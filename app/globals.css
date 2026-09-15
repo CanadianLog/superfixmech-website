@@ -1,0 +1,84 @@
+@import "tailwindcss";
+
+:root {
+  --background: #fffdf5;
+  --foreground: #2f2512;
+  --surface: #ffffff;
+  --primary: #f4c542;
+  --primary-2: #ffe9a3;
+  --muted: #7e6b45;
+  --border: #f1dfab;
+  --radius: 14px;
+  --shadow-soft: 0 10px 30px -18px rgb(74 52 12 / 25%);
+  --site-header-h: 82px;
+}
+
+@media (min-width: 768px) {
+  :root {
+    --site-header-h: 98px;
+  }
+}
+
+@media (min-width: 1024px) {
+  :root {
+    --site-header-h: 112px;
+  }
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-body);
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-body), Arial, Helvetica, sans-serif;
+}
+
+h1,
+h2,
+h3,
+h4 {
+  font-family: var(--font-heading), Arial, Helvetica, sans-serif;
+}
+
+.site-container {
+  margin-inline: auto;
+  width: min(1200px, 92vw);
+}
+
+.surface {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-soft);
+}
+
+.text-muted {
+  color: var(--muted);
+}
+
+.blue-gradient {
+  background: linear-gradient(180deg, #f4c542, #eeb62f 60%, #fce9ad);
+}
+
+@keyframes scroll-left {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+.brand-carousel-track {
+  display: flex;
+  width: max-content;
+  animation: scroll-left 30s linear infinite;
+}
+
+.brand-carousel-track:hover {
+  animation-play-state: paused;
+}
