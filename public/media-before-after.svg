@@ -1,0 +1,7 @@
+<svg width="1200" height="760" viewBox="0 0 1200 760" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="1200" height="760" rx="28" fill="#E8F2FF"/>
+  <rect x="65" y="65" width="490" height="630" rx="22" fill="#9FC1EC"/>
+  <rect x="645" y="65" width="490" height="630" rx="22" fill="#77A4DE"/>
+  <text x="240" y="408" fill="#1A335C" font-family="Arial, sans-serif" font-size="38" font-weight="700">Before</text>
+  <text x="835" y="408" fill="#E6F3FF" font-family="Arial, sans-serif" font-size="38" font-weight="700">After</text>
+</svg>

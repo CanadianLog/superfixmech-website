@@ -1,0 +1,31 @@
+<svg width="900" height="620" viewBox="0 0 900 620" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="dish-bg" x1="0" y1="0" x2="900" y2="620">
+      <stop offset="0%" stop-color="#EAF3FF"/>
+      <stop offset="100%" stop-color="#CDDEFA"/>
+    </linearGradient>
+    <linearGradient id="dish-body" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#AAC6E6"/>
+      <stop offset="100%" stop-color="#7A9FCD"/>
+    </linearGradient>
+    <radialGradient id="dish-drum" cx="0.5" cy="0.45" r="0.5">
+      <stop offset="0%" stop-color="#D5E9FF"/>
+      <stop offset="60%" stop-color="#8BB3DE"/>
+      <stop offset="100%" stop-color="#6A97D4"/>
+    </radialGradient>
+    <filter id="dish-shadow">
+      <feDropShadow dx="3" dy="6" stdDeviation="10" flood-color="#1a3a6e" flood-opacity="0.18"/>
+    </filter>
+  </defs>
+  <rect width="900" height="620" rx="26" fill="url(#dish-bg)"/>
+  <rect x="210" y="85" width="480" height="450" rx="24" fill="url(#dish-body)" filter="url(#dish-shadow)"/>
+  <rect x="240" y="120" width="420" height="60" rx="14" fill="#96B8DF"/>
+  <rect x="240" y="190" width="420" height="280" rx="18" fill="#6C98D4"/>
+  <circle cx="450" cy="330" r="85" fill="url(#dish-drum)"/>
+  <circle cx="450" cy="330" r="48" fill="none" stroke="#5A88C7" stroke-width="2.5"/>
+  <circle cx="450" cy="330" r="20" fill="#B8D4F0"/>
+  <circle cx="290" cy="150" r="9" fill="#7AA1CF"/>
+  <circle cx="320" cy="150" r="9" fill="#6892C4"/>
+  <circle cx="350" cy="150" r="9" fill="#5A82B8"/>
+  <rect x="500" y="140" width="100" height="20" rx="6" fill="#83A9D0"/>
+</svg>

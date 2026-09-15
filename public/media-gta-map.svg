@@ -1,0 +1,27 @@
+<svg width="1200" height="900" viewBox="0 0 1200 900" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="mapbg" x1="0" y1="0" x2="1200" y2="900">
+      <stop offset="0%" stop-color="#EAF4FF"/>
+      <stop offset="100%" stop-color="#CFE3FB"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="900" rx="28" fill="url(#mapbg)"/>
+  <path d="M170 680L260 560L360 590L460 520L600 560L760 470L930 530L1020 450L1080 510L950 700L750 760L540 730L360 790L220 760Z" fill="#7AA5D7" opacity="0.85"/>
+  <path d="M215 655L285 575L360 600L470 545L595 575L760 495L915 545L985 500L1035 535L925 670L745 725L550 700L365 760L250 740Z" fill="#5A88C4"/>
+  <g fill="#12B8EA">
+    <circle cx="300" cy="620" r="14"/>
+    <circle cx="430" cy="590" r="14"/>
+    <circle cx="560" cy="620" r="14"/>
+    <circle cx="700" cy="560" r="14"/>
+    <circle cx="840" cy="580" r="14"/>
+  </g>
+  <g fill="#EAF4FF" font-family="Arial, sans-serif" font-size="30" font-weight="700">
+    <text x="250" y="600">Peel</text>
+    <text x="360" y="570">Toronto</text>
+    <text x="520" y="600">York</text>
+    <text x="655" y="545">Durham</text>
+    <text x="790" y="565">Halton</text>
+  </g>
+  <rect x="120" y="120" width="350" height="140" rx="18" fill="#FFFFFF" opacity="0.9"/>
+  <text x="150" y="185" fill="#12366D" font-family="Arial, sans-serif" font-size="44" font-weight="700">GTA Coverage</text>
+</svg>

@@ -1,0 +1,24 @@
+<svg width="900" height="620" viewBox="0 0 900 620" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="fridge-bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#E8F2FF"/>
+      <stop offset="100%" stop-color="#C5DCFA"/>
+    </linearGradient>
+    <linearGradient id="fridge-body" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#B8CEE8"/>
+      <stop offset="100%" stop-color="#7BA4D4"/>
+    </linearGradient>
+    <filter id="fridge-shadow">
+      <feDropShadow dx="4" dy="8" stdDeviation="12" flood-color="#1a3a6e" flood-opacity="0.2"/>
+    </filter>
+  </defs>
+  <rect width="900" height="620" rx="26" fill="url(#fridge-bg)"/>
+  <rect x="280" y="55" width="340" height="510" rx="22" fill="url(#fridge-body)" filter="url(#fridge-shadow)"/>
+  <rect x="280" y="55" width="340" height="240" rx="22" fill="#A3C3EA"/>
+  <rect x="280" y="295" width="340" height="270" rx="22" fill="#8AADDB"/>
+  <line x1="280" y1="295" x2="620" y2="295" stroke="#6E9CD6" stroke-width="3"/>
+  <rect x="583" y="140" width="12" height="70" rx="6" fill="#5A85BC"/>
+  <rect x="583" y="360" width="12" height="100" rx="6" fill="#4E78B0"/>
+  <rect x="310" y="100" width="90" height="50" rx="10" fill="#D5E9FF" opacity="0.7"/>
+  <circle cx="355" cy="430" r="18" fill="#6892C4" opacity="0.4"/>
+</svg>

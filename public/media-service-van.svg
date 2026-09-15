@@ -1,0 +1,10 @@
+<svg width="1200" height="800" viewBox="0 0 1200 800" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="1200" height="800" fill="#D6EBFF"/>
+  <rect y="600" width="1200" height="200" fill="#C3DDF9"/>
+  <rect x="190" y="320" width="760" height="220" rx="28" fill="#0B4AAE"/>
+  <rect x="270" y="370" width="260" height="120" rx="14" fill="#DFF0FF"/>
+  <rect x="560" y="370" width="300" height="120" rx="14" fill="#0A3D92"/>
+  <circle cx="350" cy="565" r="56" fill="#1E2D4B"/>
+  <circle cx="810" cy="565" r="56" fill="#1E2D4B"/>
+  <text x="590" y="440" fill="#8FD4FF" font-family="Arial, sans-serif" font-size="44" font-weight="700">SFM</text>
+</svg>

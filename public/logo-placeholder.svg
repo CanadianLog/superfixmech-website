@@ -1,0 +1,8 @@
+<svg width="360" height="82" viewBox="0 0 360 82" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect x="6" y="17" width="24" height="48" rx="8" fill="#F4C542"/>
+  <rect x="19" y="8" width="24" height="48" rx="8" fill="#FFE298"/>
+  <circle cx="36" cy="24" r="4" fill="#7A5D1F"/>
+  <path d="M27 43L34 36L40 42L33 49C30.7 51.3 27.7 51.4 25.8 49.5C23.9 47.6 24.5 45.4 27 43Z" fill="#7A5D1F"/>
+  <text x="56" y="38" fill="#3B2B0F" font-family="Arial, sans-serif" font-size="33" font-weight="800" letter-spacing="0.15">SuperFixMech</text>
+  <text x="58" y="58" fill="#8A6A2A" font-family="Arial, sans-serif" font-size="10" font-weight="700" letter-spacing="2.1">APPLIANCE REPAIR &amp; MAINTENANCE</text>
+</svg>

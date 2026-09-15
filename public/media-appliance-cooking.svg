@@ -1,0 +1,38 @@
+<svg width="900" height="620" viewBox="0 0 900 620" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="cook-bg" x1="0" y1="0" x2="900" y2="620">
+      <stop offset="0%" stop-color="#EAF3FF"/>
+      <stop offset="100%" stop-color="#D0E3FB"/>
+    </linearGradient>
+    <linearGradient id="oven-body" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#A8C5E6"/>
+      <stop offset="100%" stop-color="#7098CA"/>
+    </linearGradient>
+    <linearGradient id="glass-door" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#3C6DAA"/>
+      <stop offset="40%" stop-color="#5A87C6"/>
+      <stop offset="100%" stop-color="#4A78B6"/>
+    </linearGradient>
+    <filter id="cook-shadow">
+      <feDropShadow dx="3" dy="6" stdDeviation="10" flood-color="#1a3a6e" flood-opacity="0.18"/>
+    </filter>
+  </defs>
+  <rect width="900" height="620" rx="26" fill="url(#cook-bg)"/>
+  <rect x="190" y="100" width="520" height="400" rx="26" fill="url(#oven-body)" filter="url(#cook-shadow)"/>
+  <rect x="220" y="195" width="460" height="210" rx="16" fill="url(#glass-door)"/>
+  <rect x="240" y="215" width="420" height="170" rx="12" fill="#3E6CA8" opacity="0.6"/>
+  <rect x="220" y="130" width="460" height="50" rx="10" fill="#96B8DF"/>
+  <circle cx="310" cy="155" r="12" fill="#7AA1CF"/>
+  <circle cx="370" cy="155" r="12" fill="#7AA1CF"/>
+  <circle cx="430" cy="155" r="12" fill="#7AA1CF"/>
+  <circle cx="490" cy="155" r="12" fill="#7AA1CF"/>
+  <circle cx="550" cy="155" r="12" fill="#7AA1CF"/>
+  <circle cx="290" cy="460" r="28" fill="#5E8BC0"/>
+  <circle cx="380" cy="460" r="28" fill="#5E8BC0"/>
+  <circle cx="470" cy="460" r="28" fill="#5E8BC0"/>
+  <circle cx="560" cy="460" r="28" fill="#5E8BC0"/>
+  <circle cx="290" cy="460" r="12" fill="#8CB4DB" opacity="0.5"/>
+  <circle cx="380" cy="460" r="12" fill="#8CB4DB" opacity="0.5"/>
+  <circle cx="470" cy="460" r="12" fill="#8CB4DB" opacity="0.5"/>
+  <circle cx="560" cy="460" r="12" fill="#8CB4DB" opacity="0.5"/>
+</svg>

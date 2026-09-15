@@ -1,0 +1,33 @@
+<svg width="900" height="620" viewBox="0 0 900 620" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="laundry-bg" x1="0" y1="0" x2="900" y2="620">
+      <stop offset="0%" stop-color="#E6F1FF"/>
+      <stop offset="100%" stop-color="#C8DFFB"/>
+    </linearGradient>
+    <linearGradient id="washer-body" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#B0CBE8"/>
+      <stop offset="100%" stop-color="#7FA6D4"/>
+    </linearGradient>
+    <radialGradient id="drum-glass" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0%" stop-color="#E8F4FF"/>
+      <stop offset="70%" stop-color="#9BBEE3"/>
+      <stop offset="100%" stop-color="#6A97D4"/>
+    </radialGradient>
+    <filter id="laundry-shadow">
+      <feDropShadow dx="3" dy="6" stdDeviation="10" flood-color="#1a3a6e" flood-opacity="0.2"/>
+    </filter>
+  </defs>
+  <rect width="900" height="620" rx="26" fill="url(#laundry-bg)"/>
+  <rect x="130" y="100" width="280" height="420" rx="24" fill="url(#washer-body)" filter="url(#laundry-shadow)"/>
+  <rect x="490" y="100" width="280" height="420" rx="24" fill="url(#washer-body)" filter="url(#laundry-shadow)"/>
+  <rect x="150" y="120" width="240" height="70" rx="14" fill="#9CBDE4"/>
+  <rect x="510" y="120" width="240" height="70" rx="14" fill="#9CBDE4"/>
+  <circle cx="270" cy="350" r="110" fill="url(#drum-glass)"/>
+  <circle cx="630" cy="350" r="110" fill="url(#drum-glass)"/>
+  <circle cx="270" cy="350" r="60" fill="none" stroke="#5A88C7" stroke-width="3" stroke-dasharray="12 8"/>
+  <circle cx="630" cy="350" r="60" fill="none" stroke="#5A88C7" stroke-width="3" stroke-dasharray="12 8"/>
+  <circle cx="190" cy="155" r="8" fill="#6892C4"/>
+  <circle cx="220" cy="155" r="8" fill="#5A82B8"/>
+  <circle cx="550" cy="155" r="8" fill="#6892C4"/>
+  <circle cx="580" cy="155" r="8" fill="#5A82B8"/>
+</svg>
