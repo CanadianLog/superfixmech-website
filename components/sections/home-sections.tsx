@@ -148,15 +148,14 @@ export function HomeSections() {
               key={service.slug}
               className="group overflow-hidden border-[#f1dfab] p-0 transition-all duration-300 hover:-translate-y-1 hover:border-[#d9b557] hover:shadow-2xl"
             >
-              <div className="relative">
+              <div className="relative flex aspect-[4/3] items-center justify-center overflow-hidden bg-gradient-to-b from-[#fff8df] to-[#f8ecc4] p-6">
                 <Image
                   src={mediaByService[service.slug]}
-                  alt={`${service.name} placeholder`}
+                  alt={service.name}
                   width={900}
-                  height={620}
-                  className="aspect-[4/3] w-full object-cover object-top transition-transform duration-300 group-hover:scale-105"
+                  height={900}
+                  className="h-full w-full object-contain drop-shadow-[0_18px_18px_rgba(59,43,15,0.18)] transition-transform duration-300 group-hover:scale-105"
                 />
-                <div className="absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-[#3b2b0f]/65 to-transparent" />
               </div>
               <div className="space-y-3 p-5">
                 <h3 className="text-xl font-bold text-[#3b2b0f]">{service.name}</h3>
