@@ -8,14 +8,6 @@ import { Card } from "@/components/ui/card";
 import { Section } from "@/components/ui/section";
 import { installationPages } from "@/lib/site-data";
 
-const mediaByInstallation: Record<string, string> = {
-  "washer-installation": "/appliance-photos/washer.png",
-  "dryer-installation": "/appliance-photos/dryer.png",
-  "dishwasher-installation": "/appliance-photos/dishwasher.png",
-  "range-hood-installation": "/appliance-photos/range-hood.png",
-  "otr-microwave-installation": "/appliance-photos/microwave.png",
-};
-
 const summaryByInstallation: Record<string, string> = {
   "washer-installation":
     "Proper hookup, levelling, and leak testing so your new washer runs quietly and drains correctly from day one.",
@@ -53,11 +45,11 @@ export default function InstallationPage() {
           {installationPages.map((installation) => (
             <Card key={installation.slug} className="overflow-hidden p-0">
               <Image
-                src={mediaByInstallation[installation.slug]}
+                src={`/service-photos/${installation.slug}.jpg`}
                 alt={installation.name}
-                width={1400}
-                height={933}
-                className="aspect-[4/3] w-full object-cover object-top"
+                width={1125}
+                height={2000}
+                className="aspect-[4/3] w-full object-cover object-center"
               />
               <div className="p-5">
                 <h3 className="text-xl font-bold text-[#5f4714]">{installation.name}</h3>

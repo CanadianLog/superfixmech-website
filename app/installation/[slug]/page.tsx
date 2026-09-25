@@ -22,7 +22,7 @@ const installationContent: Record<
       "Removal and disposal of old unit (on request)",
       "Compatibility check for stacked or space-constrained setups",
     ],
-    image: "/appliance-photos/washer.png",
+    image: "/service-photos/washer-installation.jpg",
     faq: [
       {
         question: "Do you install stackable washer/dryer units?",
@@ -51,7 +51,7 @@ const installationContent: Record<
       "Cord and outlet compatibility check",
       "Load test to confirm heating and cycle performance",
     ],
-    image: "/appliance-photos/dryer.png",
+    image: "/service-photos/dryer-installation.jpg",
     faq: [
       {
         question: "Do you install gas dryers as well as electric?",
@@ -80,7 +80,7 @@ const installationContent: Record<
       "Cabinet fit and levelling",
       "Full cycle test for leaks and drainage",
     ],
-    image: "/appliance-photos/dishwasher.png",
+    image: "/service-photos/dishwasher-installation.jpg",
     faq: [
       {
         question: "Can you install a dishwasher in a cabinet opening built for a different brand?",
@@ -109,7 +109,7 @@ const installationContent: Record<
       "Ventilation and airflow check",
       "Filter and light installation",
     ],
-    image: "/appliance-photos/range-hood.png",
+    image: "/service-photos/range-hood-installation.jpg",
     faq: [
       {
         question: "Can you install a range hood if I don't have existing ductwork?",
@@ -138,7 +138,7 @@ const installationContent: Record<
       "Clearance check above the range for safe operation",
       "Removal of old unit (on request)",
     ],
-    image: "/appliance-photos/microwave.png",
+    image: "/service-photos/otr-microwave-installation.jpg",
     faq: [
       {
         question: "Can you install an OTR microwave in the same spot as my old one?",
