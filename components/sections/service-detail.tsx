@@ -34,13 +34,13 @@ export function ServiceDetail({
         subtitle="Professional appliance support for homes and small businesses."
       />
       <Section className="py-12 md:py-16" innerClassName="grid gap-8 md:grid-cols-[1.1fr_1.4fr]">
-          <div className="surface overflow-hidden p-0">
+          <div className="surface relative min-h-[360px] overflow-hidden p-0 md:min-h-[440px]">
             <Image
               src={heroImage}
-              alt="Technician placeholder"
-              width={1400}
-              height={933}
-              className="h-full w-full object-cover"
+              alt={`${title} by SuperFix Mechanical`}
+              fill
+              sizes="(min-width: 768px) 45vw, 100vw"
+              className="object-cover"
             />
           </div>
           <article className="surface p-6 md:p-8">

@@ -81,10 +81,7 @@ export function PageHero({
 
   return (
     <section className={cn("overflow-hidden")}>
-      <div className="relative h-[160px] bg-[#5f4714] md:h-[220px]">
-        <Image src="/stock/banner-generic.jpg" alt="" fill className="object-cover" priority />
-      </div>
-      <div className="bg-[#5f4714] py-8 text-center text-white md:py-10">
+      <div className="bg-[#5f4714] py-10 text-center text-white md:py-14">
         <Container>
           <h1 className="text-3xl font-extrabold tracking-tight md:text-5xl">{title}</h1>
           <p className="mx-auto mt-3 max-w-2xl text-sm text-white/90 md:text-base">{subtitle}</p>

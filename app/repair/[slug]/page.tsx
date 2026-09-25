@@ -161,6 +161,7 @@ export default async function ServicePage({ params }: Props) {
       overview={content.overview}
       bullets={content.bullets}
       faq={content.faq}
+      heroImage={`/service-photos/${slug}.jpg`}
     />
   );
 }
