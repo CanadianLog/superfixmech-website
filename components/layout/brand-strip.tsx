@@ -26,7 +26,7 @@ const brandLogos: Array<
   { name: "Blomberg", src: "/brand-logos/blomberg.svg", type: "icon" },
   { name: "Broan", src: "/brand-logos/broan.png", type: "icon" },
   { name: "NuTone", src: "/brand-logos/nutone.png", type: "icon" },
-  { name: "Venmar", type: "wordmark" },
+  { name: "Venmar", src: "/brand-logos/venmar.png", type: "icon" },
   { name: "Best", src: "/brand-logos/best.svg", type: "icon" },
   { name: "Roper", src: "/brand-logos/roper.png", type: "icon" },
 ];
