@@ -21,14 +21,14 @@ const brandLogos: Array<
   { name: "Panasonic", src: "/brand-logos/panasonic.svg", type: "icon" },
   { name: "IKEA", src: "/brand-logos/ikea.svg", type: "icon" },
   { name: "Admiral", src: "/brand-logos/admiral.svg", type: "icon" },
-  { name: "Inglis", type: "wordmark" },
-  { name: "Danby", type: "wordmark" },
-  { name: "Blomberg", type: "wordmark" },
-  { name: "Broan", type: "wordmark" },
-  { name: "NuTone", type: "wordmark" },
+  { name: "Inglis", src: "/brand-logos/inglis.svg", type: "icon" },
+  { name: "Danby", src: "/brand-logos/danby.png", type: "icon" },
+  { name: "Blomberg", src: "/brand-logos/blomberg.svg", type: "icon" },
+  { name: "Broan", src: "/brand-logos/broan.png", type: "icon" },
+  { name: "NuTone", src: "/brand-logos/nutone.png", type: "icon" },
   { name: "Venmar", type: "wordmark" },
-  { name: "Best", type: "wordmark" },
-  { name: "Roper", type: "wordmark" },
+  { name: "Best", src: "/brand-logos/best.svg", type: "icon" },
+  { name: "Roper", src: "/brand-logos/roper.png", type: "icon" },
 ];
 
 type BrandStripProps = {
