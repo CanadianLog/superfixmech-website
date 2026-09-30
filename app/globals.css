@@ -76,7 +76,7 @@ h4 {
 .brand-carousel-track {
   display: flex;
   width: max-content;
-  animation: scroll-left 30s linear infinite;
+  animation: scroll-left 70s linear infinite;
 }
 
 .brand-carousel-track:hover {

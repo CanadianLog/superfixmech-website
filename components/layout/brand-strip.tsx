@@ -6,16 +6,29 @@ import { cn } from "@/lib/utils";
 const brandLogos: Array<
   { name: string; src: string; type: "icon" } | { name: string; type: "wordmark" }
 > = [
-  { name: "Samsung", src: "https://cdn.jsdelivr.net/npm/simple-icons@v11/icons/samsung.svg", type: "icon" },
-  { name: "Roper", type: "wordmark" },
-  { name: "Panasonic", src: "https://cdn.jsdelivr.net/npm/simple-icons@v11/icons/panasonic.svg", type: "icon" },
+  { name: "Whirlpool", src: "/brand-logos/whirlpool.svg", type: "icon" },
+  { name: "Samsung", src: "/brand-logos/samsung.svg", type: "icon" },
+  { name: "LG", src: "/brand-logos/lg.svg", type: "icon" },
+  { name: "GE", src: "/brand-logos/ge.svg", type: "icon" },
+  { name: "Frigidaire", src: "/brand-logos/frigidaire.svg", type: "icon" },
+  { name: "Bosch", src: "/brand-logos/bosch.svg", type: "icon" },
+  { name: "KitchenAid", src: "/brand-logos/kitchenaid.svg", type: "icon" },
+  { name: "Maytag", src: "/brand-logos/maytag.svg", type: "icon" },
+  { name: "Kenmore", src: "/brand-logos/kenmore.svg", type: "icon" },
+  { name: "Electrolux", src: "/brand-logos/electrolux.svg", type: "icon" },
+  { name: "JennAir", src: "/brand-logos/jennair.svg", type: "icon" },
+  { name: "Amana", src: "/brand-logos/amana.svg", type: "icon" },
+  { name: "Panasonic", src: "/brand-logos/panasonic.svg", type: "icon" },
+  { name: "IKEA", src: "/brand-logos/ikea.svg", type: "icon" },
+  { name: "Admiral", src: "/brand-logos/admiral.svg", type: "icon" },
+  { name: "Inglis", type: "wordmark" },
+  { name: "Danby", type: "wordmark" },
+  { name: "Blomberg", type: "wordmark" },
+  { name: "Broan", type: "wordmark" },
   { name: "NuTone", type: "wordmark" },
-  { name: "Maytag", src: "https://cdn.jsdelivr.net/npm/simple-icons@v11/icons/maytag.svg", type: "icon" },
-  { name: "LG", src: "https://cdn.jsdelivr.net/npm/simple-icons@v11/icons/lg.svg", type: "icon" },
-  { name: "GE", src: "https://cdn.jsdelivr.net/npm/simple-icons@v11/icons/generalelectric.svg", type: "icon" },
-  { name: "KitchenAid", type: "wordmark" },
-  { name: "Kenmore", type: "wordmark" },
-  { name: "JennAir", type: "wordmark" },
+  { name: "Venmar", type: "wordmark" },
+  { name: "Best", type: "wordmark" },
+  { name: "Roper", type: "wordmark" },
 ];
 
 type BrandStripProps = {
