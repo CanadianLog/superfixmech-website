@@ -86,6 +86,7 @@ const serviceAreas: Record<string, string[]> = {
     "Cyrville",
     "Overbrook",
     "Gloucester",
+    "Embrun",
   ],
 };
 
