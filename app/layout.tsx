@@ -3,6 +3,7 @@ import Script from "next/script";
 import { Nunito_Sans, Sora } from "next/font/google";
 import { SiteFooter } from "@/components/layout/site-footer";
 import { SiteHeader } from "@/components/layout/site-header";
+import { HcpBookingModal } from "@/components/sections/hcp-booking-modal";
 import { company } from "@/lib/site-data";
 import "./globals.css";
 
@@ -84,6 +85,7 @@ export default function RootLayout({
         <SiteHeader />
         {children}
         <SiteFooter />
+        <HcpBookingModal />
         {tawkPropertyId && tawkWidgetId ? (
           <Script id="tawkto-widget" strategy="afterInteractive">
             {`

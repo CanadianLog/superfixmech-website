@@ -3,6 +3,8 @@ import Script from "next/script";
 const HCP_TOKEN = "782f6b3219464d26a0b49b809ad17b06";
 const HCP_ORG = "Super-Fix-Mechanical";
 
+export const HCP_LEAD_FORM_URL = `https://book.housecallpro.com/lead-form/${HCP_ORG}/${HCP_TOKEN}`;
+
 /**
  * Housecall Pro lead capture form. Submissions land in Housecall Pro as leads.
  * The script handles HCP's own behaviour (e.g. resizing); the iframe works on its own.
@@ -18,7 +20,7 @@ export function HcpLeadForm() {
       <iframe
         id="hcp-lead-iframe"
         title="Request an appointment with SuperFix Mechanical"
-        src={`https://book.housecallpro.com/lead-form/${HCP_ORG}/${HCP_TOKEN}`}
+        src={HCP_LEAD_FORM_URL}
         className="w-full rounded-xl border-0"
         style={{ height: 820 }}
       />
