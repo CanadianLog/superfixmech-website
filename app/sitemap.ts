@@ -1,5 +1,6 @@
 import type { MetadataRoute } from "next";
 import { articles } from "@/lib/articles";
+import { serviceAreaPages } from "@/lib/service-areas";
 import { company, installationPages, legalPages, servicePages } from "@/lib/site-data";
 
 export const dynamic = "force-static";
@@ -29,6 +30,10 @@ export default function sitemap(): MetadataRoute.Sitemap {
     ...installationPages.map((installation) => ({
       url: `${company.url}/installation/${installation.slug}`,
       priority: 0.8,
+    })),
+    ...serviceAreaPages.map((area) => ({
+      url: `${company.url}/service-areas/${area.slug}`,
+      priority: 0.9,
     })),
     ...articles.map((article) => ({
       url: `${company.url}/blog/${article.slug}`,

@@ -3,6 +3,7 @@ import Link from "next/link";
 import { BrandStrip } from "@/components/layout/brand-strip";
 import { Button } from "@/components/ui/button";
 import { Container } from "@/components/ui/container";
+import { serviceAreaPages } from "@/lib/service-areas";
 import { company, legalPages } from "@/lib/site-data";
 
 export function SiteFooter() {
@@ -57,6 +58,13 @@ export function SiteFooter() {
             <ul className="space-y-2.5 text-sm text-[#5f4714]">
               <li><Link className="hover:underline" href="/about">About</Link></li>
               <li><Link className="hover:underline" href="/blog">Blog</Link></li>
+              {serviceAreaPages.map((area) => (
+                <li key={area.slug}>
+                  <Link className="hover:underline" href={`/service-areas/${area.slug}`}>
+                    Appliance Repair {area.name}
+                  </Link>
+                </li>
+              ))}
               <li><Link className="hover:underline" href="/contact">Contact</Link></li>
             </ul>
           </div>
