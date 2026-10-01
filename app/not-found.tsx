@@ -1,5 +1,10 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { Section } from "@/components/ui/section";
+
+export const metadata: Metadata = {
+  alternates: { canonical: null },
+};
 
 export default function NotFound() {
   return (

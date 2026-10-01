@@ -18,6 +18,7 @@ const sora = Sora({
 
 export const metadata: Metadata = {
   metadataBase: new URL(company.url),
+  alternates: { canonical: "./" },
   title: "SuperFix Mechanical | Ottawa Appliance Repair",
   description:
     "Reliable appliance repair and maintenance services across Ottawa.",
