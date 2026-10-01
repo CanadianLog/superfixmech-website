@@ -60,6 +60,7 @@ const localBusinessSchema = {
     "Riverside South",
     "Westboro",
     "Vanier",
+    "Embrun",
   ].map((name) => ({ "@type": "Place", name })),
   sameAs: company.social,
 };

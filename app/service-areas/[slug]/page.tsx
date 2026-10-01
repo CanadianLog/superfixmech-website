@@ -27,7 +27,7 @@ export default async function ServiceAreaPage({ params }: Props) {
     name: `Appliance Repair in ${area.name}`,
     url: `${company.url}/service-areas/${area.slug}`,
     provider: { "@id": `${company.url}/#business` },
-    areaServed: { "@type": "Place", name: `${area.name}, Ottawa, ON` },
+    areaServed: { "@type": "Place", name: area.locality },
   };
 
   return (
