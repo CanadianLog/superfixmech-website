@@ -2,11 +2,18 @@ export const company = {
   name: "SuperFixMech",
   phone: "613-366-7009",
   email: "service@superfixmech.ca",
+  legalName: "SuperFix Mechanical Inc.",
+  url: "https://superfixmech.ca",
+  social: [
+    "https://www.facebook.com/profile.php?id=61592087580776",
+    "https://www.instagram.com/superfixmechanical/",
+  ],
 };
 
 export const mainNav = [
   { href: "/", label: "Home" },
   { href: "/about", label: "About" },
+  { href: "/blog", label: "Blog" },
   { href: "/contact", label: "Contact" },
 ];
 

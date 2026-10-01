@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { Container } from "@/components/ui/container";
 import { Section } from "@/components/ui/section";
+import { serviceAreaPages } from "@/lib/service-areas";
 import { company, servicePages } from "@/lib/site-data";
 
 const mediaByService: Record<string, string> = {
@@ -85,8 +86,13 @@ const serviceAreas: Record<string, string[]> = {
     "Cyrville",
     "Overbrook",
     "Gloucester",
+    "Embrun",
   ],
 };
+
+const areaPageByName: Record<string, string> = Object.fromEntries(
+  serviceAreaPages.map((area) => [area.name, area.slug]),
+);
 
 const testimonials = [
   {
@@ -220,7 +226,16 @@ export function HomeSections() {
                     {cities.map((city) => (
                       <li key={city} className="flex items-start gap-2 text-sm text-[#7e6b45]">
                         <span className="mt-1 h-1.5 w-1.5 rounded-full bg-[#d6a52d]" />
-                        {city}
+                        {areaPageByName[city] ? (
+                          <Link
+                            href={`/service-areas/${areaPageByName[city]}`}
+                            className="font-semibold text-[#5f4714] underline hover:text-[#3b2b0f]"
+                          >
+                            {city}
+                          </Link>
+                        ) : (
+                          city
+                        )}
                       </li>
                     ))}
                   </ul>

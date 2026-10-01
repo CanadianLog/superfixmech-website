@@ -156,6 +156,15 @@ export function SiteHeader() {
             About
           </Link>
           <Link
+            href="/blog"
+            className={cn(
+              navItemClass,
+              pathname.startsWith("/blog") && "text-[#5f4714]",
+            )}
+          >
+            Blog
+          </Link>
+          <Link
             href="/contact"
             className={cn(
               navItemClass,
@@ -261,6 +270,7 @@ export function SiteHeader() {
                 </Link>
               ))}
             <Link href="/about" className="rounded-md border border-[#9b7a2d] px-3 py-2.5 text-sm font-semibold" onClick={() => setMobileOpen(false)}>About</Link>
+            <Link href="/blog" className="rounded-md border border-[#9b7a2d] px-3 py-2.5 text-sm font-semibold" onClick={() => setMobileOpen(false)}>Blog</Link>
             <Link href="/contact" className="rounded-md border border-[#9b7a2d] px-3 py-2.5 text-sm font-semibold" onClick={() => setMobileOpen(false)}>Contact</Link>
             <div className="mt-2 flex items-center gap-3">
               <a href="tel:+16133667009" className="rounded-full border border-[#9b7a2d] px-4 py-2 text-sm font-semibold">{company.phone}</a>
