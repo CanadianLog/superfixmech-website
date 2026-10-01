@@ -56,6 +56,7 @@ export function SiteFooter() {
             <h3 className="mb-5 text-lg font-bold">About Company</h3>
             <ul className="space-y-2.5 text-sm text-[#5f4714]">
               <li><Link className="hover:underline" href="/about">About</Link></li>
+              <li><Link className="hover:underline" href="/blog">Blog</Link></li>
               <li><Link className="hover:underline" href="/contact">Contact</Link></li>
             </ul>
           </div>

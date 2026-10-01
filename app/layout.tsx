@@ -3,6 +3,7 @@ import Script from "next/script";
 import { Nunito_Sans, Sora } from "next/font/google";
 import { SiteFooter } from "@/components/layout/site-footer";
 import { SiteHeader } from "@/components/layout/site-header";
+import { company } from "@/lib/site-data";
 import "./globals.css";
 
 const nunito = Nunito_Sans({
@@ -16,9 +17,51 @@ const sora = Sora({
 });
 
 export const metadata: Metadata = {
-  title: "SuperFixMech",
+  metadataBase: new URL(company.url),
+  title: "SuperFix Mechanical | Ottawa Appliance Repair",
   description:
     "Reliable appliance repair and maintenance services across Ottawa.",
+  openGraph: {
+    type: "website",
+    locale: "en_CA",
+    siteName: "SuperFix Mechanical",
+    images: ["/superfix_logo.png"],
+  },
+};
+
+const localBusinessSchema = {
+  "@context": "https://schema.org",
+  "@type": "HomeAndConstructionBusiness",
+  "@id": `${company.url}/#business`,
+  name: "SuperFix Mechanical",
+  legalName: company.legalName,
+  url: company.url,
+  logo: `${company.url}/superfix_logo.png`,
+  image: `${company.url}/superfix_logo.png`,
+  telephone: "+1-613-366-7009",
+  email: company.email,
+  description:
+    "Appliance repair and installation for fridges, washers, dryers, dishwashers, ovens, cooktops, microwaves, and range hoods across Ottawa.",
+  address: {
+    "@type": "PostalAddress",
+    addressLocality: "Ottawa",
+    addressRegion: "ON",
+    addressCountry: "CA",
+  },
+  areaServed: [
+    "Ottawa",
+    "Kanata",
+    "Nepean",
+    "Orleans",
+    "Barrhaven",
+    "Stittsville",
+    "Gloucester",
+    "Manotick",
+    "Riverside South",
+    "Westboro",
+    "Vanier",
+  ].map((name) => ({ "@type": "Place", name })),
+  sameAs: company.social,
 };
 
 const tawkPropertyId = process.env.NEXT_PUBLIC_TAWKTO_PROPERTY_ID;
@@ -32,6 +75,10 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={`${nunito.variable} ${sora.variable} antialiased`}>
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(localBusinessSchema) }}
+        />
         <SiteHeader />
         {children}
         <SiteFooter />
