@@ -4,7 +4,9 @@ export const company = {
   email: "service@superfixmech.ca",
   legalName: "SuperFix Mechanical Inc.",
   url: "https://superfixmech.ca",
+  googleMaps: "https://maps.google.com/?cid=7860337456778361550",
   social: [
+    "https://maps.google.com/?cid=7860337456778361550",
     "https://www.facebook.com/profile.php?id=61592087580776",
     "https://www.instagram.com/superfixmechanical/",
   ],

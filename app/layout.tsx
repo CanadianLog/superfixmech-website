@@ -64,6 +64,7 @@ const localBusinessSchema = {
     "Vanier",
     "Embrun",
   ].map((name) => ({ "@type": "Place", name })),
+  hasMap: company.googleMaps,
   sameAs: company.social,
 };
 

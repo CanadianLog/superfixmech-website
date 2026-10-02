@@ -47,6 +47,9 @@ export function SiteFooter() {
               <a href="https://www.facebook.com/profile.php?id=61592087580776" target="_blank" rel="noopener noreferrer" aria-label="Facebook" className="flex h-9 w-9 items-center justify-center rounded-full border border-[#7a5d1f] transition hover:bg-[#fff2c9]">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M18 2h-3a5 5 0 00-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 011-1h3z" /></svg>
               </a>
+              <a href={company.googleMaps} target="_blank" rel="noopener noreferrer" aria-label="Google Business Profile" className="flex h-9 w-9 items-center justify-center rounded-full border border-[#7a5d1f] transition hover:bg-[#fff2c9]">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M21.35 11.1H12v2.98h5.35c-.23 1.43-1.66 4.2-5.35 4.2-3.22 0-5.85-2.67-5.85-5.96S8.78 6.36 12 6.36c1.83 0 3.06.78 3.76 1.45l2.56-2.47C16.68 3.8 14.55 2.86 12 2.86 6.98 2.86 2.92 6.92 2.92 11.94S6.98 21.02 12 21.02c5.24 0 8.72-3.68 8.72-8.87 0-.6-.06-1.05-.15-1.5z" /></svg>
+              </a>
               <a href="https://www.instagram.com/superfixmechanical/" target="_blank" rel="noopener noreferrer" aria-label="Instagram" className="flex h-9 w-9 items-center justify-center rounded-full border border-[#7a5d1f] transition hover:bg-[#fff2c9]">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="2" width="20" height="20" rx="5" ry="5" /><path d="M16 11.37A4 4 0 1112.63 8 4 4 0 0116 11.37z" /><line x1="17.5" y1="6.5" x2="17.51" y2="6.5" /></svg>
               </a>
