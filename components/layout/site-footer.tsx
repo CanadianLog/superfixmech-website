@@ -29,7 +29,7 @@ export function SiteFooter() {
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" className="mt-0.5 shrink-0 opacity-70">
                   <path d="M12 2a7 7 0 00-7 7c0 5.25 7 13 7 13s7-7.75 7-13a7 7 0 00-7-7zm0 9.5a2.5 2.5 0 110-5 2.5 2.5 0 010 5z" />
                 </svg>
-                <span>{company.address.streetAddress}, {company.address.locality}, {company.address.region}</span>
+                <span>{company.address.streetAddress}, {company.address.locality}, {company.address.region} {company.address.postalCode}</span>
               </li>
               <li className="flex items-start gap-3">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" className="mt-0.5 shrink-0 opacity-70">

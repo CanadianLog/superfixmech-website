@@ -76,10 +76,9 @@ export default function AboutPage() {
             Certified, Experienced, and Straightforward About It
           </h2>
           <p className="mt-4 text-sm leading-7 text-[#7e6b45] md:text-base">
-            Appliance repair isn&apos;t a licensed trade in Ontario, which means anyone can
-            advertise as a repair technician. That&apos;s why we put our certification, our five
-            years of hands-on experience, and our guarantees in writing. Here&apos;s what you can
-            expect when you book with us:
+            We stand behind our certification, our five years of hands-on experience, and our
+            guarantees, and we put them in writing. Here&apos;s what you can expect when you book
+            with us:
           </p>
           <ul className="mt-5 grid gap-3 sm:grid-cols-2">
             {[

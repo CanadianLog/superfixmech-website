@@ -7,6 +7,7 @@ export const company = {
     streetAddress: "200 Bay Street",
     locality: "Ottawa",
     region: "ON",
+    postalCode: "K1R 7W8",
     country: "CA",
   },
   url: "https://superfixmech.ca",

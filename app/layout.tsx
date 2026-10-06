@@ -61,6 +61,7 @@ const localBusinessSchema = {
     streetAddress: company.address.streetAddress,
     addressLocality: company.address.locality,
     addressRegion: company.address.region,
+    postalCode: company.address.postalCode,
     addressCountry: company.address.country,
   },
   areaServed: [
