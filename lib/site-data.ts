@@ -3,6 +3,12 @@ export const company = {
   phone: "613-366-7009",
   email: "service@superfixmech.ca",
   legalName: "SuperFix Mechanical Inc.",
+  address: {
+    streetAddress: "200 Bay Street",
+    locality: "Ottawa",
+    region: "ON",
+    country: "CA",
+  },
   url: "https://superfixmech.ca",
   googleMaps: "https://maps.google.com/?cid=7860337456778361550",
   social: [

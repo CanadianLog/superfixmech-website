@@ -1,3 +1,5 @@
+import { extraArticles } from "@/lib/articles-extra";
+
 export type ArticleSection = {
   heading: string;
   paragraphs?: string[];
@@ -15,7 +17,7 @@ export type Article = {
   sections: ArticleSection[];
 };
 
-export const articles: Article[] = [
+const baseArticles: Article[] = [
   {
     slug: "fridge-not-cooling-what-to-check",
     title: "Fridge Not Cooling? 7 Things to Check Before You Call a Technician",
@@ -254,6 +256,9 @@ export const articles: Article[] = [
     ],
   },
 ];
+
+// Newest guides first.
+export const articles: Article[] = [...extraArticles, ...baseArticles];
 
 export function getArticle(slug: string) {
   return articles.find((article) => article.slug === slug);

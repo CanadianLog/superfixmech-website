@@ -58,9 +58,10 @@ const localBusinessSchema = {
     "Appliance repair and installation for fridges, washers, dryers, dishwashers, ovens, cooktops, microwaves, and range hoods across Ottawa.",
   address: {
     "@type": "PostalAddress",
-    addressLocality: "Ottawa",
-    addressRegion: "ON",
-    addressCountry: "CA",
+    streetAddress: company.address.streetAddress,
+    addressLocality: company.address.locality,
+    addressRegion: company.address.region,
+    addressCountry: company.address.country,
   },
   areaServed: [
     "Ottawa",
