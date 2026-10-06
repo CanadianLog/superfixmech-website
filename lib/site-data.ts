@@ -12,6 +12,9 @@ export const company = {
   ],
 };
 
+/** Update when site content meaningfully changes; used for sitemap lastmod. */
+export const siteLastUpdated = "2026-10-06";
+
 export const mainNav = [
   { href: "/", label: "Home" },
   { href: "/about", label: "About" },

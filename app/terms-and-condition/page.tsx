@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { PolicyContent } from "@/components/sections/policy-content";
 
 export const metadata: Metadata = {
+  robots: { index: false, follow: true },
   title: "SMS Terms & Conditions | SuperFix Mechanical",
   description:
     "Terms and conditions for SMS messaging communications from SuperFix Mechanical Inc.",

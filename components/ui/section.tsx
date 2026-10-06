@@ -9,7 +9,7 @@ type SectionProps = {
 
 export function Section({ children, className, innerClassName }: SectionProps) {
   return (
-    <section className={cn("py-14 md:py-20", className)}>
+    <section className={cn("py-9 md:py-20", className)}>
       <Container className={innerClassName}>{children}</Container>
     </section>
   );

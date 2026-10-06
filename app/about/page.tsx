@@ -1,12 +1,14 @@
 import type { Metadata } from "next";
 import Image from "next/image";
+import { JsonLd } from "@/components/seo/json-ld";
 import { CtaBand } from "@/components/sections/cta-band";
 import { Badge } from "@/components/ui/badge";
 import { Container } from "@/components/ui/container";
 import { Section } from "@/components/ui/section";
+import { breadcrumbSchema } from "@/lib/seo";
 
 export const metadata: Metadata = {
-  title: "About Us | SuperFix Mechanical",
+  title: "About SuperFix Mechanical | Ottawa Appliance Repair",
   description:
     "Family-owned appliance repair company serving Ottawa. Quality work, honest pricing, and a commitment to treating every customer like family.",
 };
@@ -14,12 +16,18 @@ export const metadata: Metadata = {
 export default function AboutPage() {
   return (
     <main>
+      <JsonLd data={breadcrumbSchema([{ name: "About", path: "/about" }])} />
       <section className="relative overflow-hidden bg-[#5f4714]">
         <div className="absolute inset-0 opacity-35">
           <Image src="/stock/banner-generic.jpg" alt="" fill className="object-cover" />
         </div>
         <Container className="relative z-10 py-14 text-center text-white md:py-16">
-          <h1 className="text-4xl font-extrabold md:text-5xl">OUR JOURNEY</h1>
+          <h1 className="text-3xl font-extrabold md:text-5xl">
+            About SuperFix Mechanical
+            <span className="mt-1 block text-lg font-bold uppercase tracking-[0.08em] text-white/90 md:text-2xl">
+              Ottawa Appliance Repair &middot; Our Journey
+            </span>
+          </h1>
           <p className="mt-3 text-sm font-semibold uppercase tracking-[0.1em] text-white/90">
             Built on Trust. Driven by Family. Powered by Knowledge.
           </p>
@@ -40,7 +48,7 @@ export default function AboutPage() {
           <div className="surface overflow-hidden p-0">
             <Image
               src="/stock/van.jpg"
-              alt="Company journey placeholder"
+              alt="SuperFix Mechanical service van, Ottawa appliance repair"
               width={1400}
               height={933}
               className="h-full w-full object-cover"
