@@ -1,6 +1,5 @@
 import Image from "next/image";
 import Link from "next/link";
-import { BrandStrip } from "@/components/layout/brand-strip";
 import { Button } from "@/components/ui/button";
 import { Container } from "@/components/ui/container";
 import { serviceAreaPages } from "@/lib/service-areas";
@@ -9,7 +8,6 @@ import { company, legalPages } from "@/lib/site-data";
 export function SiteFooter() {
   return (
     <footer>
-      <BrandStrip />
       <div className="border-t border-[#d9b557] bg-[#f4c542] pb-8 pt-12 text-[#2f2512] md:pt-14">
         <Container className="grid gap-10 md:grid-cols-2 lg:grid-cols-3">
           <div className="space-y-5">
@@ -26,6 +24,12 @@ export function SiteFooter() {
                   <path d="M6.62 10.79a15.15 15.15 0 006.59 6.59l2.2-2.2a1 1 0 011.01-.24c1.12.37 2.33.57 3.58.57a1 1 0 011 1V20a1 1 0 01-1 1A17 17 0 013 4a1 1 0 011-1h3.5a1 1 0 011 1c0 1.25.2 2.46.57 3.58a1 1 0 01-.25 1.01l-2.2 2.2z" />
                 </svg>
                 <a href="tel:+16133667009" className="hover:underline">{company.phone}</a>
+              </li>
+              <li className="flex items-start gap-3">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" className="mt-0.5 shrink-0 opacity-70">
+                  <path d="M12 2a7 7 0 00-7 7c0 5.25 7 13 7 13s7-7.75 7-13a7 7 0 00-7-7zm0 9.5a2.5 2.5 0 110-5 2.5 2.5 0 010 5z" />
+                </svg>
+                <span>{company.address.streetAddress}, {company.address.locality}, {company.address.region}</span>
               </li>
               <li className="flex items-start gap-3">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" className="mt-0.5 shrink-0 opacity-70">

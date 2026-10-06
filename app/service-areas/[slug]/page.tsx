@@ -1,10 +1,12 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { JsonLd } from "@/components/seo/json-ld";
 import { CtaBand } from "@/components/sections/cta-band";
 import { FaqList } from "@/components/sections/faq-list";
 import { PageHero } from "@/components/sections/page-hero";
 import { Section } from "@/components/ui/section";
+import { breadcrumbSchema } from "@/lib/seo";
 import { getServiceArea, serviceAreaPages } from "@/lib/service-areas";
 import { company, installationPages, servicePages } from "@/lib/site-data";
 
@@ -32,9 +34,11 @@ export default async function ServiceAreaPage({ params }: Props) {
 
   return (
     <main>
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(serviceSchema) }}
+      <JsonLd data={serviceSchema} />
+      <JsonLd
+        data={breadcrumbSchema([
+          { name: `Appliance Repair ${area.name}`, path: `/service-areas/${area.slug}` },
+        ])}
       />
       <PageHero
         title={`Appliance Repair in ${area.name}`}

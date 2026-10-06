@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { PolicyContent } from "@/components/sections/policy-content";
 
 export const metadata: Metadata = {
+  robots: { index: false, follow: true },
   title: "Refund Policy | SuperFix Mechanical",
   description:
     "Refund policy for parts and service charges with SuperFix Mechanical appliance repair, Ottawa.",

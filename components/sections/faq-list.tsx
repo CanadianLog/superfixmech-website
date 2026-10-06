@@ -1,8 +1,10 @@
 "use client";
 
 import { useState } from "react";
+import { JsonLd } from "@/components/seo/json-ld";
 import { Card } from "@/components/ui/card";
 import { Section } from "@/components/ui/section";
+import { faqSchema } from "@/lib/seo";
 
 type FaqItem = string | { question: string; answer: string };
 
@@ -22,7 +24,8 @@ export function FaqList({ title = "DIY Fixes for Common Problems", items }: FaqL
   );
 
   return (
-    <Section className="py-12 md:py-16">
+    <Section className="py-10 md:py-16">
+      <JsonLd data={faqSchema(normalized)} />
       <h2 className="mb-7 text-center text-3xl font-extrabold text-[#3b2b0f] md:text-4xl">
         {title}
       </h2>

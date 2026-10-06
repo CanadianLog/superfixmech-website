@@ -127,7 +127,7 @@ function StarRating({ count }: { count: number }) {
 export function HomeSections() {
   return (
     <main>
-      <section className="flex min-h-[calc(86vh-var(--site-header-h))] min-h-[calc(86svh-var(--site-header-h))] flex-col md:min-h-[calc(100vh-var(--site-header-h))] md:min-h-[calc(100svh-var(--site-header-h))]">
+      <section className="flex min-h-[calc(66vh-var(--site-header-h))] min-h-[calc(66svh-var(--site-header-h))] flex-col md:min-h-[calc(100vh-var(--site-header-h))] md:min-h-[calc(100svh-var(--site-header-h))]">
         <PageHero
           title="Ottawa Appliance Repair Experts"
           subtitle="Same-day home appliance repair by certified technicians. Fast, affordable, professional and insured."
@@ -142,52 +142,57 @@ export function HomeSections() {
       <Section className="bg-[#fffdf5]">
         <div className="text-center">
           <Badge>We Fix Everything</Badge>
-          <h2 className="mt-4 text-4xl font-extrabold text-[#3b2b0f] md:text-5xl">Appliance Service</h2>
-          <p className="mx-auto mt-4 max-w-2xl text-sm leading-7 text-[#7e6b45] md:text-base">
+          <h2 className="mt-3 text-3xl font-extrabold text-[#3b2b0f] md:mt-4 md:text-5xl">Appliance Service</h2>
+          <p className="mx-auto mt-3 hidden max-w-2xl text-sm leading-7 text-[#7e6b45] sm:block md:mt-4 md:text-base">
             Specialized repair services across kitchen and laundry appliances. Fast diagnostics,
             certified technicians, and clear upfront communication.
           </p>
+          <p className="mx-auto mt-2 max-w-xs text-sm text-[#7e6b45] sm:hidden">
+            Same-day diagnostics. Certified techs. Clear quote first.
+          </p>
         </div>
-        <div className="mt-10 grid gap-6 sm:grid-cols-2 xl:grid-cols-4">
+        <div className="mt-6 grid grid-cols-3 gap-2.5 sm:mt-10 sm:grid-cols-2 sm:gap-6 xl:grid-cols-4">
           {servicePages.map((service) => (
-            <Card
+            <Link
               key={service.slug}
-              className="group overflow-hidden border-[#f1dfab] p-0 transition-all duration-300 hover:-translate-y-1 hover:border-[#d9b557] hover:shadow-2xl"
+              href={`/repair/${service.slug}`}
+              className="surface group flex flex-col overflow-hidden border-[#f1dfab] transition-all duration-300 hover:-translate-y-1 hover:border-[#d9b557] hover:shadow-2xl"
             >
-              <div className="relative flex aspect-[4/3] items-center justify-center overflow-hidden bg-gradient-to-b from-[#fff8df] to-[#f8ecc4] p-6">
+              <div className="relative flex aspect-square items-center justify-center overflow-hidden bg-gradient-to-b from-[#fff8df] to-[#f8ecc4] p-2.5 sm:aspect-[4/3] sm:p-6">
                 <Image
                   src={mediaByService[service.slug]}
                   alt={service.name}
                   width={900}
                   height={900}
-                  className="h-full w-full object-contain drop-shadow-[0_18px_18px_rgba(59,43,15,0.18)] transition-transform duration-300 group-hover:scale-105"
+                  sizes="(min-width: 1280px) 22vw, (min-width: 640px) 45vw, 30vw"
+                  className="h-full w-full object-contain drop-shadow-[0_10px_10px_rgba(59,43,15,0.18)] transition-transform duration-300 group-hover:scale-105 sm:drop-shadow-[0_18px_18px_rgba(59,43,15,0.18)]"
                 />
               </div>
-              <div className="space-y-3 p-5">
-                <h3 className="text-xl font-bold text-[#3b2b0f]">{service.name}</h3>
-                <ul className="space-y-1 text-xs text-[#7e6b45]">
+              <div className="flex flex-1 flex-col items-center justify-center px-1.5 py-2 text-center sm:items-start sm:space-y-3 sm:p-5 sm:text-left">
+                <h3 className="text-[0.8rem] font-bold leading-tight text-[#3b2b0f] sm:text-xl">
+                  {service.name.replace(/ Repair$/, "")}
+                  <span className="hidden sm:inline"> Repair</span>
+                </h3>
+                <ul className="hidden space-y-1 text-xs text-[#7e6b45] sm:block">
                   <li>• Same-day diagnostics</li>
                   <li>• Certified appliance techs</li>
                   <li>• Clear quote before repair</li>
                 </ul>
-                <Link
-                  href={`/repair/${service.slug}`}
-                  className="inline-flex rounded-full border border-[#e8c96b] bg-[#fff8df] px-4 py-2 text-sm font-semibold text-[#5f4714] transition hover:border-[#5f4714] hover:bg-[#f4c542] hover:text-[#2f2512]"
-                >
+                <span className="hidden rounded-full border border-[#e8c96b] bg-[#fff8df] px-4 py-2 text-sm font-semibold text-[#5f4714] transition group-hover:border-[#5f4714] group-hover:bg-[#f4c542] group-hover:text-[#2f2512] sm:inline-flex">
                   Learn more
-                </Link>
+                </span>
               </div>
-            </Card>
+            </Link>
           ))}
         </div>
       </Section>
 
-      <Section className="bg-gradient-to-br from-[#f8d36a] via-[#f4c542] to-[#e9b82f] py-16 text-[#2f2512]">
-        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+      <Section className="bg-gradient-to-br from-[#f8d36a] via-[#f4c542] to-[#e9b82f] py-9 text-[#2f2512] md:py-16">
+        <div className="grid grid-cols-2 gap-2.5 md:gap-4 xl:grid-cols-4">
           {values.map((item) => (
             <div
               key={item.title}
-              className="rounded-2xl border border-[#e0c06a] bg-[#fff6de] p-6 text-[#3b2b0f] shadow-[0_16px_30px_-20px_rgba(95,71,20,0.45)]"
+              className="rounded-2xl border border-[#e0c06a] bg-[#fff6de] p-3.5 text-[#3b2b0f] md:p-6 shadow-[0_16px_30px_-20px_rgba(95,71,20,0.45)]"
             >
               <svg
                 width="30"
@@ -198,12 +203,12 @@ export function HomeSections() {
                 strokeWidth="1.5"
                 strokeLinecap="round"
                 strokeLinejoin="round"
-                className="mb-4 opacity-85"
+                className="mb-2 h-6 w-6 opacity-85 md:mb-4 md:h-[30px] md:w-[30px]"
               >
                 <path d={item.icon} />
               </svg>
-              <h3 className="text-2xl font-extrabold">{item.title}</h3>
-              <p className="mt-3 text-sm leading-relaxed text-[#7e6b45]">{item.text}</p>
+              <h3 className="text-base font-extrabold md:text-2xl">{item.title}</h3>
+              <p className="mt-1.5 text-xs leading-snug text-[#7e6b45] md:mt-3 md:text-sm md:leading-relaxed">{item.text}</p>
             </div>
           ))}
         </div>
@@ -213,18 +218,18 @@ export function HomeSections() {
         <div className="grid gap-10 lg:grid-cols-[1.15fr_1fr]">
           <div>
             <Badge>Coverage</Badge>
-            <h2 className="mt-4 text-4xl font-extrabold text-[#3b2b0f] md:text-5xl">Areas We Service</h2>
+            <h2 className="mt-3 text-3xl font-extrabold text-[#3b2b0f] md:mt-4 md:text-5xl">Areas We Service</h2>
             <p className="mt-4 max-w-xl text-sm leading-7 text-[#7e6b45] md:text-base">
               We provide reliable appliance repair across Ottawa with fast dispatch windows and
               flexible appointment times.
             </p>
-            <div className="mt-8 grid gap-6 sm:grid-cols-2">
+            <div className="mt-5 grid grid-cols-2 gap-2.5 md:mt-8 md:gap-6">
               {Object.entries(serviceAreas).map(([region, cities]) => (
-                <div key={region} className="rounded-2xl border border-[#eedca7] bg-[#fff9e8] p-4">
-                  <h3 className="mb-2 text-lg font-bold text-[#5f4714]">{region}</h3>
-                  <ul className="space-y-1.5">
+                <div key={region} className="rounded-2xl border border-[#eedca7] bg-[#fff9e8] p-3 md:p-4">
+                  <h3 className="mb-1.5 text-sm font-bold text-[#5f4714] md:mb-2 md:text-lg">{region}</h3>
+                  <ul className="space-y-1 md:space-y-1.5">
                     {cities.map((city) => (
-                      <li key={city} className="flex items-start gap-2 text-sm text-[#7e6b45]">
+                      <li key={city} className="flex items-start gap-1.5 text-xs text-[#7e6b45] md:gap-2 md:text-sm">
                         <span className="mt-1 h-1.5 w-1.5 rounded-full bg-[#d6a52d]" />
                         {areaPageByName[city] ? (
                           <Link
@@ -247,7 +252,7 @@ export function HomeSections() {
             <iframe
               title="SuperFixMech Service Area Map"
               src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d719109.7820689518!2d-76.45964010968795!3d45.24733603797201!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x676a36eea2f1b8b3%3A0x6d15874565f8bace!2sSuper%20Fix%20Mechanical!5e0!3m2!1sen!2sca!4v1789079970161!5m2!1sen!2sca"
-              className="h-[480px] w-full border-0"
+              className="h-[260px] w-full border-0 md:h-[480px]"
               loading="lazy"
               allowFullScreen
               referrerPolicy="strict-origin-when-cross-origin"
@@ -259,13 +264,13 @@ export function HomeSections() {
       <Section className="bg-[#fffdf5]">
         <div className="text-center">
           <Badge>Reviews</Badge>
-          <h2 className="mt-4 text-4xl font-extrabold text-[#3b2b0f] md:text-5xl">
+          <h2 className="mt-3 text-3xl font-extrabold text-[#3b2b0f] md:mt-4 md:text-5xl">
             What Our Clients Are Saying
           </h2>
         </div>
-        <div className="mt-10 grid gap-5 md:grid-cols-3">
+        <div className="-mx-[4vw] mt-6 flex snap-x snap-mandatory gap-3 overflow-x-auto px-[4vw] pb-2 md:mx-0 md:mt-10 md:grid md:grid-cols-3 md:gap-5 md:overflow-visible md:px-0 md:pb-0">
           {testimonials.map((t) => (
-            <Card key={t.name} className="flex flex-col gap-4 border-[#f1dfab]">
+            <Card key={t.name} className="flex w-[82%] shrink-0 snap-center flex-col gap-3 border-[#f1dfab] md:w-auto md:shrink md:gap-4">
               <StarRating count={t.rating} />
               <p className="flex-1 text-sm leading-relaxed text-[#7e6b45]">&ldquo;{t.text}&rdquo;</p>
               <div className="pt-2">
@@ -277,15 +282,15 @@ export function HomeSections() {
         </div>
       </Section>
 
-      <Section className="bg-[#f4c542] py-16 text-[#2f2512]">
+      <Section className="bg-[#f4c542] py-9 text-[#2f2512] md:py-16">
         <div className="mx-auto max-w-3xl text-center">
-          <h2 className="text-4xl font-extrabold md:text-5xl">A Family Owned Business</h2>
-          <p className="mt-4 text-base leading-relaxed text-[#5f4714]">
+          <h2 className="text-3xl font-extrabold md:text-5xl">A Family Owned Business</h2>
+          <p className="mt-3 text-sm md:mt-4 md:text-base leading-relaxed text-[#5f4714]">
             We treat you like family ensuring quality work, professional service, affordable prices &amp; honesty. We are not satisfied until you are! High ethics and morals ensure a great experience for you and your family. We look forward to working with you and hope to service your appliance needs for years to come.
           </p>
           <Link
             href="/about"
-            className="mt-6 inline-flex rounded-full border border-[#e0c06a] bg-[#fff8df] px-6 py-3 text-sm font-semibold transition hover:bg-[#e9b82f] hover:text-[#2f2512]"
+            className="mt-4 inline-flex rounded-full border border-[#e0c06a] bg-[#fff8df] px-6 py-3 md:mt-6 text-sm font-semibold transition hover:bg-[#e9b82f] hover:text-[#2f2512]"
           >
             Learn more about us
           </Link>

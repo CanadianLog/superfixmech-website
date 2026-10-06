@@ -1,9 +1,11 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { JsonLd } from "@/components/seo/json-ld";
 import { CtaBand } from "@/components/sections/cta-band";
 import { Section } from "@/components/ui/section";
 import { articles, getArticle } from "@/lib/articles";
+import { breadcrumbSchema } from "@/lib/seo";
 import { company } from "@/lib/site-data";
 
 type Props = {
@@ -34,9 +36,12 @@ export default async function ArticlePage({ params }: Props) {
 
   return (
     <main>
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(articleSchema) }}
+      <JsonLd data={articleSchema} />
+      <JsonLd
+        data={breadcrumbSchema([
+          { name: "Blog", path: "/blog" },
+          { name: article.title, path: `/blog/${article.slug}` },
+        ])}
       />
       <Section className="py-12 md:py-16">
         <article className="mx-auto max-w-3xl">

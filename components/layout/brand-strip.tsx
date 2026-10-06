@@ -4,7 +4,8 @@ import Image from "next/image";
 import { cn } from "@/lib/utils";
 
 const brandLogos: Array<
-  { name: string; src: string; type: "icon" } | { name: string; type: "wordmark" }
+  | { name: string; src: string; type: "icon" }
+  | { name: string; type: "wordmark" }
 > = [
   { name: "Whirlpool", src: "/brand-logos/whirlpool.svg", type: "icon" },
   { name: "Samsung", src: "/brand-logos/samsung.svg", type: "icon" },
@@ -36,7 +37,10 @@ type BrandStripProps = {
   className?: string;
 };
 
-export function BrandStrip({ variant = "default", className }: BrandStripProps) {
+export function BrandStrip({
+  variant = "default",
+  className,
+}: BrandStripProps) {
   const doubled = [...brandLogos, ...brandLogos];
   const isHero = variant === "hero";
 
@@ -51,38 +55,47 @@ export function BrandStrip({ variant = "default", className }: BrandStripProps) 
       )}
     >
       <div className="brand-carousel-track">
-        {doubled.map((brand, index) => (
-          <div
-            key={`${brand.name}-${index}`}
-            className={cn(
-              "mx-4 flex shrink-0 items-center justify-center px-2 md:mx-5",
-              isHero ? "h-12 w-[144px] md:w-[160px]" : "h-11 w-[120px] md:w-[128px]",
-            )}
-          >
-            {brand.type === "icon" ? (
-              <Image
-                src={brand.src}
-                alt={brand.name}
-                width={104}
-                height={32}
-                className={cn(
-                  "object-contain grayscale opacity-85",
-                  isHero ? "h-9 w-[120px] md:h-10 md:w-[130px]" : "h-8 w-[104px]",
-                )}
-                unoptimized
-              />
-            ) : (
-              <span
-                className={cn(
-                  "font-extrabold uppercase tracking-[0.11em] text-[#5f4714]",
-                  isHero ? "text-base md:text-lg" : "text-sm",
-                )}
-              >
-                {brand.name}
-              </span>
-            )}
-          </div>
-        ))}
+        {doubled.map((brand, index) => {
+          // The list is repeated for a seamless loop; the copy is decorative only.
+          const isDuplicate = index >= brandLogos.length;
+          return (
+            <div
+              key={`${brand.name}-${index}`}
+              aria-hidden={isDuplicate || undefined}
+              className={cn(
+                "mx-4 flex shrink-0 items-center justify-center px-2 md:mx-5",
+                isHero
+                  ? "h-12 w-[144px] md:w-[160px]"
+                  : "h-11 w-[120px] md:w-[128px]",
+              )}
+            >
+              {brand.type === "icon" ? (
+                <Image
+                  src={brand.src}
+                  alt={isDuplicate ? "" : brand.name}
+                  width={104}
+                  height={32}
+                  className={cn(
+                    "object-contain grayscale opacity-85",
+                    isHero
+                      ? "h-9 w-[120px] md:h-10 md:w-[130px]"
+                      : "h-8 w-[104px]",
+                  )}
+                  unoptimized
+                />
+              ) : (
+                <span
+                  className={cn(
+                    "font-extrabold uppercase tracking-[0.11em] text-[#5f4714]",
+                    isHero ? "text-base md:text-lg" : "text-sm",
+                  )}
+                >
+                  {brand.name}
+                </span>
+              )}
+            </div>
+          );
+        })}
       </div>
     </div>
   );

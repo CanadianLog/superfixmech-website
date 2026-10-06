@@ -182,6 +182,9 @@ export default async function InstallationServicePage({ params }: Props) {
       faq={content.faq}
       faqTitle="Installation FAQs"
       heroImage={content.image}
+      path={`/installation/${slug}`}
+      parent={{ name: "Installation", path: "/installation" }}
+      serviceType="Appliance installation"
     />
   );
 }

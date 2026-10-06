@@ -11,6 +11,8 @@ type PageHeroProps = {
   mode?: "stacked" | "overlay" | "video";
   showCta?: boolean;
   className?: string;
+  /** Render the title as a <p> instead of <h1> when the page has its own H1. */
+  titleAsParagraph?: boolean;
 };
 
 export function PageHero({
@@ -21,7 +23,9 @@ export function PageHero({
   mode = "stacked",
   showCta = false,
   className,
+  titleAsParagraph = false,
 }: PageHeroProps) {
+  const Heading = titleAsParagraph ? "p" : "h1";
   if (mode === "video") {
     return (
       <section
@@ -83,7 +87,7 @@ export function PageHero({
     <section className={cn("overflow-hidden")}>
       <div className="bg-[#5f4714] py-10 text-center text-white md:py-14">
         <Container>
-          <h1 className="text-3xl font-extrabold tracking-tight md:text-5xl">{title}</h1>
+          <Heading className="font-[family-name:var(--font-heading)] text-3xl font-extrabold tracking-tight md:text-5xl">{title}</Heading>
           <p className="mx-auto mt-3 max-w-2xl text-sm text-white/90 md:text-base">{subtitle}</p>
           {showCta && (
             <Button href={ctaHref} variant="light" className="mt-5">

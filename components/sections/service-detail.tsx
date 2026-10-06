@@ -3,8 +3,10 @@ import { CtaBand } from "@/components/sections/cta-band";
 import { FaqList } from "@/components/sections/faq-list";
 import { PageHero } from "@/components/sections/page-hero";
 import { ServiceCommitment } from "@/components/sections/service-commitment";
+import { JsonLd } from "@/components/seo/json-ld";
 import { Badge } from "@/components/ui/badge";
 import { Section } from "@/components/ui/section";
+import { breadcrumbSchema, serviceSchema } from "@/lib/seo";
 
 type FaqItem = string | { question: string; answer: string };
 
@@ -16,6 +18,10 @@ type ServiceDetailProps = {
   faq: FaqItem[];
   faqTitle?: string;
   heroImage?: string;
+  /** Page path, e.g. /repair/fridge-repair. Enables Service + Breadcrumb schema. */
+  path: string;
+  parent: { name: string; path: string };
+  serviceType: string;
 };
 
 export function ServiceDetail({
@@ -26,10 +32,25 @@ export function ServiceDetail({
   faq,
   faqTitle,
   heroImage = "/stock/technician.jpg",
+  path,
+  parent,
+  serviceType,
 }: ServiceDetailProps) {
   return (
     <main>
+      <JsonLd
+        data={breadcrumbSchema([parent, { name: title, path }])}
+      />
+      <JsonLd
+        data={serviceSchema({
+          name: `${title} in Ottawa`,
+          path,
+          description: overview,
+          serviceType,
+        })}
+      />
       <PageHero
+        titleAsParagraph
         title={title.toUpperCase()}
         subtitle="Professional appliance support for homes and small businesses."
       />

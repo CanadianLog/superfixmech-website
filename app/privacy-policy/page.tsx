@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { PolicyContent } from "@/components/sections/policy-content";
 
 export const metadata: Metadata = {
+  robots: { index: false, follow: true },
   title: "Privacy Policy | SuperFix Mechanical",
   description:
     "How SuperFix Mechanical Inc. collects, uses, and protects your information, including SMS messaging consent.",

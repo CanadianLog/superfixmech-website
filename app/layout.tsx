@@ -4,7 +4,8 @@ import { Nunito_Sans, Sora } from "next/font/google";
 import { SiteFooter } from "@/components/layout/site-footer";
 import { SiteHeader } from "@/components/layout/site-header";
 import { HcpBookingModal } from "@/components/sections/hcp-booking-modal";
-import { company } from "@/lib/site-data";
+import { JsonLd } from "@/components/seo/json-ld";
+import { company, installationPages, servicePages } from "@/lib/site-data";
 import "./globals.css";
 
 const nunito = Nunito_Sans({
@@ -27,6 +28,17 @@ export const metadata: Metadata = {
     type: "website",
     locale: "en_CA",
     siteName: "SuperFix Mechanical",
+    images: [
+      {
+        url: "/superfix_logo.png",
+        width: 1262,
+        height: 597,
+        alt: "SuperFix Mechanical logo",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
     images: ["/superfix_logo.png"],
   },
 };
@@ -46,9 +58,10 @@ const localBusinessSchema = {
     "Appliance repair and installation for fridges, washers, dryers, dishwashers, ovens, cooktops, microwaves, and range hoods across Ottawa.",
   address: {
     "@type": "PostalAddress",
-    addressLocality: "Ottawa",
-    addressRegion: "ON",
-    addressCountry: "CA",
+    streetAddress: company.address.streetAddress,
+    addressLocality: company.address.locality,
+    addressRegion: company.address.region,
+    addressCountry: company.address.country,
   },
   areaServed: [
     "Ottawa",
@@ -64,6 +77,28 @@ const localBusinessSchema = {
     "Vanier",
     "Embrun",
   ].map((name) => ({ "@type": "Place", name })),
+  hasOfferCatalog: {
+    "@type": "OfferCatalog",
+    name: "Appliance repair and installation in Ottawa",
+    itemListElement: [
+      ...servicePages.map((service) => ({
+        "@type": "Offer",
+        itemOffered: {
+          "@type": "Service",
+          name: `${service.name} in Ottawa`,
+          url: `${company.url}/repair/${service.slug}`,
+        },
+      })),
+      ...installationPages.map((installation) => ({
+        "@type": "Offer",
+        itemOffered: {
+          "@type": "Service",
+          name: `${installation.name} in Ottawa`,
+          url: `${company.url}/installation/${installation.slug}`,
+        },
+      })),
+    ],
+  },
   hasMap: company.googleMaps,
   sameAs: company.social,
 };
@@ -79,10 +114,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={`${nunito.variable} ${sora.variable} antialiased`}>
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(localBusinessSchema) }}
-        />
+        <JsonLd data={localBusinessSchema} />
         <SiteHeader />
         {children}
         <SiteFooter />

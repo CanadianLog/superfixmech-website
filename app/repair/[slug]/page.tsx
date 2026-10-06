@@ -162,6 +162,9 @@ export default async function ServicePage({ params }: Props) {
       bullets={content.bullets}
       faq={content.faq}
       heroImage={`/service-photos/${slug}.jpg`}
+      path={`/repair/${slug}`}
+      parent={{ name: "Repair", path: "/repair" }}
+      serviceType="Appliance repair"
     />
   );
 }
