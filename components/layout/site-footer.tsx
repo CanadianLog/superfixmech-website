@@ -1,5 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
+import { CookieSettingsButton } from "@/components/layout/cookie-consent";
 import { Button } from "@/components/ui/button";
 import { Container } from "@/components/ui/container";
 import { serviceAreaPages } from "@/lib/service-areas";
@@ -84,6 +85,7 @@ export function SiteFooter() {
                   <Link className="hover:underline" href={item.href}>{item.label}</Link>
                 </li>
               ))}
+              <CookieSettingsButton />
             </ul>
           </div>
         </Container>

@@ -18,6 +18,14 @@ export const company = {
   ],
 };
 
+/** Default social share image (1200x630), used by Open Graph and Twitter cards. */
+export const ogImage = {
+  url: "/og-image.jpg",
+  width: 1200,
+  height: 630,
+  alt: "SuperFix Mechanical: appliance repair and installation in Ottawa. Call 613-366-7009.",
+};
+
 /** Update when site content meaningfully changes; used for sitemap lastmod. */
 export const siteLastUpdated = "2026-10-06";
 
