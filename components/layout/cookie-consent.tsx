@@ -4,7 +4,8 @@ import Link from "next/link";
 import Script from "next/script";
 import { useEffect, useState, useSyncExternalStore } from "react";
 
-const GA_ID = process.env.NEXT_PUBLIC_GA_ID;
+// GA4 measurement ID for superfixmech.ca; NEXT_PUBLIC_GA_ID overrides it (e.g. for testing).
+const GA_ID = process.env.NEXT_PUBLIC_GA_ID || "G-G8HPJ9QJ7Z";
 const STORAGE_KEY = "sfm-cookie-consent";
 export const OPEN_COOKIE_SETTINGS_EVENT = "sfm:open-cookie-settings";
 
@@ -46,8 +47,7 @@ function subscribe(listener: () => void) {
 }
 
 /**
- * Asks for consent before loading Google Analytics. Renders nothing unless
- * NEXT_PUBLIC_GA_ID is set at build time, since no other optional cookies are used.
+ * Asks for consent before loading Google Analytics, the only optional cookies on the site.
  */
 export function CookieConsent() {
   const choice = useSyncExternalStore(subscribe, readChoice, () => "pending" as const);
