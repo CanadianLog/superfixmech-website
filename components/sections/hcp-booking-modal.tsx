@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { HCP_LEAD_FORM_URL } from "@/components/sections/hcp-lead-form";
+import { HcpFormFrame } from "@/components/sections/hcp-form-frame";
 import { company } from "@/lib/site-data";
 
 // Links to these pages open the Housecall Pro form in a popup instead of navigating.
@@ -76,12 +76,7 @@ export function HcpBookingModal() {
           </button>
         </div>
         <div className="overflow-y-auto">
-          <iframe
-            title="Request an appointment with SuperFix Mechanical"
-            src={HCP_LEAD_FORM_URL}
-            className="block w-full border-0"
-            style={{ height: 820 }}
-          />
+          <HcpFormFrame />
         </div>
       </div>
     </div>

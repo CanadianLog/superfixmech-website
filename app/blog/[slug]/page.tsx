@@ -6,7 +6,7 @@ import { CtaBand } from "@/components/sections/cta-band";
 import { Section } from "@/components/ui/section";
 import { articles, getArticle } from "@/lib/articles";
 import { breadcrumbSchema } from "@/lib/seo";
-import { company } from "@/lib/site-data";
+import { company, ogImage } from "@/lib/site-data";
 
 type Props = {
   params: Promise<{ slug: string }>;
@@ -142,6 +142,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       description: article.description,
       url: `/blog/${article.slug}`,
       publishedTime: article.date,
+      images: [ogImage],
     },
   };
 }

@@ -2,10 +2,12 @@ import type { Metadata } from "next";
 import Script from "next/script";
 import { Nunito_Sans, Sora } from "next/font/google";
 import { SiteFooter } from "@/components/layout/site-footer";
+import { CookieConsent } from "@/components/layout/cookie-consent";
+import { MobileCtaBar } from "@/components/layout/mobile-cta-bar";
 import { SiteHeader } from "@/components/layout/site-header";
 import { HcpBookingModal } from "@/components/sections/hcp-booking-modal";
 import { JsonLd } from "@/components/seo/json-ld";
-import { company, installationPages, servicePages } from "@/lib/site-data";
+import { company, installationPages, ogImage, servicePages } from "@/lib/site-data";
 import "./globals.css";
 
 const nunito = Nunito_Sans({
@@ -28,18 +30,11 @@ export const metadata: Metadata = {
     type: "website",
     locale: "en_CA",
     siteName: "SuperFix Mechanical",
-    images: [
-      {
-        url: "/superfix_logo.png",
-        width: 1262,
-        height: 597,
-        alt: "SuperFix Mechanical logo",
-      },
-    ],
+    images: [ogImage],
   },
   twitter: {
     card: "summary_large_image",
-    images: ["/superfix_logo.png"],
+    images: [ogImage.url],
   },
 };
 
@@ -118,12 +113,16 @@ export default function RootLayout({
         <SiteHeader />
         {children}
         <SiteFooter />
+        <MobileCtaBar />
         <HcpBookingModal />
+        <CookieConsent />
         {tawkPropertyId && tawkWidgetId ? (
           <Script id="tawkto-widget" strategy="afterInteractive">
             {`
               var Tawk_API = Tawk_API || {};
               var Tawk_LoadStart = new Date();
+              // Lift the chat bubble above the sticky mobile Call/Book bar
+              Tawk_API.customStyle = { visibility: { mobile: { position: "br", xOffset: 12, yOffset: 84 } } };
               (function () {
                 var s1 = document.createElement("script");
                 var s0 = document.getElementsByTagName("script")[0];
