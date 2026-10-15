@@ -44,6 +44,10 @@ const values = [
   },
 ];
 
+// Housecall Pro reviews widget; reviews are managed in Housecall Pro.
+const HCP_REVIEWS_URL =
+  "https://client.housecallpro.com/reviews/widget/259ea32e-4046-4b70-9822-c67368fa06a9";
+
 const serviceAreas: Record<string, string[]> = {
   "Central Ottawa": [
     "Downtown Ottawa",
@@ -93,36 +97,6 @@ const serviceAreas: Record<string, string[]> = {
 const areaPageByName: Record<string, string> = Object.fromEntries(
   serviceAreaPages.map((area) => [area.name, area.slug]),
 );
-
-const testimonials = [
-  {
-    name: "Patrick R.",
-    text: "I reached out to Adam because my dryer wasn't working. He arrived promptly and performed a fantastic repair. He was a very pleasant person to deal with, and I highly recommend his services.",
-    rating: 5,
-  },
-  {
-    name: "Chris B.",
-    text: "Had an issue with our fridge not cooling properly and called superfix. They came out, found the problem pretty quickly and got it fixed. Fridge has been working great since. Really happy with the service.",
-    rating: 5,
-  },
-  {
-    name: "Sanjeev B.",
-    text: "Adam did a great job fixing our stove. He was quick to respond, showed up on time and had the issue figured out pretty fast. Now our large burner works again! Would definitely recommend them.",
-    rating: 5,
-  },
-];
-
-function StarRating({ count }: { count: number }) {
-  return (
-    <div className="flex gap-0.5">
-      {Array.from({ length: count }).map((_, i) => (
-        <svg key={i} width="16" height="16" viewBox="0 0 24 24" fill="#facc15">
-          <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
-        </svg>
-      ))}
-    </div>
-  );
-}
 
 export function HomeSections() {
   return (
@@ -268,17 +242,13 @@ export function HomeSections() {
             What Our Clients Are Saying
           </h2>
         </div>
-        <div className="-mx-[4vw] mt-6 flex snap-x snap-mandatory gap-3 overflow-x-auto px-[4vw] pb-2 md:mx-0 md:mt-10 md:grid md:grid-cols-3 md:gap-5 md:overflow-visible md:px-0 md:pb-0">
-          {testimonials.map((t) => (
-            <Card key={t.name} className="flex w-[82%] shrink-0 snap-center flex-col gap-3 border-[#f1dfab] md:w-auto md:shrink md:gap-4">
-              <StarRating count={t.rating} />
-              <p className="flex-1 text-sm leading-relaxed text-[#7e6b45]">&ldquo;{t.text}&rdquo;</p>
-              <div className="pt-2">
-                <p className="text-sm font-bold text-[#5f4714]">{t.name}</p>
-                <p className="text-xs uppercase tracking-[0.12em] text-[#9a8457]">Verified Customer</p>
-              </div>
-            </Card>
-          ))}
+        <div className="mx-auto mt-6 max-w-5xl overflow-hidden rounded-2xl border border-[#f1dfab] bg-white md:mt-10">
+          <iframe
+            title="SuperFix Mechanical customer reviews"
+            src={HCP_REVIEWS_URL}
+            loading="lazy"
+            className="block h-[900px] w-full border-0 md:h-[1000px]"
+          />
         </div>
       </Section>
 
