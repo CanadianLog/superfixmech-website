@@ -5,7 +5,7 @@ const nextConfig: NextConfig = {
   turbopack: { root: __dirname },
   outputFileTracingRoot: __dirname,
   experimental: {
-    serverActions: { bodySizeLimit: "2mb" },
+    serverActions: { bodySizeLimit: "25mb" },
   },
 };
 

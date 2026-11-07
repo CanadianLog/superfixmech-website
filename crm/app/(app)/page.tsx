@@ -77,6 +77,7 @@ export default async function Dashboard({ searchParams }: { searchParams: Promis
             <form action={loadDemoData}>
               <button className="btn-ghost">Load sample data</button>
             </form>
+            <Link href="/import" className="btn-ghost">Import from Housecall Pro</Link>
             <Link href="/customers/new" className="btn-primary">Add a customer</Link>
           </div>
         </div>

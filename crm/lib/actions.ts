@@ -868,3 +868,38 @@ export async function syncAllToQbo(): Promise<FormState> {
   revalidatePath("/", "layout");
   return errors.length ? { error: `Sent ${ok}. Problems: ${errors.join(" · ")}` } : { ok: `Sent ${ok} invoice${ok === 1 ? "" : "s"} to QuickBooks.` };
 }
+
+/* ---------- Housecall Pro import ---------- */
+
+export async function importHousecallPro(_: FormState, fd: FormData): Promise<FormState> {
+  await requireUser(["admin"]);
+  const { importCustomers, importJobs, importPricebook } = await import("./import-hcp");
+  const files: [string, string][] = [
+    ["pricebook", "Parts & services"],
+    ["customers", "Customers"],
+    ["jobs", "Jobs"],
+  ];
+  const lines: string[] = [];
+  const warnings: string[] = [];
+  let any = false;
+  for (const [key, label] of files) {
+    const file = fd.get(key);
+    if (!(file instanceof File) || file.size === 0) continue;
+    any = true;
+    if (/\.(xlsx?|numbers)$/i.test(file.name)) {
+      return { error: `${file.name} is an Excel file. Open it in Excel or Google Sheets, choose File → Save As (or Download) → CSV, and upload the .csv instead.` };
+    }
+    const text = await file.text();
+    try {
+      const r =
+        key === "customers" ? importCustomers(text) : key === "jobs" ? importJobs(text, timeZone()) : importPricebook(text);
+      lines.push(`${label}: ${r.created} added, ${r.updated} matched/updated, ${r.skipped} skipped`);
+      warnings.push(...r.warnings);
+    } catch (e) {
+      return { error: `Couldn't import ${file.name}: ${(e as Error).message}. Nothing from that file was saved.` };
+    }
+  }
+  if (!any) return { error: "Choose at least one CSV file to import." };
+  revalidatePath("/", "layout");
+  return { ok: ["Import finished.", ...lines, ...warnings.map((w) => `⚠ ${w}`)].join("\n") };
+}

@@ -30,6 +30,20 @@ npm run dev
 
 Open http://localhost:3100. The first visit asks you to create the owner account. To look around, use **Load sample data** on the dashboard.
 
+## Bring your data over from Housecall Pro
+
+Sign in as an admin and open **Settings → Import from Housecall Pro** (or go to `/import`). That page walks through each step:
+
+1. In Housecall Pro: **Customers → Actions → Export**, then **Jobs → Actions → Export**. Each CSV arrives by email. Optionally, also export the **Price book**.
+2. Add your technicians on the **Team** page, using the same names they had in Housecall Pro.
+3. Upload the CSV files. Customers are matched so nobody is duplicated, and importing the same file twice is safe. Completed jobs come over with an invoice and their recorded payment, so balances carry over.
+
+Excel (.xlsx) files need to be saved as CSV first.
+
+## Hosting on Render (easiest)
+
+The repository has a `render.yaml` blueprint. On https://render.com choose **New → Blueprint** and pick this repository. It creates the CRM web service with a 1 GB persistent disk for the database. The marketing website is not affected. Once it's live, open the address Render gives you to create the owner account. To use your own address (e.g. `crm.superfixmech.ca`), add it under the service's **Custom Domains** in Render.
+
 ## Run it for real
 
 The app is a normal Node server with a single database file. Any host that runs Node and keeps a **persistent disk** works: a small VPS, Render or Railway with a volume, Fly.io with a volume, or a computer in the office.

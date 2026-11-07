@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { requireUser } from "@/lib/auth";
 import { get, getSettings } from "@/lib/db";
 import { appOrigin } from "@/lib/origin";
@@ -30,7 +31,7 @@ export default async function SettingsPage({ searchParams }: { searchParams: Pro
 });`;
   return (
     <div className="mx-auto max-w-4xl">
-      <PageHeader title="Settings" />
+      <PageHeader title="Settings" actions={<Link href="/import" className="btn-ghost">Import from Housecall Pro</Link>} />
       <ActionForm action={saveSettings} className="space-y-6">
         <Card title="Company (shown on estimates and invoices)">
           <div className="grid gap-4 sm:grid-cols-2">

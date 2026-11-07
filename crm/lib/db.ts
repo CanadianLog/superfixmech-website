@@ -207,6 +207,10 @@ const MIGRATIONS: [table: string, column: string, definition: string][] = [
   ["invoices", "qbo_id", "TEXT"],
   ["invoices", "qbo_synced_at", "TEXT"],
   ["payments", "qbo_id", "TEXT"],
+  // IDs from the old system (Housecall Pro), so re-importing the same file never creates duplicates.
+  ["customers", "external_id", "TEXT"],
+  ["jobs", "external_id", "TEXT"],
+  ["pricebook", "external_id", "TEXT"],
 ];
 
 function migrate(db: DatabaseSync) {
