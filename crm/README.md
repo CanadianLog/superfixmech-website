@@ -30,6 +30,15 @@ npm run dev
 
 Open http://localhost:3100. The first visit asks you to create the owner account. To look around, use **Load sample data** on the dashboard.
 
+## Finishing a job, invoices, receipts and Google reviews
+
+- On a job, tap **✓ Job finished**. The job is marked complete, an invoice is created from its line items, and a **Checkout** panel opens:
+  1. **Send invoice** by text and/or email.
+  2. **Payment & receipt**: pick how they paid (e-Transfer, credit card, cash or cheque), then the receipt is sent by text and/or email. Each payment has its own receipt page.
+  3. **Google review request**: sent automatically after the job is finished (default: 60 minutes later, never between 8pm and 9am). You can send it right away or cancel it from the job.
+- Set up sending under **Settings → Texts & email** (Twilio for texts, your mailbox such as Gmail for email) and **Settings → Google reviews** (paste your Google review link). Until texting or email is set up, the buttons open your phone's own texting or email app with the message already written.
+- Customers who shouldn't get review requests can be marked on their customer page. Customers who reply STOP to a text are blocked by Twilio.
+
 ## Bring your data over from Housecall Pro
 
 Sign in as an admin and open **Settings → Import from Housecall Pro** (or go to `/import`). That page walks through each step:

@@ -7,6 +7,7 @@ import { loadDemoData, rotateBookingKey, saveSettings } from "@/lib/actions";
 import { Card, Field, PageHeader } from "@/components/ui";
 import { ActionForm, SubmitButton } from "@/components/forms";
 import { QuickBooksCard } from "@/components/quickbooks-card";
+import { MessagingCard, ReviewCard } from "@/components/messaging-cards";
 
 export const metadata = { title: "Settings" };
 
@@ -59,6 +60,8 @@ export default async function SettingsPage({ searchParams }: { searchParams: Pro
         <div className="flex justify-end"><SubmitButton>Save settings</SubmitButton></div>
       </ActionForm>
 
+      <MessagingCard s={s} />
+      <ReviewCard s={s} />
       <QuickBooksCard origin={origin} status={qbo} />
 
       <Card title="Website booking requests" className="mt-6">

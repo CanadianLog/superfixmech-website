@@ -46,6 +46,15 @@ export function ActionForm({
       {state?.ok && (
         <div role="status" className="mb-4 whitespace-pre-line rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-800">
           {state.ok}
+          {!!state.links?.length && (
+            <div className="mt-2 flex flex-wrap gap-2">
+              {state.links.map((l) => (
+                <a key={l.href} href={l.href} className="btn-dark btn-sm">
+                  {l.label}
+                </a>
+              ))}
+            </div>
+          )}
         </div>
       )}
       {children}

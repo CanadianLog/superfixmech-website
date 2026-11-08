@@ -19,6 +19,8 @@ import type { JobStatus, LineItemInput, User } from "./types";
 import { JOB_STATUSES } from "./types";
 import { seedDemoData } from "./seed";
 import * as qbo from "./quickbooks";
+import * as msg from "./messaging";
+import { appOrigin } from "./origin";
 
 /* ---------- helpers ---------- */
 
@@ -44,7 +46,8 @@ function taxRateField(fd: FormData): number | null {
   return Number.isFinite(n) && n >= 0 && n <= 100 ? n : null;
 }
 
-export type FormState = { error?: string; ok?: string } | undefined;
+/** links: fallback buttons that open the phone's own text/email app with the message pre-written. */
+export type FormState = { error?: string; ok?: string; links?: { label: string; href: string }[] } | undefined;
 
 function logActivity(opts: { customerId?: number | null; jobId?: number | null; userId?: number | null; kind?: string; body: string }) {
   run(
@@ -157,7 +160,7 @@ export async function saveCustomer(_: FormState, fd: FormData): Promise<FormStat
 
   let customerId: number;
   if (id) {
-    run(`UPDATE customers SET ${fields.map((f) => `${f} = ?`).join(", ")} WHERE id = ?`, ...values, id);
+    run(`UPDATE customers SET ${fields.map((f) => `${f} = ?`).join(", ")}, no_review = ? WHERE id = ?`, ...values, fd.get("no_review") ? 1 : 0, id);
     customerId = id;
   } else {
     customerId = tx(() => {
@@ -362,6 +365,15 @@ export async function saveJobItems(_: FormState, fd: FormData): Promise<FormStat
   tx(() => {
     replaceItems("job", id, parseItems(fd));
     run("UPDATE jobs SET tax_rate = ? WHERE id = ?", taxRateField(fd), id);
+    // A draft invoice with no payments follows the job's line items, so finishing then editing stays consistent.
+    const draft = get<{ id: number }>(
+      "SELECT id FROM invoices WHERE job_id = ? AND status = 'draft' AND NOT EXISTS (SELECT 1 FROM payments p WHERE p.invoice_id = invoices.id)",
+      id,
+    );
+    if (draft) {
+      copyItems("job", id, "invoice", draft.id);
+      run("UPDATE invoices SET tax_rate = ? WHERE id = ?", taxRateField(fd), draft.id);
+    }
   });
   revalidatePath(`/jobs/${id}`);
   return { ok: "Line items saved." };
@@ -603,15 +615,19 @@ export async function recordPayment(_: FormState, fd: FormData): Promise<FormSta
   if (inv.status === "void") return { error: "This invoice is void." };
   const amount = toCents(str(fd, "amount"));
   if (amount <= 0) return { error: "Enter an amount greater than zero." };
-  tx(() => {
-    run(
-      "INSERT INTO payments (invoice_id, amount_cents, method, reference, paid_on, recorded_by) VALUES (?, ?, ?, ?, ?, ?)",
+  const method = str(fd, "method");
+  if (!method) return { error: "How did the customer pay? Pick e-Transfer, credit card, cash or cheque." };
+  const paymentToken = randomToken();
+  const paymentId = tx(() => {
+    const { id: pid } = run(
+      "INSERT INTO payments (invoice_id, amount_cents, method, reference, paid_on, recorded_by, token) VALUES (?, ?, ?, ?, ?, ?, ?)",
       invoiceId,
       amount,
-      str(fd, "method") || "card",
+      method,
       str(fd, "reference"),
       str(fd, "paid_on") || today(),
       user.id,
+      paymentToken,
     );
     if (inv.status === "draft") run("UPDATE invoices SET status = 'sent' WHERE id = ?", invoiceId);
     logActivity({
@@ -619,8 +635,9 @@ export async function recordPayment(_: FormState, fd: FormData): Promise<FormSta
       jobId: inv.job_id,
       userId: user.id,
       kind: "payment",
-      body: `Payment of $${(amount / 100).toFixed(2)} (${str(fd, "method") || "card"}) on invoice #${inv.number}`,
+      body: `Payment of $${(amount / 100).toFixed(2)} (${msg.METHOD_LABEL[method] ?? method}) on invoice #${inv.number}`,
     });
+    return pid;
   });
   let note = "";
   const synced = get<{ qbo_id: string | null }>("SELECT qbo_id FROM invoices WHERE id = ?", invoiceId);
@@ -632,8 +649,17 @@ export async function recordPayment(_: FormState, fd: FormData): Promise<FormSta
       note = ` Not sent to QuickBooks: ${(e as Error).message}`;
     }
   }
+  // Receipt
+  const channels = (["sms", "email"] as const).filter((c) => fd.get(`receipt_${c}`));
+  let receiptNote = "";
+  let links: { label: string; href: string }[] = [];
+  if (channels.length) {
+    const r = await sendDocument({ kind: "receipt", invoiceId, paymentId, channels });
+    receiptNote = r.note;
+    links = r.links;
+  }
   revalidatePath("/", "layout");
-  return { ok: `Payment recorded.${note}` };
+  return { ok: `Payment recorded.${receiptNote}${note}`, links };
 }
 
 export async function deletePayment(fd: FormData) {
@@ -902,4 +928,248 @@ export async function importHousecallPro(_: FormState, fd: FormData): Promise<Fo
   if (!any) return { error: "Choose at least one CSV file to import." };
   revalidatePath("/", "layout");
   return { ok: ["Import finished.", ...lines, ...warnings.map((w) => `⚠ ${w}`)].join("\n") };
+}
+
+/* ---------- job finished, invoices, receipts, review requests ---------- */
+
+/** Builds and sends an invoice or receipt by text and/or email; falls back to pre-written links. */
+async function sendDocument(opts: {
+  kind: "invoice" | "receipt";
+  invoiceId: number;
+  paymentId?: number;
+  channels: readonly ("sms" | "email")[];
+}): Promise<{ note: string; links: { label: string; href: string }[]; error?: string }> {
+  const s = getSettings();
+  const inv = get<{ id: number; number: number; token: string; customer_id: number; job_id: number | null }>(
+    "SELECT id, number, token, customer_id, job_id FROM invoices WHERE id = ?",
+    opts.invoiceId,
+  );
+  if (!inv) return { note: "", links: [], error: "Invoice not found." };
+  const c = get<{ id: number; first_name: string; last_name: string; company: string; email: string; phone: string }>(
+    "SELECT * FROM customers WHERE id = ?",
+    inv.customer_id,
+  )!;
+  const origin = await appOrigin();
+  const { getInvoice } = await import("./data");
+  const full = getInvoice(inv.id)!;
+  let vars: Record<string, string> = { ...msg.baseVars(c), invoice_number: String(inv.number) };
+  if (opts.kind === "invoice") {
+    vars = { ...vars, amount: msg.amountVar(Math.max(0, full.balance_cents) || full.total_cents), link: `${origin}/p/i/${inv.token}` };
+  } else {
+    const p = get<{ amount_cents: number; method: string; token: string | null }>("SELECT amount_cents, method, token FROM payments WHERE id = ?", opts.paymentId ?? 0);
+    if (!p) return { note: "", links: [], error: "Payment not found." };
+    vars = { ...vars, amount: msg.amountVar(p.amount_cents), method: msg.METHOD_LABEL[p.method] ?? p.method, link: `${origin}/p/r/${p.token}` };
+  }
+  const subject = opts.kind === "invoice" ? `Invoice #${inv.number} from ${s.company_name}` : `Receipt for invoice #${inv.number} – ${s.company_name}`;
+  const smsBody = msg.fill(opts.kind === "invoice" ? s.tpl_invoice_sms : s.tpl_receipt_sms, vars);
+  const emailBody = msg.fill(opts.kind === "invoice" ? s.tpl_invoice_email : s.tpl_receipt_email, vars);
+
+  const sent: string[] = [];
+  const problems: string[] = [];
+  const links: { label: string; href: string }[] = [];
+  const word = opts.kind === "invoice" ? "invoice" : "receipt";
+
+  for (const ch of opts.channels) {
+    if (ch === "sms") {
+      if (!c.phone) {
+        problems.push("no mobile number on file");
+        continue;
+      }
+      if (msg.smsConfigured(s)) {
+        const r = await msg.queueMessage({ kind: opts.kind, channel: "sms", recipient: c.phone, body: smsBody, customerId: c.id, jobId: inv.job_id, invoiceId: inv.id });
+        if (r.ok) sent.push(`texted to ${c.phone}`);
+        else problems.push(`text failed: ${r.error}`);
+      } else {
+        const to = msg.toE164(c.phone) ?? c.phone;
+        links.push({ label: `Text ${word} from my phone`, href: `sms:${to}?&body=${encodeURIComponent(smsBody)}` });
+      }
+    } else {
+      if (!c.email) {
+        problems.push("no email on file");
+        continue;
+      }
+      if (msg.emailConfigured(s)) {
+        const r = await msg.queueMessage({ kind: opts.kind, channel: "email", recipient: c.email, subject, body: emailBody, customerId: c.id, jobId: inv.job_id, invoiceId: inv.id });
+        if (r.ok) sent.push(`emailed to ${c.email}`);
+        else problems.push(`email failed: ${r.error}`);
+      } else {
+        links.push({ label: `Email ${word} from my email app`, href: `mailto:${c.email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(emailBody)}` });
+      }
+    }
+  }
+  const label = opts.kind === "invoice" ? "Invoice" : "Receipt";
+  const parts = [
+    sent.length ? ` ${label} ${sent.join(" and ")}.` : "",
+    problems.length ? ` ${label} not sent: ${problems.join("; ")}.` : "",
+    links.length ? ` Tap below to send it yourself (automatic sending isn't set up yet).` : "",
+  ];
+  return { note: parts.join(""), links };
+}
+
+export async function finishJob(fd: FormData) {
+  const user = await requireUser();
+  const id = num(fd, "id")!;
+  if (!canTouchJob(user, id)) redirect(`/jobs/${id}`);
+  const job = getJob(id);
+  if (!job) redirect("/jobs");
+  const s = getSettings();
+  const now = new Date().toISOString();
+  tx(() => {
+    run(
+      "UPDATE jobs SET status = 'completed', completed_at = ?, started_at = COALESCE(started_at, ?) WHERE id = ?",
+      now,
+      now,
+      id,
+    );
+    logActivity({ customerId: job.customer_id, jobId: id, userId: user.id, body: "Job finished" });
+    // Make sure there's an invoice ready to send.
+    if (!get("SELECT id FROM invoices WHERE job_id = ? AND status != 'void'", id)) {
+      const issued = today();
+      const number = nextNumber("invoices", 2001);
+      const { id: invId } = run(
+        "INSERT INTO invoices (number, customer_id, job_id, status, token, issued_on, due_on, notes, tax_rate) VALUES (?, ?, ?, 'draft', ?, ?, ?, ?, ?)",
+        number,
+        job.customer_id,
+        id,
+        randomToken(),
+        issued,
+        addDays(issued, parseInt(s.invoice_terms_days || "0", 10)),
+        s.invoice_footer || "",
+        job.tax_rate,
+      );
+      copyItems("job", id, "invoice", invId);
+      logActivity({ customerId: job.customer_id, jobId: id, userId: user.id, body: `Invoice #${number} created` });
+    }
+  });
+  const review = msg.scheduleReviewRequest(id);
+  if (review) logActivity({ customerId: job.customer_id, jobId: id, kind: "event", body: review });
+  revalidatePath("/", "layout");
+  redirect(`/jobs/${id}#checkout`);
+}
+
+export async function sendInvoice(_: FormState, fd: FormData): Promise<FormState> {
+  const user = await requireUser();
+  const invoiceId = num(fd, "invoice_id")!;
+  const inv = get<{ job_id: number | null; status: string; customer_id: number; number: number }>(
+    "SELECT job_id, status, customer_id, number FROM invoices WHERE id = ?",
+    invoiceId,
+  );
+  if (!inv) return { error: "Invoice not found." };
+  if (!isOffice(user) && !(inv.job_id && canTouchJob(user, inv.job_id))) return { error: "Not allowed." };
+  if (inv.status === "void") return { error: "This invoice is void." };
+  const channels = (["sms", "email"] as const).filter((c) => fd.get(c));
+  if (!channels.length) return { error: "Choose text, email or both." };
+  const r = await sendDocument({ kind: "invoice", invoiceId, channels });
+  if (r.error) return { error: r.error };
+  if (inv.status === "draft") run("UPDATE invoices SET status = 'sent' WHERE id = ?", invoiceId);
+  logActivity({ customerId: inv.customer_id, jobId: inv.job_id, userId: user.id, body: `Invoice #${inv.number} marked sent` });
+  revalidatePath("/", "layout");
+  return { ok: r.note.trim() || "Invoice ready to send.", links: r.links };
+}
+
+export async function sendReviewNow(_: FormState, fd: FormData): Promise<FormState> {
+  const user = await requireUser();
+  const jobId = num(fd, "job_id")!;
+  if (!canTouchJob(user, jobId)) return { error: "Not allowed." };
+  const s = getSettings();
+  if (!s.google_review_url) return { error: "Add your Google review link in Settings → Google reviews first." };
+  const job = get<{ customer_id: number }>("SELECT customer_id FROM jobs WHERE id = ?", jobId);
+  const c = job && get<{ id: number; first_name: string; last_name: string; company: string; email: string; phone: string }>("SELECT * FROM customers WHERE id = ?", job.customer_id);
+  if (!c) return { error: "Customer not found." };
+  run("UPDATE messages SET status = 'canceled' WHERE job_id = ? AND kind = 'review' AND status = 'queued'", jobId);
+  const body = msg.fill(s.tpl_review_sms, msg.baseVars(c));
+  if (c.phone && msg.toE164(c.phone)) {
+    if (msg.smsConfigured(s)) {
+      const r = await msg.queueMessage({ kind: "review", channel: "sms", recipient: c.phone, body, customerId: c.id, jobId });
+      revalidatePath(`/jobs/${jobId}`);
+      return r.ok ? { ok: `Review request texted to ${c.phone}.` } : { error: `Text failed: ${r.error}` };
+    }
+    run(
+      "INSERT INTO messages (kind, channel, customer_id, job_id, recipient, body, status, send_after, sent_at) VALUES ('review','sms',?,?,?,?, 'sent', ?, ?)",
+      c.id,
+      jobId,
+      c.phone,
+      body,
+      new Date().toISOString(),
+      new Date().toISOString(),
+    );
+    revalidatePath(`/jobs/${jobId}`);
+    return { ok: "Tap below to text the review request from your phone.", links: [{ label: "Text review request", href: `sms:${msg.toE164(c.phone)}?&body=${encodeURIComponent(body)}` }] };
+  }
+  if (c.email) {
+    const emailBody = msg.fill(s.tpl_review_email, msg.baseVars(c));
+    const subject = `How did we do? – ${s.company_name}`;
+    if (msg.emailConfigured(s)) {
+      const r = await msg.queueMessage({ kind: "review", channel: "email", recipient: c.email, subject, body: emailBody, customerId: c.id, jobId });
+      revalidatePath(`/jobs/${jobId}`);
+      return r.ok ? { ok: `Review request emailed to ${c.email}.` } : { error: `Email failed: ${r.error}` };
+    }
+    return { ok: "Tap below to email the review request.", links: [{ label: "Email review request", href: `mailto:${c.email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(emailBody)}` }] };
+  }
+  return { error: "This customer has no mobile number or email on file." };
+}
+
+export async function cancelReview(fd: FormData) {
+  const user = await requireUser();
+  const jobId = num(fd, "job_id")!;
+  if (canTouchJob(user, jobId)) run("UPDATE messages SET status = 'canceled' WHERE job_id = ? AND kind = 'review' AND status = 'queued'", jobId);
+  done(`/jobs/${jobId}#checkout`);
+}
+
+const MESSAGING_SETTINGS = ["twilio_sid", "twilio_from", "smtp_host", "smtp_port", "smtp_user", "smtp_from_name"];
+const SECRET_SETTINGS = ["twilio_token", "smtp_pass"];
+const REVIEW_SETTINGS = ["google_review_url", "review_delay_minutes", "review_cooldown_days", "tpl_review_sms", "tpl_review_email", "tpl_invoice_sms", "tpl_invoice_email", "tpl_receipt_sms", "tpl_receipt_email"];
+
+export async function saveMessagingSettings(_: FormState, fd: FormData): Promise<FormState> {
+  await requireUser(["admin"]);
+  for (const k of MESSAGING_SETTINGS) if (fd.has(k)) run("UPDATE settings SET value = ? WHERE key = ?", str(fd, k), k);
+  for (const k of SECRET_SETTINGS) if (str(fd, k)) run("UPDATE settings SET value = ? WHERE key = ?", str(fd, k), k);
+  if (str(fd, "twilio_from") && !msg.toE164(str(fd, "twilio_from"))) return { error: "The Twilio number should look like +16135551234." };
+  if (str(fd, "twilio_from")) run("UPDATE settings SET value = ? WHERE key = 'twilio_from'", msg.toE164(str(fd, "twilio_from"))!);
+  revalidatePath("/settings");
+  return { ok: "Saved. Use “Send a test” to check it works." };
+}
+
+export async function saveReviewSettings(_: FormState, fd: FormData): Promise<FormState> {
+  await requireUser(["admin"]);
+  const url = str(fd, "google_review_url");
+  if (url && !/^https:\/\//.test(url)) return { error: "The review link should start with https://" };
+  for (const k of REVIEW_SETTINGS) if (fd.has(k)) run("UPDATE settings SET value = ? WHERE key = ?", str(fd, k), k);
+  run("UPDATE settings SET value = ? WHERE key = 'review_auto'", fd.get("review_auto") ? "1" : "0");
+  revalidatePath("/settings");
+  return { ok: "Saved." };
+}
+
+export async function sendTestMessage(_: FormState, fd: FormData): Promise<FormState> {
+  const me = await requireUser(["admin"]);
+  const channel = str(fd, "channel") === "email" ? "email" : "sms";
+  const to = str(fd, "to");
+  if (!to) return { error: channel === "sms" ? "Enter your mobile number." : "Enter your email address." };
+  const s = getSettings();
+  if (channel === "sms" && !msg.smsConfigured(s)) return { error: "Save your Twilio details first." };
+  if (channel === "email" && !msg.emailConfigured(s)) return { error: "Save your email details first." };
+  const r = await msg.queueMessage({
+    kind: "test",
+    channel,
+    recipient: to,
+    subject: `Test from ${s.company_name} CRM`,
+    body: `This is a test message from your ${s.company_name} CRM, sent by ${me.name}. If you got this, it works!`,
+  });
+  return r.ok ? { ok: `Test ${channel === "sms" ? "text" : "email"} sent to ${to}.` } : { error: r.error };
+}
+
+export async function sendReceipt(_: FormState, fd: FormData): Promise<FormState> {
+  const user = await requireUser();
+  const paymentId = num(fd, "payment_id")!;
+  const p = get<{ invoice_id: number; token: string | null }>("SELECT invoice_id, token FROM payments WHERE id = ?", paymentId);
+  if (!p) return { error: "Payment not found." };
+  const inv = get<{ job_id: number | null }>("SELECT job_id FROM invoices WHERE id = ?", p.invoice_id);
+  if (!isOffice(user) && !(inv?.job_id && canTouchJob(user, inv.job_id))) return { error: "Not allowed." };
+  if (!p.token) run("UPDATE payments SET token = ? WHERE id = ?", randomToken(), paymentId);
+  const channels = (["sms", "email"] as const).filter((c) => fd.get(c));
+  if (!channels.length) return { error: "Choose text, email or both." };
+  const r = await sendDocument({ kind: "receipt", invoiceId: p.invoice_id, paymentId, channels });
+  if (r.error) return { error: r.error };
+  revalidatePath("/", "layout");
+  return { ok: r.note.trim() || "Receipt ready to send.", links: r.links };
 }

@@ -3,9 +3,11 @@ import { notFound } from "next/navigation";
 import { requireUser } from "@/lib/auth";
 import { getSettings, get } from "@/lib/db";
 import { getCustomer, getInvoice, invoicePayments, lineItems, listPricebook, rateFor, timeZone, today } from "@/lib/data";
-import { centsToInput, customerName, fmtDate, fmtStamp, money, PAYMENT_METHODS } from "@/lib/format";
+import { customerName, fmtDate, fmtStamp, money } from "@/lib/format";
 import { appOrigin } from "@/lib/origin";
-import { deletePayment, recordPayment, saveInvoice, setInvoiceStatus, syncInvoiceToQbo } from "@/lib/actions";
+import { deletePayment, saveInvoice, setInvoiceStatus, syncInvoiceToQbo } from "@/lib/actions";
+import { emailConfigured, smsConfigured } from "@/lib/messaging";
+import { PaymentForm, ReceiptForm, SendInvoiceForm } from "@/components/checkout";
 import { qboConfig } from "@/lib/quickbooks";
 import { Card, Field, PageHeader, StatusBadge } from "@/components/ui";
 import { ActionForm, ConfirmButton, CopyButton, SubmitButton } from "@/components/forms";
@@ -79,20 +81,15 @@ export default async function InvoicePage({ params }: { params: Promise<{ id: st
             </dl>
           </Card>
 
+          {!locked && (
+            <Card title="Send invoice">
+              <SendInvoiceForm invoice={inv} phone={c.phone} email={c.email} smsReady={smsConfigured()} emailReady={emailConfigured()} />
+            </Card>
+          )}
+
           {!locked && inv.balance_cents > 0 && (
-            <Card title="Record a payment">
-              <ActionForm action={recordPayment} className="space-y-3">
-                <input type="hidden" name="invoice_id" value={inv.id} />
-                <Field label="Amount"><input className="input" name="amount" inputMode="decimal" defaultValue={centsToInput(inv.balance_cents)} required /></Field>
-                <div className="grid grid-cols-2 gap-3">
-                  <Field label="Method">
-                    <select className="input" name="method">{PAYMENT_METHODS.map((m) => <option key={m} value={m}>{m[0].toUpperCase() + m.slice(1)}</option>)}</select>
-                  </Field>
-                  <Field label="Date"><input className="input" type="date" name="paid_on" defaultValue={today()} /></Field>
-                </div>
-                <Field label="Reference" hint="Cheque #, last 4 digits, e-transfer ref…"><input className="input" name="reference" /></Field>
-                <SubmitButton className="btn-primary w-full">Record payment</SubmitButton>
-              </ActionForm>
+            <Card title="Record payment & send receipt">
+              <PaymentForm invoice={inv} phone={c.phone} email={c.email} smsReady={smsConfigured()} emailReady={emailConfigured()} today={today()} />
             </Card>
           )}
 
@@ -115,7 +112,7 @@ export default async function InvoicePage({ params }: { params: Promise<{ id: st
                   <li key={p.id} className="flex items-start justify-between gap-2">
                     <div>
                       <div className="font-semibold tabular-nums">{money(p.amount_cents)}</div>
-                      <div className="text-xs capitalize text-stone-500">{p.method}{p.reference ? ` · ${p.reference}` : ""} · {fmtDate(p.paid_on)}</div>
+                      <div className="text-xs capitalize text-stone-500">{p.method === "card" ? "credit card" : p.method}{p.reference ? ` · ${p.reference}` : ""} · {fmtDate(p.paid_on)}{p.token && <> · <Link className="link normal-case" href={`/p/r/${p.token}`} target="_blank">receipt</Link></>}</div>
                     </div>
                     {user.role === "admin" && (
                       <form action={deletePayment}>
@@ -129,6 +126,12 @@ export default async function InvoicePage({ params }: { params: Promise<{ id: st
               </ul>
             ) : (
               <p className="text-sm text-stone-400">No payments yet.</p>
+            )}
+            {payments.length > 0 && (
+              <div className="mt-4 border-t border-stone-100 pt-4">
+                <div className="label">Receipt for the last payment</div>
+                <ReceiptForm paymentId={payments[payments.length - 1].id} phone={c.phone} email={c.email} smsReady={smsConfigured()} emailReady={emailConfigured()} />
+              </div>
             )}
           </Card>
         </div>

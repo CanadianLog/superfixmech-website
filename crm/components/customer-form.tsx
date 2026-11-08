@@ -38,6 +38,10 @@ export function CustomerForm({ customer }: { customer?: Customer }) {
             <datalist id="lead-sources">{LEAD_SOURCES.map((s) => <option key={s} value={s} />)}</datalist>
           </Field>
           <Field label="Tags" hint="Comma separated, e.g. VIP, Landlord"><input className="input" name="tags" defaultValue={c?.tags} /></Field>
+          <label className="flex items-center gap-2 text-sm sm:col-span-2">
+            <input type="checkbox" name="no_review" defaultChecked={!!c?.no_review} className="h-4 w-4 accent-amber-500" />
+            Don&apos;t send this customer Google review requests
+          </label>
           <Field label="Customer notes" className="sm:col-span-2"><textarea className="input" name="notes" defaultValue={c?.notes} placeholder="Gate code, pets, preferred contact times…" /></Field>
         </div>
       </Card>

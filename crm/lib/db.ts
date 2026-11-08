@@ -165,6 +165,26 @@ CREATE TABLE IF NOT EXISTS activities (
 );
 CREATE INDEX IF NOT EXISTS activities_customer ON activities(customer_id);
 CREATE INDEX IF NOT EXISTS activities_job ON activities(job_id);
+
+-- Outgoing texts and emails (invoices, receipts, review requests). Queued rows are sent by a background worker.
+CREATE TABLE IF NOT EXISTS messages (
+  id INTEGER PRIMARY KEY,
+  kind TEXT NOT NULL,                 -- invoice | receipt | review | test
+  channel TEXT NOT NULL CHECK (channel IN ('sms','email')),
+  customer_id INTEGER REFERENCES customers(id) ON DELETE CASCADE,
+  job_id INTEGER REFERENCES jobs(id) ON DELETE SET NULL,
+  invoice_id INTEGER REFERENCES invoices(id) ON DELETE SET NULL,
+  recipient TEXT NOT NULL,
+  subject TEXT NOT NULL DEFAULT '',
+  body TEXT NOT NULL,
+  status TEXT NOT NULL DEFAULT 'queued' CHECK (status IN ('queued','sent','failed','canceled')),
+  error TEXT NOT NULL DEFAULT '',
+  send_after TEXT NOT NULL,           -- UTC ISO timestamp
+  sent_at TEXT,
+  created_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ','now'))
+);
+CREATE INDEX IF NOT EXISTS messages_due ON messages(status, send_after);
+CREATE INDEX IF NOT EXISTS messages_job ON messages(job_id);
 `;
 
 const DEFAULT_SETTINGS: Record<string, string> = {
@@ -195,6 +215,27 @@ const DEFAULT_SETTINGS: Record<string, string> = {
   qbo_tax_13: "",
   qbo_tax_5: "",
   qbo_tax_0: "",
+  // Texting (Twilio) and email (SMTP)
+  twilio_sid: "",
+  twilio_token: "",
+  twilio_from: "",
+  smtp_host: "",
+  smtp_port: "465",
+  smtp_user: "",
+  smtp_pass: "",
+  smtp_from_name: "SuperFix Mechanical",
+  // Google review requests
+  google_review_url: "",
+  review_auto: "1",
+  review_delay_minutes: "60",
+  review_cooldown_days: "180",
+  // Message templates. Placeholders: {first_name} {company} {amount} {invoice_number} {method} {link} {review_link} {phone}
+  tpl_invoice_sms: "Hi {first_name}, thank you for choosing {company}! Your invoice #{invoice_number} for {amount} is ready here: {link}",
+  tpl_invoice_email: "Hi {first_name},\n\nThank you for choosing {company}. Your invoice #{invoice_number} for {amount} is ready:\n{link}\n\nYou can pay by e-transfer, credit card, cash or cheque. Questions? Call us at {phone}.\n\n{company}",
+  tpl_receipt_sms: "Hi {first_name}, we received your {method} payment of {amount} for invoice #{invoice_number}. Thank you! Your receipt: {link}",
+  tpl_receipt_email: "Hi {first_name},\n\nThank you! We received your {method} payment of {amount} for invoice #{invoice_number}.\n\nYour receipt: {link}\n\n{company}\n{phone}",
+  tpl_review_sms: "Hi {first_name}, thank you for choosing {company}! If you were happy with our service, would you mind leaving a quick Google review? It really helps our small business: {review_link} Reply STOP to opt out.",
+  tpl_review_email: "Hi {first_name},\n\nThank you for choosing {company}! If you were happy with our service, would you mind leaving us a quick Google review? It only takes a minute and really helps a small local business:\n{review_link}\n\nThank you,\n{company}",
 };
 
 /** Columns added after the first release. Each runs once, only if missing. */
@@ -211,6 +252,8 @@ const MIGRATIONS: [table: string, column: string, definition: string][] = [
   ["customers", "external_id", "TEXT"],
   ["jobs", "external_id", "TEXT"],
   ["pricebook", "external_id", "TEXT"],
+  ["payments", "token", "TEXT"],
+  ["customers", "no_review", "INTEGER NOT NULL DEFAULT 0"],
 ];
 
 function migrate(db: DatabaseSync) {

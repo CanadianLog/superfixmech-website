@@ -23,6 +23,7 @@ export type Customer = {
   lead_source: string;
   notes: string;
   qbo_id: string | null;
+  no_review: number;
   created_at: string;
 };
 
@@ -117,6 +118,7 @@ export type Payment = {
   reference: string;
   paid_on: string;
   recorded_by: number | null;
+  token: string | null;
   created_at: string;
 };
 

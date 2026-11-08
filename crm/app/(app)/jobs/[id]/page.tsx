@@ -1,9 +1,12 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { requireUser, isOffice } from "@/lib/auth";
-import { activitiesFor, getAddress, getCustomer, getJob, lineItems, listInvoices, listPricebook, rateFor, timeZone } from "@/lib/data";
+import { activitiesFor, getAddress, getCustomer, getJob, invoicePayments, lineItems, listInvoices, listPricebook, rateFor, timeZone, today } from "@/lib/data";
 import { addressLine, customerName, fmtSchedule, fmtStamp, mapsUrl, money } from "@/lib/format";
-import { createInvoiceFromJob, saveJobItems, saveTechNotes, setJobStatus } from "@/lib/actions";
+import { createInvoiceFromJob, finishJob, saveJobItems, saveTechNotes, setJobStatus } from "@/lib/actions";
+import { getSettings } from "@/lib/db";
+import { emailConfigured, messagesForJob, smsConfigured } from "@/lib/messaging";
+import { PaidBadge, PaymentForm, ReceiptForm, ReviewStatus, SendInvoiceForm } from "@/components/checkout";
 import { Card, PageHeader, StatusBadge, TechDot } from "@/components/ui";
 import { ActionForm, SubmitButton } from "@/components/forms";
 import { LineItemsEditor } from "@/components/line-items-editor";
@@ -15,7 +18,6 @@ const NEXT_STEP: Partial<Record<JobStatus, { status: JobStatus; label: string }>
   unscheduled: { status: "dispatched", label: "On my way" },
   scheduled: { status: "dispatched", label: "On my way" },
   dispatched: { status: "in_progress", label: "Start job" },
-  in_progress: { status: "completed", label: "Finish job" },
 };
 
 export default async function JobPage({ params }: { params: Promise<{ id: string }> }) {
@@ -28,6 +30,11 @@ export default async function JobPage({ params }: { params: Promise<{ id: string
   const invoices = listInvoices({ jobId: job.id });
   const tz = timeZone();
   const step = NEXT_STEP[job.status];
+  const s = getSettings();
+  const invoice = invoices.find((i) => i.display_status !== "void");
+  const smsReady = smsConfigured(s);
+  const emailReady = emailConfigured(s);
+  const canFinish = job.status !== "completed" && job.status !== "canceled";
 
   return (
     <>
@@ -45,10 +52,10 @@ export default async function JobPage({ params }: { params: Promise<{ id: string
                 <SubmitButton pendingText="Updating…">{step.label}</SubmitButton>
               </form>
             )}
-            {job.status === "completed" && (
-              <form action={createInvoiceFromJob}>
-                <input type="hidden" name="job_id" value={job.id} />
-                <SubmitButton pendingText="Creating…">{invoices.length ? "View invoice" : "Create invoice"}</SubmitButton>
+            {canFinish && (
+              <form action={finishJob}>
+                <input type="hidden" name="id" value={job.id} />
+                <SubmitButton className="btn btn-dark bg-emerald-700 hover:bg-emerald-800" pendingText="Finishing…">✓ Job finished</SubmitButton>
               </form>
             )}
           </>
@@ -57,6 +64,74 @@ export default async function JobPage({ params }: { params: Promise<{ id: string
 
       <div className="grid gap-6 xl:grid-cols-3">
         <div className="space-y-6 xl:col-span-2">
+          {job.status === "completed" && (
+            <div id="checkout" className="scroll-mt-6">
+              <Card
+                title="Checkout"
+                className="border-emerald-300 ring-2 ring-emerald-100"
+                actions={invoice && <Link href={isOffice(user) ? `/invoices/${invoice.id}` : `/p/i/${invoice.token}`} className="link text-xs">Invoice #{invoice.number} →</Link>}
+              >
+                {!invoice ? (
+                  <form action={createInvoiceFromJob} className="flex items-center justify-between gap-3 text-sm">
+                    <span className="text-stone-600">No invoice for this job yet.</span>
+                    <input type="hidden" name="job_id" value={job.id} />
+                    <SubmitButton pendingText="Creating…">Create invoice</SubmitButton>
+                  </form>
+                ) : (
+                  <div className="space-y-6">
+                    <div className="flex flex-wrap items-baseline justify-between gap-2">
+                      <div className="text-sm text-stone-500">
+                        Invoice #{invoice.number} · <StatusBadge status={invoice.display_status} />
+                      </div>
+                      <div className="text-right">
+                        <div className="text-2xl font-bold tabular-nums">{money(invoice.total_cents)}</div>
+                        {invoice.paid_cents > 0 && invoice.balance_cents > 0 && <div className="text-sm text-rose-700">Balance {money(invoice.balance_cents)}</div>}
+                      </div>
+                    </div>
+
+                    <section>
+                      <h3 className="mb-2 text-sm font-bold">1. Send invoice</h3>
+                      <SendInvoiceForm invoice={invoice} phone={customer.phone} email={customer.email} smsReady={smsReady} emailReady={emailReady} />
+                    </section>
+
+                    <section className="border-t border-stone-100 pt-5">
+                      <h3 className="mb-2 text-sm font-bold">2. Payment & receipt</h3>
+                      {invoice.balance_cents > 0 ? (
+                        <PaymentForm invoice={invoice} phone={customer.phone} email={customer.email} smsReady={smsReady} emailReady={emailReady} today={today()} />
+                      ) : (
+                        <>
+                          <PaidBadge invoice={invoice} />
+                          {(() => {
+                            const last = invoicePayments(invoice.id).at(-1);
+                            return last ? (
+                              <div className="mt-4">
+                                <div className="label">Receipt for the {money(last.amount_cents)} payment</div>
+                                <ReceiptForm paymentId={last.id} phone={customer.phone} email={customer.email} smsReady={smsReady} emailReady={emailReady} />
+                              </div>
+                            ) : null;
+                          })()}
+                          <ul className="mt-2 space-y-1 text-xs text-stone-500">
+                            {invoicePayments(invoice.id).map((p) => (
+                              <li key={p.id}>
+                                {money(p.amount_cents)} · {p.method === "card" ? "credit card" : p.method} · {p.paid_on}
+                                {p.token && <> · <Link className="link" href={`/p/r/${p.token}`} target="_blank">receipt</Link></>}
+                              </li>
+                            ))}
+                          </ul>
+                        </>
+                      )}
+                    </section>
+
+                    <section className="border-t border-stone-100 pt-5">
+                      <h3 className="mb-2 text-sm font-bold">3. Google review request</h3>
+                      <ReviewStatus jobId={job.id} messages={messagesForJob(job.id)} tz={tz} hasReviewLink={!!s.google_review_url} />
+                    </section>
+                  </div>
+                )}
+              </Card>
+            </div>
+          )}
+
           <Card title="Appliance">
             <form action={saveTechNotes} className="grid gap-3 sm:grid-cols-4">
               <input type="hidden" name="id" value={job.id} />
