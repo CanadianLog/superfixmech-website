@@ -4,3 +4,4 @@
 
 # Generated bundles for uploading the CRM to a Claude Project
 /crm-superfix-export/
+*.tsbuildinfo
