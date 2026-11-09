@@ -18,6 +18,9 @@ export const company = {
   ],
 };
 
+/** The SuperFix CRM. The website's booking form and reviews section talk to it. */
+export const crmUrl = process.env.NEXT_PUBLIC_CRM_URL || "https://superfix-crm.onrender.com";
+
 /** Default social share image (1200x630), used by Open Graph and Twitter cards. */
 export const ogImage = {
   url: "/og-image.jpg",

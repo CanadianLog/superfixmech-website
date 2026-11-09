@@ -12,7 +12,7 @@ import { timeZone } from "./data";
  */
 
 export type Channel = "sms" | "email";
-export type MessageKind = "invoice" | "receipt" | "review" | "test";
+export type MessageKind = "invoice" | "receipt" | "review" | "test" | "notice";
 
 export function smsConfigured(s = getSettings()) {
   return !!(s.twilio_sid && s.twilio_token && s.twilio_from);
@@ -86,7 +86,7 @@ async function deliver(id: number): Promise<{ ok: boolean; error?: string }> {
   if (run("UPDATE messages SET status = 'sent', sent_at = ? WHERE id = ? AND status = 'queued'", new Date().toISOString(), id).changes === 0) {
     return { ok: false, error: "Already handled" };
   }
-  const what = { invoice: "Invoice", receipt: "Receipt", review: "Google review request", test: "Test message" }[m.kind] ?? "Message";
+  const what = { invoice: "Invoice", receipt: "Receipt", review: "Google review request", test: "Test message", notice: "New-booking alert" }[m.kind] ?? "Message";
   const how = m.channel === "sms" ? `texted to ${m.recipient}` : `emailed to ${m.recipient}`;
   try {
     if (m.channel === "sms") await sendSms(m.recipient, m.body);

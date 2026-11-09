@@ -1219,3 +1219,50 @@ export async function saveAddressSearchKey(_: FormState, fd: FormData): Promise<
   revalidatePath("/", "layout");
   return { ok: "Saved and tested. Address search is on." };
 }
+
+/* ---------- website: allowed addresses and Google reviews ---------- */
+
+export async function saveWebsiteOrigins(_: FormState, fd: FormData): Promise<FormState> {
+  await requireUser(["admin"]);
+  const list = str(fd, "website_origins")
+    .split(/[\s,]+/)
+    .map((o) => o.trim().replace(/\/$/, ""))
+    .filter(Boolean);
+  const bad = list.filter((o) => !/^https?:\/\/[a-z0-9.-]+(:\d+)?$/i.test(o));
+  if (bad.length) return { error: `These don't look like website addresses: ${bad.join(", ")}. Use the form https://superfixmech.ca` };
+  run("UPDATE settings SET value = ? WHERE key = 'website_origins'", list.join(", "));
+  revalidatePath("/settings");
+  return { ok: "Saved." };
+}
+
+export async function findGoogleBusiness(_: FormState, fd: FormData): Promise<FormState> {
+  await requireUser(["admin"]);
+  const { placesKey } = await import("./places");
+  if (!placesKey()) return { error: "Add your Google API key under Google address search first." };
+  const { findPlaceId, getPublicReviews } = await import("./reviews");
+  try {
+    const found = await findPlaceId(str(fd, "query") || undefined);
+    if (!found) return { error: "Google didn't find a business with that name. Try your exact Google listing name plus “Ottawa”." };
+    run("INSERT INTO settings (key, value) VALUES ('google_place_id', ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value", found.id);
+    const r = await getPublicReviews(true);
+    revalidatePath("/settings");
+    return {
+      ok: `Linked to “${found.name}”, ${found.address}.${r ? ` ${r.rating ?? "–"}★ from ${r.count} reviews; ${r.reviews.length} shown on your website.` : ""} If that's not your business, search again with a more exact name.`,
+    };
+  } catch (e) {
+    return { error: (e as Error).message };
+  }
+}
+
+export async function refreshGoogleReviews(): Promise<FormState> {
+  await requireUser(["admin"]);
+  const { getPublicReviews } = await import("./reviews");
+  try {
+    const r = await getPublicReviews(true);
+    if (!r) return { error: "Link your Google business first." };
+    revalidatePath("/settings");
+    return { ok: `Updated: ${r.rating ?? "–"}★ from ${r.count} reviews.` };
+  } catch (e) {
+    return { error: (e as Error).message };
+  }
+}

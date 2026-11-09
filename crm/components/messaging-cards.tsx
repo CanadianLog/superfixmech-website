@@ -1,4 +1,4 @@
-import { saveAddressSearchKey, saveMessagingSettings, saveReviewSettings, sendTestMessage } from "@/lib/actions";
+import { findGoogleBusiness, refreshGoogleReviews, saveAddressSearchKey, saveMessagingSettings, saveReviewSettings, saveWebsiteOrigins, sendTestMessage } from "@/lib/actions";
 import { emailConfigured, smsConfigured } from "@/lib/messaging";
 import { ActionForm, SubmitButton } from "./forms";
 import { Card, Field } from "./ui";
@@ -127,6 +127,56 @@ export function AddressSearchCard({ s, fromEnv }: { s: Record<string, string>; f
             <SubmitButton>Save</SubmitButton>
           </ActionForm>
         )}
+      </Card>
+    </div>
+  );
+}
+
+export function WebsiteCard({ s, origin }: { s: Record<string, string>; origin: string }) {
+  let cached: { name?: string; rating?: number | null; count?: number; fetchedAt?: string } = {};
+  try {
+    cached = s.reviews_cache ? JSON.parse(s.reviews_cache) : {};
+  } catch {
+    cached = {};
+  }
+  return (
+    <div id="website" className="mt-6 scroll-mt-6">
+      <Card title="Your website">
+        <p className="text-sm text-stone-600">
+          The booking form on your website sends requests straight into the CRM as unscheduled jobs tagged “Online booking”, and the reviews section shows your Google
+          rating and reviews. Both come from <code className="text-xs">{origin}</code>.
+        </p>
+        <ActionForm action={saveWebsiteOrigins} className="mt-4 flex flex-wrap items-end gap-2">
+          <Field label="Website addresses allowed to send bookings" className="min-w-72 flex-1" hint="Comma separated. Bookings from anywhere else need the booking key below.">
+            <input className="input" name="website_origins" defaultValue={s.website_origins} />
+          </Field>
+          <SubmitButton className="btn-ghost">Save</SubmitButton>
+        </ActionForm>
+
+        <div className="mt-6 border-t border-stone-100 pt-4">
+          <h3 className="text-sm font-bold">Google reviews on your website</h3>
+          <p className="mt-1 text-xs text-stone-500">
+            Uses the same Google API key as address search. Google shares up to 5 recent reviews; the website shows the 4★ and 5★ ones, plus your overall rating, and refreshes twice a day.
+          </p>
+          {s.google_place_id ? (
+            <p className="mt-2 text-sm">
+              Linked{cached.name ? <> to <b>{cached.name}</b></> : ""}{cached.rating ? ` · ${cached.rating}★ from ${cached.count} reviews` : ""}.
+            </p>
+          ) : (
+            <p className="mt-2 text-sm text-stone-500">Not linked yet.</p>
+          )}
+          <ActionForm action={findGoogleBusiness} className="mt-3 flex flex-wrap items-end gap-2">
+            <Field label="Find your Google business" className="min-w-72 flex-1">
+              <input className="input" name="query" defaultValue={`${s.company_name}, Ottawa`} />
+            </Field>
+            <SubmitButton className="btn-dark" pendingText="Searching…">{s.google_place_id ? "Search again" : "Find & link"}</SubmitButton>
+          </ActionForm>
+          {s.google_place_id && (
+            <ActionForm action={refreshGoogleReviews} className="mt-2">
+              <SubmitButton className="btn-ghost btn-sm" pendingText="Refreshing…">Refresh reviews now</SubmitButton>
+            </ActionForm>
+          )}
+        </div>
       </Card>
     </div>
   );
