@@ -16,8 +16,9 @@ const norm = (s: string) => s.toLowerCase().replace(/[^a-z0-9]/g, "");
 
 type Row = { get: (...names: string[]) => string; raw: string[] };
 
-function table(text: string): { headers: string[]; rows: Row[] } {
+function table(text: string): { headers: string[]; rawHeaders: string[]; rows: Row[] } {
   const [head = [], ...body] = parseCSV(text);
+  const rawHeaders = head.map((h) => h.trim());
   const headers = head.map(norm);
   const rows = body.map((raw) => ({
     raw,
@@ -29,27 +30,38 @@ function table(text: string): { headers: string[]; rows: Row[] } {
       return "";
     },
   }));
-  return { headers, rows };
+  return { headers, rawHeaders, rows };
 }
 
 const digits = (s: string) => s.replace(/\D/g, "").slice(-10);
 
-function findCustomer(opts: { externalId?: string; email?: string; phone?: string; first?: string; last?: string; company?: string }): number | undefined {
+function findCustomer(opts: { externalId?: string; email?: string; phone?: string; first?: string; last?: string; company?: string; fullName?: string }): number | undefined {
   if (opts.externalId) {
     const r = get<{ id: number }>("SELECT id FROM customers WHERE external_id = ?", opts.externalId);
     if (r) return r.id;
   }
+  // A shared email or phone (families, landlords) only counts as the same customer when the names don't disagree.
+  const sameName = (c: { first_name: string; last_name: string }) => {
+    const mine = `${opts.first ?? ""} ${opts.last ?? ""}`.trim().toLowerCase();
+    const theirs = `${c.first_name} ${c.last_name}`.trim().toLowerCase();
+    return !mine || !theirs || mine === theirs;
+  };
   if (opts.email) {
-    const r = get<{ id: number }>("SELECT id FROM customers WHERE email = ? COLLATE NOCASE AND email != ''", opts.email);
-    if (r) return r.id;
+    const rows = all<{ id: number; first_name: string; last_name: string }>(
+      "SELECT id, first_name, last_name FROM customers WHERE email = ? COLLATE NOCASE AND email != '' ORDER BY id",
+      opts.email,
+    );
+    const hit = rows.find(sameName);
+    if (hit) return hit.id;
   }
   const d = digits(opts.phone ?? "");
   if (d.length >= 7) {
-    const r = get<{ id: number }>(
-      "SELECT id FROM customers WHERE REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(phone,'-',''),' ',''),'(',''),')',''),'.',''),'+','') LIKE ?",
+    const rows = all<{ id: number; first_name: string; last_name: string }>(
+      "SELECT id, first_name, last_name FROM customers WHERE REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(phone,'-',''),' ',''),'(',''),')',''),'.',''),'+','') LIKE ? ORDER BY id",
       `%${d}`,
     );
-    if (r) return r.id;
+    const hit = rows.find(sameName);
+    if (hit) return hit.id;
   }
   if (opts.first || opts.last) {
     const r = get<{ id: number }>(
@@ -62,7 +74,48 @@ function findCustomer(opts: { externalId?: string; email?: string; phone?: strin
     const r = get<{ id: number }>("SELECT id FROM customers WHERE company = ? COLLATE NOCASE AND first_name = '' AND last_name = ''", opts.company);
     if (r) return r.id;
   }
+  // Job exports only carry the customer's display name: match "First Last" or the company name.
+  const full = opts.fullName?.trim();
+  if (full) {
+    const r = get<{ id: number }>(
+      `SELECT id FROM customers
+        WHERE TRIM(first_name || ' ' || last_name) = ? COLLATE NOCASE
+           OR (company != '' AND company = ? COLLATE NOCASE)
+        ORDER BY id LIMIT 1`,
+      full,
+      full,
+    );
+    if (r) return r.id;
+  }
   return undefined;
+}
+
+/** Splits a one-line address like "12 Main St, Unit 4, Ottawa, ON K1A 0A1" into parts. */
+export function splitAddress(full: string): { street: string; unit: string; city: string; province: string; postal: string } {
+  const parts = full.split(",").map((p) => p.trim()).filter(Boolean);
+  const out = { street: "", unit: "", city: "", province: "", postal: "" };
+  if (!parts.length) return out;
+  const postalRe = /([A-Za-z]\d[A-Za-z])\s?(\d[A-Za-z]\d)/;
+  // Last part usually holds province and postal code ("ON K1A 0A1"), sometimes followed by "Canada".
+  if (parts.length > 1 && /^(canada|ca)$/i.test(parts[parts.length - 1])) parts.pop();
+  const last = parts[parts.length - 1] ?? "";
+  const pm = last.match(postalRe);
+  const prov = last.replace(postalRe, "").trim().replace(/^(ontario)$/i, "ON").replace(/^(quebec|québec)$/i, "QC");
+  if (parts.length >= 3 && (pm || /^[A-Za-z]{2}$/.test(prov))) {
+    out.postal = pm ? `${pm[1]} ${pm[2]}`.toUpperCase() : "";
+    out.province = /^[A-Za-z]{2}$/.test(prov) ? prov.toUpperCase() : "ON";
+    parts.pop();
+    out.city = parts.pop() ?? "";
+  } else if (parts.length === 2) {
+    out.city = parts.pop() ?? "";
+  }
+  // What's left is the street, plus maybe a unit ("Unit 4", "#4", "Apt 2", or a short number).
+  if (parts.length >= 2) {
+    const unitIdx = parts.findIndex((p) => /^(unit|apt|suite|ste|#)\s*\w+|^\d{1,4}[a-z]?$/i.test(p));
+    if (unitIdx >= 0) out.unit = parts.splice(unitIdx, 1)[0];
+  }
+  out.street = parts.join(", ");
+  return out;
 }
 
 function ensureAddress(customerId: number, a: { street: string; unit?: string; city?: string; province?: string; postal?: string; notes?: string }): number | null {
@@ -106,7 +159,7 @@ export function importCustomers(text: string): ImportReport {
       const last = r.get("Last Name");
       const company = r.get("Company");
       const fullName = r.get("Customer", "Name", "Display Name");
-      const [f, l] = first || last ? [first, last] : fullName ? [fullName.split(" ")[0], fullName.split(" ").slice(1).join(" ")] : ["", ""];
+      const [f, l] = first || last ? [first, last] : company ? ["", ""] : fullName ? [fullName.split(" ")[0], fullName.split(" ").slice(1).join(" ")] : ["", ""];
       if (!f && !l && !company) {
         report.skipped++;
         continue;
@@ -190,16 +243,47 @@ export function parseDateTime(input: string, tz: string): { date?: string; time?
     }
     return { date: `${m[1]}-${m[2]}-${m[3]}`, time: m[4] ? `${m[4]}:${m[5]}` : undefined };
   }
-  m = s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{2,4})(.*)$/);
+  m = s.match(/^(\d{4})\/(\d{1,2})\/(\d{1,2})(.*)$/); // 2025/11/07
+  if (m) return valid(Number(m[1]), Number(m[2]), Number(m[3]), m[4]);
+  m = s.match(/^(\d{1,2})[/.-](\d{1,2})[/.-](\d{2,4})(.*)$/); // 11/07/2025 (US), or 25/11/2025 when the first number can't be a month
   if (m) {
     const y = m[3].length === 2 ? 2000 + Number(m[3]) : Number(m[3]);
-    return { date: `${y}-${pad(Number(m[1]))}-${pad(Number(m[2]))}`, time: parseTime(m[4]) };
+    const a = Number(m[1]);
+    const b = Number(m[2]);
+    return a > 12 ? valid(y, b, a, m[4]) : valid(y, a, b, m[4]);
   }
-  m = s.match(/([a-z]{3})[a-z]*\.?\s+(\d{1,2}),?\s+(\d{4})(.*)$/i);
-  if (m && MONTHS.includes(m[1].toLowerCase())) {
-    return { date: `${m[3]}-${pad(MONTHS.indexOf(m[1].toLowerCase()) + 1)}-${pad(Number(m[2]))}`, time: parseTime(m[4]) };
+  m = s.match(/^(\d{1,2})[\s-]([a-z]{3})[a-z]*\.?[\s-,]+(\d{4})(.*)$/i); // 7 Nov 2025, 07-Nov-2025
+  if (m && MONTHS.includes(m[2].toLowerCase())) return valid(Number(m[3]), MONTHS.indexOf(m[2].toLowerCase()) + 1, Number(m[1]), m[4]);
+  m = s.match(/^(\d{5})(\.\d+)?$/); // Excel serial date (e.g. 45968)
+  if (m && Number(m[1]) > 30000 && Number(m[1]) < 60000) {
+    const d = new Date(Date.UTC(1899, 11, 30) + Number(s) * 86400_000);
+    return valid(d.getUTCFullYear(), d.getUTCMonth() + 1, d.getUTCDate(), m[2] ? `${pad(d.getUTCHours())}:${pad(d.getUTCMinutes())}` : "");
   }
+  m = s.match(/([a-z]{3})[a-z]*\.?[\s-]+(\d{1,2})(?:st|nd|rd|th)?,?[\s-]+(\d{4})(.*)$/i); // Nov 7, 2025 / Friday, November 7, 2025 2:30 PM
+  if (m && MONTHS.includes(m[1].toLowerCase())) return valid(Number(m[3]), MONTHS.indexOf(m[1].toLowerCase()) + 1, Number(m[2]), m[4]);
   return {};
+}
+
+function valid(y: number, mo: number, d: number, rest: string): { date?: string; time?: string } {
+  if (y < 2000 || y > 2100 || mo < 1 || mo > 12 || d < 1 || d > 31) return {};
+  return { date: `${y}-${pad(mo)}-${pad(d)}`, time: parseTime(rest ?? "") };
+}
+
+/**
+ * Finds a date in any column whose name looks like a date (used when none of the usual names match).
+ * Columns whose name matches `prefer` are tried first.
+ */
+function dateFinder(rawHeaders: string[]) {
+  const looksLikeDate = /(date|time|when|day|scheduled|schedule|start|end|completed|complete|finished|finish|created|closed|paid|at$)/i;
+  const cols = rawHeaders.map((h, i) => ({ h, i })).filter(({ h }) => looksLikeDate.test(h.replace(/[^a-z]/gi, "")));
+  return (r: Row, prefer: RegExp, tz: string, onlyPreferred = false) => {
+    const ordered = onlyPreferred ? cols.filter(({ h }) => prefer.test(h)) : [...cols.filter(({ h }) => prefer.test(h)), ...cols.filter(({ h }) => !prefer.test(h))];
+    for (const { i } of ordered) {
+      const got = parseDateTime(r.raw[i] ?? "", tz);
+      if (got.date) return got;
+    }
+    return {};
+  };
 }
 
 function mapStatus(status: string, finished: string, hasDate: boolean): string {
@@ -248,7 +332,34 @@ function moneyFrom(r: Row) {
 }
 
 export function importJobs(text: string, tz: string): ImportReport {
-  const { rows } = table(text);
+  const { rows, rawHeaders } = table(text);
+  const findDate = dateFinder(rawHeaders);
+  let undated = 0;
+
+  /** Every date a row offers, by meaning. Each falls back to a column whose name suggests it. */
+  const datesOf = (r: Row) => {
+    let sched = parseDateTime(r.get("Date", "Job Date", "Scheduled Date", "Scheduled For", "Schedule Date", "Scheduled Start", "Scheduled Start Date", "Job Scheduled Start", "Start Date", "Appointment Date", "Start", "Job scheduled start date", "Scheduled start date"), tz);
+    if (!sched.date) sched = findDate(r, /sched|start|appoint|job ?date|^date$/i, tz, true);
+    const end = parseDateTime(r.get("End Time", "Scheduled End", "End", "Job scheduled end date", "Scheduled end date"), tz);
+    let created = parseDateTime(r.get("Created At", "Created", "Created Date", "Created On", "Date Created", "Job created date", "Job Created At"), tz);
+    if (!created.date) created = findDate(r, /creat/i, tz, true);
+    const done =
+      parseDateTime(r.get("Finished", "Finished At", "Completed", "Completed At", "Completed Date", "Completed On", "Completion Date", "Job Completed", "Job Completed At", "Job completed date", "Job finished date"), tz).date ??
+      findDate(r, /complet|finish|closed/i, tz, true).date ??
+      sched.date ??
+      created.date ??
+      findDate(r, /./, tz).date;
+    return { sched, end, created, done };
+  };
+
+  /** The address, from separate columns or one combined "Address" column. */
+  const addressOf = (r: Row) => {
+    const street = r.get("Street", "Street Line 1", "Address Line 1");
+    if (street) {
+      return { street, unit: r.get("Street Line 2", "Address Line 2"), city: r.get("City"), province: r.get("State", "Province"), postal: r.get("Zip", "Postal Code", "Zip Code") };
+    }
+    return splitAddress(r.get("Address", "Service Address", "Job Address"));
+  };
   const report: ImportReport = { created: 0, updated: 0, skipped: 0, warnings: [] };
   const users = all<{ id: number; name: string }>("SELECT id, name FROM users");
   const unknownTechs = new Set<string>();
@@ -266,15 +377,54 @@ export function importJobs(text: string, tz: string): ImportReport {
           "SELECT id, issued_on, created_at FROM invoices WHERE job_id = ? AND status != 'void' ORDER BY id LIMIT 1",
           existingJob.id,
         );
-        // If the first import couldn't read the dates, it dated the invoice on the import day; correct it now.
-        const realDate = parseDateTime(r.get("Finished", "Finished At", "Completed", "Completed At", "Completed Date", "Completed On", "Completion Date", "Job Completed", "Job Completed At"), tz).date ?? parseDateTime(r.get("Date", "Job Date", "Scheduled Date", "Scheduled For", "Schedule Date", "Scheduled Start", "Scheduled Start Date", "Job Scheduled Start", "Start Date", "Appointment Date", "Start"), tz).date;
+        // If the first import couldn't read the dates, it dated things on the import day; correct them now.
+        const d = datesOf(r);
+        const realDate = d.done;
         let fixedDate = false;
         if (inv && realDate && inv.issued_on !== realDate && inv.issued_on === inv.created_at.slice(0, 10)) {
           run("UPDATE invoices SET issued_on = ?, due_on = ? WHERE id = ? AND notes = 'Imported from Housecall Pro'", realDate, realDate, inv.id);
           run("UPDATE payments SET paid_on = ? WHERE invoice_id = ? AND reference = 'Paid in Housecall Pro'", realDate, inv.id);
-          run("UPDATE jobs SET completed_at = ? WHERE id = ? AND status = 'completed'", `${realDate}T17:00:00.000Z`, existingJob.id);
           inv = { ...inv, issued_on: realDate };
           fixedDate = true;
+        }
+        const job = get<{ status: string; scheduled_start: string | null; completed_at: string | null; created_at: string; address_id: number | null }>(
+          "SELECT status, scheduled_start, completed_at, created_at, address_id FROM jobs WHERE id = ?",
+          existingJob.id,
+        )!;
+        const importDay = job.created_at.slice(0, 10);
+        if (!job.scheduled_start && d.sched.date) {
+          const st = d.sched.time ?? "09:00";
+          const [hh, mm] = st.split(":").map(Number);
+          const t = Math.min(hh * 60 + mm + 120, 23 * 60 + 59);
+          run(
+            "UPDATE jobs SET scheduled_start = ?, scheduled_end = ?, status = CASE WHEN status = 'unscheduled' THEN 'scheduled' ELSE status END WHERE id = ?",
+            `${d.sched.date}T${st}`,
+            `${d.sched.date}T${pad(Math.floor(t / 60))}:${pad(t % 60)}`,
+            existingJob.id,
+          );
+          fixedDate = true;
+        }
+        if (job.status === "completed" && realDate && (!job.completed_at || job.completed_at.slice(0, 10) === importDay)) {
+          run("UPDATE jobs SET completed_at = ? WHERE id = ?", `${realDate}T17:00:00.000Z`, existingJob.id);
+          fixedDate = true;
+        }
+        if (d.created.date && importDay !== d.created.date) {
+          run("UPDATE jobs SET created_at = ? WHERE id = ? AND substr(created_at, 1, 10) = ?", `${d.created.date}T${d.created.time ?? "12:00"}:00.000Z`, existingJob.id, importDay);
+        }
+        // Fill in a city/postal code the first import left blank.
+        if (job.address_id) {
+          const a = addressOf(r);
+          if (a.city) {
+            const changed = run(
+              "UPDATE addresses SET city = ?, province = ?, postal_code = ?, unit = CASE WHEN unit = '' THEN ? ELSE unit END WHERE id = ? AND city = ''",
+              a.city,
+              a.province || "ON",
+              a.postal.toUpperCase(),
+              a.unit,
+              job.address_id,
+            ).changes;
+            if (changed) fixedDate = true;
+          }
         }
         const alreadyPaid = inv ? get<{ s: number }>("SELECT COALESCE(SUM(amount_cents), 0) AS s FROM payments WHERE invoice_id = ?", inv.id)!.s : 0;
         if (inv && m.paid > alreadyPaid) {
@@ -304,7 +454,7 @@ export function importJobs(text: string, tz: string): ImportReport {
         report.skipped++;
         continue;
       }
-      let customerId = findCustomer({ email, phone, first, last, company });
+      let customerId = findCustomer({ email, phone, first, last, company, fullName });
       if (!customerId) {
         customerId = run(
           "INSERT INTO customers (first_name, last_name, company, email, phone, alt_phone, tags) VALUES (?, ?, ?, ?, ?, ?, ?)",
@@ -317,19 +467,14 @@ export function importJobs(text: string, tz: string): ImportReport {
           r.get("Customer Tags", "Customer Tag"),
         ).id;
       }
-      const addressId = ensureAddress(customerId, {
-        street: r.get("Street", "Street Line 1", "Address Line 1") || r.get("Address").split(",")[0]?.trim() || "",
-        unit: r.get("Street Line 2", "Address Line 2"),
-        city: r.get("City"),
-        province: r.get("State", "Province"),
-        postal: r.get("Zip", "Postal Code", "Zip Code"),
-      });
+      const addressId = ensureAddress(customerId, addressOf(r));
 
       // Schedule & status
-      const when = parseDateTime(r.get("Date", "Job Date", "Scheduled Date", "Scheduled For", "Schedule Date", "Scheduled Start", "Scheduled Start Date", "Job Scheduled Start", "Start Date", "Appointment Date", "Start"), tz);
+      const dates = datesOf(r);
+      const when = dates.sched;
       const window = r.get("Window", "Arrival Window");
       const startTime = when.time ?? (window ? parseTime(window) : undefined) ?? "09:00";
-      const endParsed = parseDateTime(r.get("End Time", "Scheduled End", "End"), tz);
+      const endParsed = dates.end;
       const endTime = endParsed.time ?? (window.includes("-") ? parseTime(window.split("-")[1]) : undefined);
       const start = when.date ? `${when.date}T${startTime}` : null;
       let end = when.date && endTime ? `${when.date}T${endTime}` : null;
@@ -368,11 +513,10 @@ export function importJobs(text: string, tz: string): ImportReport {
       ]
         .filter(Boolean)
         .join("\n");
-      const completedIso = status === "completed" ? `${(parseDateTime(r.get("Finished", "Finished At", "Completed", "Completed At", "Completed Date", "Completed On", "Completion Date", "Job Completed", "Job Completed At"), tz).date ?? when.date ?? new Date().toISOString().slice(0, 10))}T17:00:00.000Z` : null;
-      const createdIso = (() => {
-        const c = parseDateTime(r.get("Created At", "Created", "Created Date", "Created On", "Date Created"), tz);
-        return c.date ? `${c.date}T${c.time ?? "12:00"}:00.000Z` : new Date().toISOString();
-      })();
+      const doneDate = dates.done;
+      if (!doneDate) undated++;
+      const completedIso = status === "completed" ? `${doneDate ?? new Date().toISOString().slice(0, 10)}T17:00:00.000Z` : null;
+      const createdIso = dates.created.date ? `${dates.created.date}T${dates.created.time ?? "12:00"}:00.000Z` : new Date().toISOString();
 
       const jobId = run(
         `INSERT INTO jobs (number, customer_id, address_id, title, description, status, scheduled_start, scheduled_end, tech_id,
@@ -447,6 +591,11 @@ export function importJobs(text: string, tz: string): ImportReport {
       report.created++;
     }
   });
+  if (undated) {
+    report.warnings.push(
+      `${undated} job${undated === 1 ? "" : "s"} had no date this import could read, so ${undated === 1 ? "it was" : "they were"} dated today. Columns in your file: ${rawHeaders.join(" | ")}. Copy this message into your chat with Claude so the date column can be matched.`,
+    );
+  }
   if (unknownTechs.size) {
     report.warnings.push(
       `These Housecall Pro employees aren't on your Team yet, so their jobs were left unassigned (their names are in each job's private notes): ${[...unknownTechs].slice(0, 10).join(", ")}. Add them on the Team page first and import again to assign them.`,

@@ -40,7 +40,7 @@ export default async function ImportPage() {
             On the <b>Team</b> page, add each technician using the same name they had in Housecall Pro, so imported jobs get assigned to them.
           </Step>
         </ol>
-        <p className="mt-4 text-xs text-stone-500">Only Housecall Pro admins can export. If you get an Excel (.xlsx) file, open it and save it as CSV first.</p>
+        <p className="mt-4 text-xs text-stone-500">Only Housecall Pro admins can export. A .zip from Housecall Pro can be uploaded as-is. If you get an Excel (.xlsx) file, open it and save it as CSV first.</p>
       </Card>
 
       <Card title="2. Upload the files here" className="mt-6">
@@ -52,7 +52,7 @@ export default async function ImportPage() {
           ].map(([name, label]) => (
             <label key={name} className="block">
               <span className="label">{label}</span>
-              <input type="file" name={name} accept=".csv,.tsv,.txt,text/csv" className="block w-full text-sm file:mr-3 file:rounded-lg file:border-0 file:bg-stone-900 file:px-3 file:py-2 file:text-sm file:font-semibold file:text-white" />
+              <input type="file" name={name} accept=".csv,.tsv,.txt,.zip,text/csv,application/zip" className="block w-full text-sm file:mr-3 file:rounded-lg file:border-0 file:bg-stone-900 file:px-3 file:py-2 file:text-sm file:font-semibold file:text-white" />
             </label>
           ))}
           <ul className="list-disc space-y-1 pl-5 text-xs text-stone-500">
