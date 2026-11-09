@@ -15,7 +15,7 @@ export const serviceAreaPages: ServiceArea[] = [
     name: "Kanata",
     locality: "Kanata, Ottawa, ON",
     metaDescription:
-      "Appliance repair in Kanata: fridges, washers, dryers, dishwashers, ovens and more. Local technicians serving Bridlewood, Kanata Lakes, Beaverbrook, Morgan's Grant and all of Kanata. Call 613-366-7009.",
+      "Appliance repair in Kanata for fridges, washers, dryers, dishwashers and ovens. Serving Bridlewood, Kanata Lakes and Beaverbrook. Call 613-366-7009.",
     intro:
       "SuperFix Mechanical provides appliance repair and installation throughout Kanata, from the established streets of Beaverbrook and Katimavik to newer homes in Kanata Lakes, Bridlewood and the Kanata North area. Tell us what's wrong and we'll book a visit with a technician who knows the brands and models common in west-end Ottawa homes.",
     neighbourhoods: [
@@ -67,7 +67,7 @@ export const serviceAreaPages: ServiceArea[] = [
     name: "Orleans",
     locality: "Orleans, Ottawa, ON",
     metaDescription:
-      "Appliance repair in Orleans: fridges, washers, dryers, dishwashers, ovens and more. Local technicians serving Avalon, Chapel Hill, Convent Glen, Fallingbrook and all of Orleans. Call 613-366-7009.",
+      "Appliance repair in Orleans for fridges, washers, dryers, dishwashers and ovens. Serving Avalon, Chapel Hill and Convent Glen. Call 613-366-7009.",
     intro:
       "SuperFix Mechanical provides appliance repair and installation across Orleans, from Convent Glen and Queenswood Heights to Avalon, Chapel Hill and the growing communities near Cardinal Creek. Whether it's a fridge that stopped cooling or a washer that won't drain, we'll book a visit and get it working again.",
     neighbourhoods: [
@@ -119,7 +119,7 @@ export const serviceAreaPages: ServiceArea[] = [
     name: "Nepean",
     locality: "Nepean, Ottawa, ON",
     metaDescription:
-      "Appliance repair in Nepean: fridges, washers, dryers, dishwashers, ovens and more. Local technicians serving Centrepointe, Craig Henry, Qualicum, Meadowlands and all of Nepean. Call 613-366-7009.",
+      "Appliance repair in Nepean for fridges, washers, dryers, dishwashers and ovens. Serving Centrepointe, Craig Henry and Qualicum. Call 613-366-7009.",
     intro:
       "SuperFix Mechanical repairs and installs household appliances across Nepean, from Centrepointe and Craig Henry to Qualicum, Meadowlands and Fisher Heights. Whether it's a fridge that's running warm, a dishwasher full of standing water or an oven that won't hold temperature, we'll book a technician to diagnose it and get it fixed.",
     neighbourhoods: [
@@ -171,7 +171,7 @@ export const serviceAreaPages: ServiceArea[] = [
     name: "Barrhaven",
     locality: "Barrhaven, Ottawa, ON",
     metaDescription:
-      "Appliance repair in Barrhaven: fridges, washers, dryers, dishwashers, ovens and more. Local technicians serving Half Moon Bay, Stonebridge, Longfields, Chapman Mills and all of Barrhaven. Call 613-366-7009.",
+      "Appliance repair in Barrhaven for fridges, washers, dryers, dishwashers and ovens. Serving Half Moon Bay and Stonebridge. Call 613-366-7009.",
     intro:
       "SuperFix Mechanical provides appliance repair and installation throughout Barrhaven, from Longfields and Davidson Heights to Half Moon Bay, Stonebridge and the newer streets in Barrhaven South. If an appliance has stopped working, tell us the brand and the problem and we'll book a visit.",
     neighbourhoods: [
@@ -223,7 +223,7 @@ export const serviceAreaPages: ServiceArea[] = [
     name: "Stittsville",
     locality: "Stittsville, Ottawa, ON",
     metaDescription:
-      "Appliance repair in Stittsville: fridges, washers, dryers, dishwashers, ovens and more. Local technicians serving Fairwinds, Jackson Trails, Westwood, Crossing Bridge and all of Stittsville. Call 613-366-7009.",
+      "Appliance repair in Stittsville for fridges, washers, dryers, dishwashers and ovens. Serving Fairwinds and Jackson Trails. Call 613-366-7009.",
     intro:
       "SuperFix Mechanical repairs and installs appliances across Stittsville, from the village core around Stittsville Main Street to Fairwinds, Jackson Trails, Westwood and Crossing Bridge. Book a visit and we'll diagnose the problem and walk you through your options before any work starts.",
     neighbourhoods: [
@@ -275,7 +275,7 @@ export const serviceAreaPages: ServiceArea[] = [
     name: "Embrun",
     locality: "Embrun, Russell Township, ON",
     metaDescription:
-      "Appliance repair in Embrun: fridges, washers, dryers, dishwashers, ovens and more. Technicians serving Embrun, Russell and the surrounding area east of Ottawa. Call 613-366-7009.",
+      "Appliance repair in Embrun for fridges, washers, dryers, dishwashers and ovens. Serving Embrun, Russell and the area east of Ottawa. Call 613-366-7009.",
     intro:
       "SuperFix Mechanical serves Embrun and the surrounding area in Russell Township, east of Ottawa. You shouldn't have to wait longer for a repair because you live outside the city, so tell us what's wrong and we'll book a technician to come out, diagnose the problem and fix it.",
     neighbourhoods: [

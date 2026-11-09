@@ -133,7 +133,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   }
 
   return {
-    title: `${article.title} | SuperFix Mechanical`,
+    title: { absolute: article.metaTitle ?? `${article.title} | SuperFix Mechanical` },
     description: article.description,
     alternates: { canonical: `/blog/${article.slug}` },
     openGraph: {

@@ -6,6 +6,7 @@ import { Card } from "@/components/ui/card";
 import { Section } from "@/components/ui/section";
 
 export const metadata: Metadata = {
+  robots: { index: false, follow: true },
   title: "Appliance Maintenance Plans | SuperFix Mechanical",
   description:
     "Preventive appliance maintenance in Ottawa — seasonal checks, safety inspections, and priority scheduling to reduce unexpected breakdowns.",
