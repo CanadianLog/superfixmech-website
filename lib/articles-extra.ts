@@ -4,8 +4,9 @@ export const extraArticles: Article[] = [
   {
     slug: "washer-not-draining-or-spinning",
     title: "Washer Not Draining or Spinning? What to Check Before You Call",
+    metaTitle: "Washer Not Draining or Spinning? | SuperFix",
     description:
-      "A washer that fills but won't drain or spin is usually caused by a clogged pump, a kinked hose, or an unbalanced load. Here is what to check and when to call a technician.",
+      "A washer that fills but won't drain or spin is often a clogged pump, kinked hose, or unbalanced load. What to check first.",
     date: "2026-10-06",
     readMinutes: 6,
     related: { href: "/repair/washer-repair", label: "Washer Repair in Ottawa" },
@@ -78,8 +79,9 @@ export const extraArticles: Article[] = [
   {
     slug: "oven-not-heating-properly",
     title: "Oven Not Heating? Common Causes for Gas and Electric Ovens",
+    metaTitle: "Oven Not Heating? Gas & Electric Causes | SuperFix",
     description:
-      "An oven that will not heat, heats unevenly or never reaches temperature usually has a failed igniter, element or sensor. Learn what to check and when to call a technician.",
+      "An oven that won't heat or heats unevenly often has a failed igniter, element, or sensor. What to check and when to call.",
     date: "2026-10-06",
     readMinutes: 6,
     related: { href: "/repair/oven-repair", label: "Oven Repair in Ottawa" },
@@ -145,8 +147,9 @@ export const extraArticles: Article[] = [
   {
     slug: "microwave-not-heating",
     title: "Microwave Running but Not Heating? Causes, Safety and Repair Options",
+    metaTitle: "Microwave Running but Not Heating? | SuperFix",
     description:
-      "If your microwave turns on, spins and hums but food stays cold, the cause is usually inside the high-voltage system. Learn what is safe to check and when to replace the unit.",
+      "If your microwave spins and hums but food stays cold, the cause is usually the high-voltage system. When to replace it.",
     date: "2026-10-06",
     readMinutes: 5,
     related: { href: "/repair/microwave-repair", label: "Microwave Repair in Ottawa" },
@@ -206,8 +209,9 @@ export const extraArticles: Article[] = [
   {
     slug: "noisy-fridge-sounds-what-they-mean",
     title: "Noisy Fridge? What Buzzing, Clicking and Rattling Sounds Mean",
+    metaTitle: "Noisy Fridge? What Buzzing and Clicking Mean",
     description:
-      "Normal fridge sounds versus warning signs: what buzzing, clicking, humming and rattling usually mean, and which noises need a technician.",
+      "Normal fridge sounds versus warning signs: what buzzing, clicking, humming and rattling mean, and when to call a technician.",
     date: "2026-10-06",
     readMinutes: 6,
     related: { href: "/repair/fridge-repair", label: "Fridge Repair in Ottawa" },
@@ -273,8 +277,9 @@ export const extraArticles: Article[] = [
   {
     slug: "dishwasher-not-cleaning-dishes",
     title: "Dishwasher Not Cleaning Dishes? 8 Fixes Before You Call a Technician",
+    metaTitle: "Dishwasher Not Cleaning Dishes? 8 Fixes | SuperFix",
     description:
-      "Cloudy glasses, gritty plates and food left behind point to a handful of causes: spray arms, filters, water temperature and detergent. Here is how to fix them.",
+      "Cloudy glasses and gritty plates point to spray arms, filters, water temperature or detergent. Here is how to fix them.",
     date: "2026-10-06",
     readMinutes: 6,
     related: { href: "/repair/dishwasher-repair", label: "Dishwasher Repair in Ottawa" },
@@ -348,8 +353,9 @@ export const extraArticles: Article[] = [
   {
     slug: "how-long-do-home-appliances-last",
     title: "How Long Do Home Appliances Last? Typical Lifespans and When to Replace",
+    metaTitle: "How Long Do Appliances Last? Lifespans | SuperFix",
     description:
-      "Typical lifespans for fridges, washers, dryers, dishwashers, ovens and microwaves, and how to decide whether a repair is worth it.",
+      "Typical lifespans for fridges, washers, dryers, dishwashers, ovens and microwaves, and when a repair is worth it.",
     date: "2026-10-06",
     readMinutes: 6,
     related: { href: "/repair/fridge-repair", label: "Appliance Repair in Ottawa" },

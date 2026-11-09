@@ -11,8 +11,6 @@ export default function sitemap(): MetadataRoute.Sitemap {
     "/about",
     "/contact",
     "/online-booking",
-    "/our-work",
-    "/maintenance",
     "/repair",
     "/installation",
     "/blog",

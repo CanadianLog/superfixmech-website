@@ -6,6 +6,7 @@ import { Card } from "@/components/ui/card";
 import { Section } from "@/components/ui/section";
 
 export const metadata: Metadata = {
+  robots: { index: false, follow: true },
   title: "Our Work | SuperFix Mechanical",
   description:
     "See recent appliance repair projects completed by SuperFix Mechanical in Ottawa.",

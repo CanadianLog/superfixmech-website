@@ -13,7 +13,7 @@ import { servicePages } from "@/lib/site-data";
 export const metadata: Metadata = {
   title: "About SuperFix Mechanical | Ottawa Appliance Repair",
   description:
-    "Family-owned Ottawa appliance repair company with 5 years of hands-on experience and a certified technician. Honest pricing, clear quotes, and a 30-day repair warranty.",
+    "Family-owned Ottawa appliance repair with 5 years of experience and a certified technician. Honest pricing, clear quotes, 30-day repair warranty.",
 };
 
 export default function AboutPage() {

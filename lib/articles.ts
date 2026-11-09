@@ -9,6 +9,8 @@ export type ArticleSection = {
 export type Article = {
   slug: string;
   title: string;
+  /** Search-result title (60 characters or fewer). Falls back to title. */
+  metaTitle?: string;
   description: string;
   date: string;
   readMinutes: number;
@@ -21,8 +23,9 @@ const baseArticles: Article[] = [
   {
     slug: "fridge-not-cooling-what-to-check",
     title: "Fridge Not Cooling? 7 Things to Check Before You Call a Technician",
+    metaTitle: "Fridge Not Cooling? 7 Things to Check | SuperFix",
     description:
-      "An Ottawa appliance technician's checklist for a warm fridge: thermostat settings, blocked vents, dirty coils, door seals, and the signs that mean it's time for a repair.",
+      "A warm fridge checklist from an Ottawa technician: thermostat, vents, coils, door seals, and signs it's time for a repair.",
     date: "2026-10-01",
     readMinutes: 6,
     related: { href: "/repair/fridge-repair", label: "Fridge Repair in Ottawa" },
@@ -89,8 +92,9 @@ const baseArticles: Article[] = [
   {
     slug: "dryer-taking-too-long-to-dry",
     title: "Why Is My Dryer Taking So Long? Lint, Venting, and Ottawa Winters",
+    metaTitle: "Dryer Taking Too Long to Dry? Causes | SuperFix",
     description:
-      "Long dry times waste energy and can be a fire hazard. Learn the most common causes, from clogged vents to failed heating elements, and what you can safely fix yourself.",
+      "Long dry times waste energy and can be a fire risk. Learn the common causes, from clogged vents to failed elements.",
     date: "2026-10-01",
     readMinutes: 5,
     related: { href: "/repair/dryer-repair", label: "Dryer Repair in Ottawa" },
@@ -142,8 +146,9 @@ const baseArticles: Article[] = [
   {
     slug: "dishwasher-not-draining",
     title: "Dishwasher Not Draining? Common Causes and Simple Fixes",
+    metaTitle: "Dishwasher Not Draining? Causes & Fixes | SuperFix",
     description:
-      "Standing water at the bottom of your dishwasher is usually caused by a clogged filter, a blocked garbage disposal connection, or a kinked drain hose. Here's how to check each one.",
+      "Standing water is usually a clogged filter, a blocked disposal connection, or a kinked drain hose. Here's how to check.",
     date: "2026-10-01",
     readMinutes: 5,
     related: { href: "/repair/dishwasher-repair", label: "Dishwasher Repair in Ottawa" },
@@ -194,8 +199,9 @@ const baseArticles: Article[] = [
   {
     slug: "repair-or-replace-appliance",
     title: "Repair or Replace? How to Decide When an Appliance Breaks",
+    metaTitle: "Repair or Replace an Appliance? How to Decide",
     description:
-      "Use the age of your appliance, the cost of the repair, and its overall condition to decide whether a repair or a replacement is the smarter choice.",
+      "Use your appliance's age, the repair cost, and its overall condition to decide whether repair or replacement makes sense.",
     date: "2026-10-01",
     readMinutes: 6,
     related: { href: "/repair", label: "Appliance Repair Services" },
