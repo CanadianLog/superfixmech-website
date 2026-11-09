@@ -1,4 +1,4 @@
-import { saveMessagingSettings, saveReviewSettings, sendTestMessage } from "@/lib/actions";
+import { saveAddressSearchKey, saveMessagingSettings, saveReviewSettings, sendTestMessage } from "@/lib/actions";
 import { emailConfigured, smsConfigured } from "@/lib/messaging";
 import { ActionForm, SubmitButton } from "./forms";
 import { Card, Field } from "./ui";
@@ -99,6 +99,34 @@ export function ReviewCard({ s }: { s: Record<string, string> }) {
           </details>
           <div className="flex justify-end"><SubmitButton>Save</SubmitButton></div>
         </ActionForm>
+      </Card>
+    </div>
+  );
+}
+
+export function AddressSearchCard({ s, fromEnv }: { s: Record<string, string>; fromEnv: boolean }) {
+  const on = fromEnv || !!s.google_maps_api_key;
+  return (
+    <div id="address-search" className="mt-6 scroll-mt-6">
+      <Card title="Google address search" actions={<Pill on={on} />}>
+        <p className="text-sm text-stone-600">
+          Suggests real addresses as you type on customer and address forms, and fills in the street, city, province and postal code.
+        </p>
+        <ol className="mt-3 list-decimal space-y-1 pl-5 text-xs text-stone-500">
+          <li>Go to console.cloud.google.com, create a project and add a billing account (Google includes a free monthly allowance that a small business is unlikely to go over).</li>
+          <li>Under <b>APIs &amp; Services → Library</b>, enable <b>Places API (New)</b>.</li>
+          <li>Under <b>APIs &amp; Services → Credentials</b>, create an <b>API key</b>, restrict it to <b>Places API (New)</b>, and paste it below.</li>
+        </ol>
+        {fromEnv ? (
+          <p className="mt-3 text-sm text-stone-500">The key is set on the server (GOOGLE_MAPS_API_KEY).</p>
+        ) : (
+          <ActionForm action={saveAddressSearchKey} className="mt-4 flex flex-wrap items-end gap-2">
+            <Field label="API key" className="min-w-64 flex-1">
+              <input className="input" type="password" name="google_maps_api_key" autoComplete="off" placeholder={s.google_maps_api_key ? "•••••••• (saved)" : "AIza…"} />
+            </Field>
+            <SubmitButton>Save</SubmitButton>
+          </ActionForm>
+        )}
       </Card>
     </div>
   );

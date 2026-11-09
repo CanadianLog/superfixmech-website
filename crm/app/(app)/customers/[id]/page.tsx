@@ -8,6 +8,8 @@ import { Card, Empty, PageHeader, StatusBadge, Tabs } from "@/components/ui";
 import { JobList } from "@/components/job-list";
 import { Timeline } from "@/components/timeline";
 import { ConfirmButton } from "@/components/forms";
+import { AddressSearch } from "@/components/address-search";
+import { placesKey } from "@/lib/places";
 
 export default async function CustomerPage({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<{ tab?: string; addr?: string }> }) {
   await requireUser(["admin", "dispatcher"]);
@@ -59,7 +61,7 @@ export default async function CustomerPage({ params, searchParams }: { params: P
             <ul className="space-y-4 text-sm">
               {addresses.map((a) =>
                 addr === String(a.id) ? (
-                  <li key={a.id}><AddressForm customerId={id} a={a} /></li>
+                  <li key={a.id}><AddressForm customerId={id} a={a} search={!!placesKey()} /></li>
                 ) : (
                   <li key={a.id} className="flex items-start justify-between gap-2">
                     <div>
@@ -77,7 +79,7 @@ export default async function CustomerPage({ params, searchParams }: { params: P
                 ),
               )}
               {addresses.length === 0 && addr !== "new" && <li className="text-stone-400">No address on file.</li>}
-              {addr === "new" && <li><AddressForm customerId={id} /></li>}
+              {addr === "new" && <li><AddressForm customerId={id} search={!!placesKey()} /></li>}
             </ul>
           </Card>
         </div>
@@ -125,11 +127,12 @@ export default async function CustomerPage({ params, searchParams }: { params: P
   );
 }
 
-function AddressForm({ customerId, a }: { customerId: number; a?: { id: number; street: string; unit: string; city: string; province: string; postal_code: string; notes: string } }) {
+function AddressForm({ customerId, a, search }: { customerId: number; search: boolean; a?: { id: number; street: string; unit: string; city: string; province: string; postal_code: string; notes: string } }) {
   return (
     <form action={saveAddress} className="grid grid-cols-6 gap-2 rounded-lg bg-stone-50 p-3">
       <input type="hidden" name="customer_id" value={customerId} />
       {a && <input type="hidden" name="id" value={a.id} />}
+      {search && <AddressSearch className="col-span-6" />}
       <input className="input col-span-4" name="street" placeholder="Street" defaultValue={a?.street} required />
       <input className="input col-span-2" name="unit" placeholder="Unit" defaultValue={a?.unit} />
       <input className="input col-span-3" name="city" placeholder="City" defaultValue={a?.city ?? "Ottawa"} />

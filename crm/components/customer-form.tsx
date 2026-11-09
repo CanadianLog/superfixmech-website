@@ -2,10 +2,11 @@ import { saveCustomer } from "@/lib/actions";
 import type { Customer } from "@/lib/types";
 import { ActionForm, SubmitButton } from "./forms";
 import { Card, Field } from "./ui";
+import { AddressSearch } from "./address-search";
 
 export const LEAD_SOURCES = ["Google", "Website", "Online booking", "Referral", "Facebook", "Instagram", "HomeStars", "Repeat customer", "Other"];
 
-export function CustomerForm({ customer }: { customer?: Customer }) {
+export function CustomerForm({ customer, addressSearch = false }: { customer?: Customer; addressSearch?: boolean }) {
   const c = customer;
   return (
     <ActionForm action={saveCustomer} className="space-y-6">
@@ -23,6 +24,7 @@ export function CustomerForm({ customer }: { customer?: Customer }) {
       {!c && (
         <Card title="Service address">
           <div className="grid gap-4 sm:grid-cols-6">
+            {addressSearch && <AddressSearch className="sm:col-span-6" />}
             <Field label="Street" className="sm:col-span-4"><input className="input" name="street" autoComplete="street-address" /></Field>
             <Field label="Unit" className="sm:col-span-2"><input className="input" name="unit" /></Field>
             <Field label="City" className="sm:col-span-3"><input className="input" name="city" defaultValue="Ottawa" /></Field>

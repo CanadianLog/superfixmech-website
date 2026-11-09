@@ -224,6 +224,8 @@ const DEFAULT_SETTINGS: Record<string, string> = {
   smtp_user: "",
   smtp_pass: "",
   smtp_from_name: "SuperFix Mechanical",
+  // Google address search (Places API)
+  google_maps_api_key: "",
   // Google review requests
   google_review_url: "",
   review_auto: "1",

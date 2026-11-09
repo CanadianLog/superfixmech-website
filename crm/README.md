@@ -39,6 +39,10 @@ Open http://localhost:3100. The first visit asks you to create the owner account
 - Set up sending under **Settings → Texts & email** (Twilio for texts, your mailbox such as Gmail for email) and **Settings → Google reviews** (paste your Google review link). Until texting or email is set up, the buttons open your phone's own texting or email app with the message already written.
 - Customers who shouldn't get review requests can be marked on their customer page. Customers who reply STOP to a text are blocked by Twilio.
 
+## Google address search
+
+With a Google API key (Places API (New) enabled), the new-customer and address forms suggest real addresses as you type and fill in street, city, province and postal code. Add the key under **Settings → Google address search**, or set `GOOGLE_MAPS_API_KEY` on the server. Searches go through the CRM's server, so the key is never sent to browsers.
+
 ## Bring your data over from Housecall Pro
 
 Sign in as an admin and open **Settings → Import from Housecall Pro** (or go to `/import`). That page walks through each step:

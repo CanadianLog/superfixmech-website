@@ -1203,3 +1203,19 @@ export async function markInvoicesPaid(_: FormState, fd: FormData): Promise<Form
   revalidatePath("/", "layout");
   return count ? { ok: `Marked ${count} invoice${count === 1 ? "" : "s"} as paid.` } : { error: "None of the selected invoices had a balance to pay." };
 }
+
+export async function saveAddressSearchKey(_: FormState, fd: FormData): Promise<FormState> {
+  await requireUser(["admin"]);
+  const key = str(fd, "google_maps_api_key");
+  if (!key) return { error: "Paste your Google API key." };
+  run("UPDATE settings SET value = ? WHERE key = 'google_maps_api_key'", key);
+  const { autocomplete } = await import("./places");
+  try {
+    await autocomplete("200 Bay Street Ottawa", "settings-check");
+  } catch (e) {
+    revalidatePath("/settings");
+    return { error: `Saved, but Google rejected a test search: ${(e as Error).message.replace(/\.$/, "")}. Check that Places API (New) is enabled for this key.` };
+  }
+  revalidatePath("/", "layout");
+  return { ok: "Saved and tested. Address search is on." };
+}
