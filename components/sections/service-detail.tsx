@@ -52,7 +52,7 @@ export function ServiceDetail({
       <PageHero
         titleAsParagraph
         title={title.toUpperCase()}
-        subtitle="Professional appliance support for homes and small businesses."
+        subtitle="Professional appliance support for homes, condos and rental properties."
       />
       <Section className="py-12 md:py-16" innerClassName="grid gap-8 md:grid-cols-[1.1fr_1.4fr]">
           <div className="surface relative min-h-[360px] overflow-hidden p-0 md:min-h-[440px]">
