@@ -20,7 +20,7 @@ A field-service CRM for SuperFix Mechanical: customers, jobs, dispatch, estimate
 
 ## Run it locally
 
-Needs **Node.js 22.5 or newer** (it uses Node's built-in SQLite, so there's no separate database to install).
+Needs **Node.js 22.13 or newer** (it uses Node's built-in SQLite, so there's no separate database to install).
 
 ```bash
 cd crm
