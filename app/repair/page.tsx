@@ -6,6 +6,7 @@ import { PageHero } from "@/components/sections/page-hero";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { Section } from "@/components/ui/section";
+import { serviceContent } from "@/lib/repair-content";
 import { servicePages } from "@/lib/site-data";
 
 export const metadata: Metadata = {
@@ -52,8 +53,7 @@ export default function RepairPage() {
               <div className="p-5">
               <h3 className="text-xl font-bold text-[#5f4714]">{service.name}</h3>
               <p className="mt-2 text-sm leading-7 text-[#7e6b45]">
-                Placeholder service summary with common symptoms, expected process, and next
-                steps.
+                {serviceContent[service.slug].overview}
               </p>
               <Link
                 href={`/repair/${service.slug}`}
