@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { BookingRequestForm } from "@/components/sections/booking-request-form";
 import { FaqList } from "@/components/sections/faq-list";
-import { HcpLeadForm } from "@/components/sections/hcp-lead-form";
 import { PageHero } from "@/components/sections/page-hero";
 import { Card } from "@/components/ui/card";
 import { Section } from "@/components/ui/section";
@@ -75,7 +75,9 @@ export default function OnlineBookingPage() {
         <h2 className="mb-6 text-center text-3xl font-extrabold text-[#3b2b0f] md:text-4xl">
           Request your appointment
         </h2>
-        <HcpLeadForm />
+        <div className="rounded-2xl border border-[#f1dfab] bg-white p-5 shadow-[0_10px_30px_-18px_rgba(74,52,12,0.25)] md:p-8">
+          <BookingRequestForm />
+        </div>
       </Section>
       <Section className="pt-0 md:pt-0" innerClassName="max-w-5xl">
         <h2 className="mb-7 text-center text-3xl font-extrabold text-[#3b2b0f] md:text-4xl">

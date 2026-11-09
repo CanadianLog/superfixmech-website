@@ -1,0 +1,22 @@
+# One-click hosting for the SuperFix CRM on Render (render.com).
+# In Render: New → Blueprint → pick this repository. It creates the CRM web service
+# with a persistent disk for the database. The marketing website is not affected.
+services:
+  - type: web
+    name: superfix-crm
+    runtime: node
+    rootDir: crm
+    plan: starter # a persistent disk needs a paid instance
+    region: virginia
+    buildCommand: npm ci && npm run build
+    startCommand: npm start
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_VERSION
+        value: 22.23.4
+      - key: CRM_DB_PATH
+        value: /var/data/crm.db
+    disk:
+      name: crm-data
+      mountPath: /var/data
+      sizeGB: 1

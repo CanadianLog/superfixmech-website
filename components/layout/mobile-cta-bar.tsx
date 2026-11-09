@@ -3,7 +3,7 @@ import { company } from "@/lib/site-data";
 
 /**
  * Call / Book bar pinned to the bottom of the screen on phones. Book Now links to
- * /online-booking, which the HCP booking modal intercepts to open the form in place.
+ * /online-booking, which the booking modal intercepts to open the form in place.
  */
 export function MobileCtaBar() {
   return (
