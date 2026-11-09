@@ -46,7 +46,7 @@ export default function ContactPage() {
           <h2 className="text-xl font-bold text-[#3b2b0f]">Get in touch</h2>
           <p className="mt-2 text-sm leading-6 text-[#7e6b45]">
             Call for the fastest response, or use the form and we&apos;ll call you back to book a
-            time.
+            time. We&apos;re open {company.hours.label.toLowerCase()}.
           </p>
           <ul className="mt-5 space-y-4">
             {contactItems.map((item) => (

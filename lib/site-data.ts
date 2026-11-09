@@ -10,6 +10,10 @@ export const company = {
     country: "CA",
   },
   url: "https://superfixmech.ca",
+  /** Phone and service hours, the same every day of the week. */
+  hours: { label: "Every day, 8 am to 8 pm", opens: "08:00", closes: "20:00" },
+  /** Flat diagnostic fee in CAD, before tax. */
+  diagnosticFee: 89,
   googleMaps: "https://maps.google.com/?cid=7860337456778361550",
   social: [
     "https://maps.google.com/?cid=7860337456778361550",
@@ -30,7 +34,7 @@ export const ogImage = {
 };
 
 /** Update when site content meaningfully changes; used for sitemap lastmod. */
-export const siteLastUpdated = "2026-10-06";
+export const siteLastUpdated = "2026-11-09";
 
 export const mainNav = [
   { href: "/", label: "Home" },
@@ -61,7 +65,6 @@ export const installationPages = [
 export const legalPages = [
   { href: "/privacy-policy", label: "Privacy Policy" },
   { href: "/warranty", label: "Warranty Policy" },
-  { href: "/cancellation-policy", label: "Cancellation Policy" },
   { href: "/terms-and-condition", label: "Terms & Condition" },
   { href: "/refund-policy", label: "Refund Policy" },
 ];

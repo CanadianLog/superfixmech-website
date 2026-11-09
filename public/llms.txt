@@ -9,6 +9,11 @@ by a certified appliance technician with five years of experience, and a clear
 quote is given before any repair work begins. Repairs carry a 30-day warranty
 on parts and labour. The company is insured.
 
+Hours: every day, 8 am to 8 pm, including weekends.
+
+Pricing: the diagnostic fee is $89 plus tax (CAD). Repair and installation
+prices are quoted after diagnosis, before any work begins.
+
 We do not offer commercial service or HVAC (heating and air conditioning).
 
 ## Appliance repair
@@ -44,6 +49,7 @@ Local pages: https://superfixmech.ca/service-areas/kanata, https://superfixmech.
 ## Contact
 
 - Phone: 613-366-7009
+- Hours: every day, 8 am to 8 pm
 - Email: service@superfixmech.ca
 - Address: 200 Bay Street, Ottawa, ON
 - Book online: https://superfixmech.ca/online-booking
@@ -53,4 +59,4 @@ Local pages: https://superfixmech.ca/service-areas/kanata, https://superfixmech.
 - About: https://superfixmech.ca/about
 - Repair guides: https://superfixmech.ca/blog
 - Warranty: https://superfixmech.ca/warranty
-- Cancellation: https://superfixmech.ca/cancellation-policy
+- Refunds: https://superfixmech.ca/refund-policy

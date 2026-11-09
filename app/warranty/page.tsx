@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import { PolicyContent } from "@/components/sections/policy-content";
 
 export const metadata: Metadata = {
-  robots: { index: false, follow: true },
   title: "Warranty Policy | SuperFix Mechanical",
   description:
     "30-day warranty on parts and labour for appliance repairs completed by SuperFix Mechanical in Ottawa.",
@@ -13,7 +12,7 @@ export default function WarrantyPage() {
     <main>
       <PolicyContent
         title="Warranty Policy"
-        intro="This placeholder warranty policy outlines sample coverage terms for parts and labour service."
+        intro="Every repair completed by SuperFix Mechanical is covered by a 30-day warranty on parts and labour. This policy explains what is covered and the conditions that apply."
         sections={[
           {
             heading: "30-Day Warranty on Parts & Labour",
