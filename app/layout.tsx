@@ -5,7 +5,7 @@ import { SiteFooter } from "@/components/layout/site-footer";
 import { CookieConsent } from "@/components/layout/cookie-consent";
 import { MobileCtaBar } from "@/components/layout/mobile-cta-bar";
 import { SiteHeader } from "@/components/layout/site-header";
-import { HcpBookingModal } from "@/components/sections/hcp-booking-modal";
+import { BookingModal } from "@/components/sections/booking-modal";
 import { JsonLd } from "@/components/seo/json-ld";
 import { company, installationPages, ogImage, servicePages } from "@/lib/site-data";
 import "./globals.css";
@@ -114,7 +114,7 @@ export default function RootLayout({
         {children}
         <SiteFooter />
         <MobileCtaBar />
-        <HcpBookingModal />
+        <BookingModal />
         <CookieConsent />
         {tawkPropertyId && tawkWidgetId ? (
           <Script id="tawkto-widget" strategy="afterInteractive">

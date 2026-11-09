@@ -1,15 +1,15 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { HcpFormFrame } from "@/components/sections/hcp-form-frame";
+import { BookingRequestForm } from "@/components/sections/booking-request-form";
 import { company } from "@/lib/site-data";
 
-// Links to these pages open the Housecall Pro form in a popup instead of navigating.
+// Links to these pages open the booking form in a popup instead of navigating.
 // The pages themselves still carry the form, so the links work without JavaScript
 // and when opened in a new tab.
 const POPUP_PATHS = new Set(["/online-booking", "/contact"]);
 
-export function HcpBookingModal() {
+export function BookingModal() {
   const [open, setOpen] = useState(false);
 
   useEffect(() => {
@@ -76,7 +76,7 @@ export function HcpBookingModal() {
           </button>
         </div>
         <div className="overflow-y-auto">
-          <HcpFormFrame />
+          <BookingRequestForm compact />
         </div>
       </div>
     </div>

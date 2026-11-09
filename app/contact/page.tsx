@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { HcpLeadForm } from "@/components/sections/hcp-lead-form";
+import { BookingRequestForm } from "@/components/sections/booking-request-form";
 import { PageHero } from "@/components/sections/page-hero";
 import { Section } from "@/components/ui/section";
 import { company } from "@/lib/site-data";
@@ -93,7 +93,7 @@ export default function ContactPage() {
             .
           </p>
         </aside>
-        <HcpLeadForm />
+        <BookingRequestForm />
       </Section>
     </main>
   );

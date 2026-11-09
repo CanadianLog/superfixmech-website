@@ -1,3 +1,4 @@
+import { GoogleReviews } from "@/components/sections/google-reviews";
 import Image from "next/image";
 import Link from "next/link";
 import { BrandStrip } from "@/components/layout/brand-strip";
@@ -43,10 +44,6 @@ const values = [
     text: "Tech-savvy yet down-to-earth, we bring friendly, reliable service that makes every repair feel professional, personal, and local.",
   },
 ];
-
-// Housecall Pro reviews widget; reviews are managed in Housecall Pro.
-const HCP_REVIEWS_URL =
-  "https://client.housecallpro.com/reviews/widget/259ea32e-4046-4b70-9822-c67368fa06a9";
 
 const serviceAreas: Record<string, string[]> = {
   "Central Ottawa": [
@@ -242,14 +239,7 @@ export function HomeSections() {
             What Our Clients Are Saying
           </h2>
         </div>
-        <div className="mx-auto mt-6 max-w-5xl overflow-hidden rounded-2xl border border-[#f1dfab] bg-white md:mt-10">
-          <iframe
-            title="SuperFix Mechanical customer reviews"
-            src={HCP_REVIEWS_URL}
-            loading="lazy"
-            className="block h-[900px] w-full border-0 md:h-[1000px]"
-          />
-        </div>
+        <GoogleReviews />
       </Section>
 
       <Section className="bg-[#f4c542] py-9 text-[#2f2512] md:py-16">

@@ -41,6 +41,8 @@ export function PageHero({
           playsInline
           className="absolute inset-0 h-full w-full object-cover opacity-40"
         >
+          {/* Served from this site; the Framer copy is only a fallback now that the Framer site is gone. */}
+          <source src="/hero-video.mp4" type="video/mp4" />
           <source
             src="https://framerusercontent.com/assets/Y0KHvF7TN2xrIaZjaq5VPPdmbo.mp4"
             type="video/mp4"

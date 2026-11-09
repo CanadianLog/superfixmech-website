@@ -50,7 +50,7 @@ export default function PrivacyPolicyPage() {
           {
             heading: "Information Collected Through Our Website",
             points: [
-              "Booking and contact form submissions (such as your name, phone number, address, and service details) are processed by Housecall Pro, our scheduling provider, so we can respond to your request.",
+              "Booking and contact form submissions (such as your name, phone number, address, and service details) are stored in our own customer management system so we can respond to your request and schedule your service.",
               "If you use the live chat, your messages are handled by our chat provider (Tawk.to).",
               "Our hosting provider (Cloudflare) processes basic technical data, such as IP address and browser type, to deliver and secure the website.",
             ],
