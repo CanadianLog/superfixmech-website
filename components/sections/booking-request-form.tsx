@@ -144,7 +144,7 @@ export function BookingRequestForm({ compact = false }: { compact?: boolean }) {
         </label>
         <label className="block">
           <span className={label}>Mobile phone *</span>
-          <input name="phone" type="tel" required autoComplete="tel" inputMode="tel" className={input} placeholder="613-555-0123" />
+          <input name="phone" type="tel" required autoComplete="tel" inputMode="tel" className={input} placeholder="Your phone number" />
         </label>
         <label className="block">
           <span className={label}>Email</span>

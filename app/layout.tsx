@@ -58,6 +58,14 @@ const localBusinessSchema = {
     addressRegion: company.address.region,
     addressCountry: company.address.country,
   },
+  openingHoursSpecification: [
+    {
+      "@type": "OpeningHoursSpecification",
+      dayOfWeek: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"],
+      opens: company.hours.opens,
+      closes: company.hours.closes,
+    },
+  ],
   areaServed: [
     "Ottawa",
     "Kanata",

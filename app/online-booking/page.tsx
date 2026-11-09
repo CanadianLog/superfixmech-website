@@ -58,9 +58,12 @@ const faq = [
       "Repairs are backed by our 30-day warranty. See the warranty policy for the full details.",
   },
   {
-    question: "What if I need to cancel or reschedule?",
-    answer:
-      "Let us know as early as you can by phone or email. Our cancellation policy explains how changes to a booking are handled.",
+    question: "How much does a diagnostic cost?",
+    answer: `The diagnostic fee is $${company.diagnosticFee} plus tax. The technician finds the fault and gives you a quote for the repair before any work begins.`,
+  },
+  {
+    question: "What are your hours?",
+    answer: `We are open ${company.hours.label.toLowerCase()}, including weekends. Call ${company.phone} or book online any time.`,
   },
 ];
 
@@ -101,10 +104,6 @@ export default function OnlineBookingPage() {
           . You can also read our{" "}
           <Link className="font-semibold underline" href="/warranty">
             warranty policy
-          </Link>{" "}
-          and{" "}
-          <Link className="font-semibold underline" href="/cancellation-policy">
-            cancellation policy
           </Link>{" "}
           before you book.
         </p>
