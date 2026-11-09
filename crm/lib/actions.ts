@@ -1173,3 +1173,33 @@ export async function sendReceipt(_: FormState, fd: FormData): Promise<FormState
   revalidatePath("/", "layout");
   return { ok: r.note.trim() || "Receipt ready to send.", links: r.links };
 }
+
+/** Records the remaining balance as paid on each selected invoice (used to tidy up after an import). */
+export async function markInvoicesPaid(_: FormState, fd: FormData): Promise<FormState> {
+  const user = await requireUser(["admin", "dispatcher"]);
+  const ids = fd.getAll("ids").map((v) => Number(v)).filter((n) => Number.isFinite(n) && n > 0);
+  if (!ids.length) return { error: "Tick the invoices you want to mark as paid." };
+  const method = str(fd, "method") || "other";
+  const { getInvoice } = await import("./data");
+  let count = 0;
+  tx(() => {
+    for (const id of ids) {
+      const inv = getInvoice(id);
+      if (!inv || inv.status === "void" || inv.balance_cents <= 0) continue;
+      run(
+        "INSERT INTO payments (invoice_id, amount_cents, method, reference, paid_on, recorded_by, token) VALUES (?, ?, ?, 'Marked paid', ?, ?, ?)",
+        id,
+        inv.balance_cents,
+        method,
+        str(fd, "date_mode") === "today" ? today() : inv.issued_on,
+        user.id,
+        randomToken(),
+      );
+      run("UPDATE invoices SET status = 'sent' WHERE id = ? AND status = 'draft'", id);
+      logActivity({ customerId: inv.customer_id, jobId: inv.job_id, userId: user.id, kind: "payment", body: `Invoice #${inv.number} marked paid` });
+      count++;
+    }
+  });
+  revalidatePath("/", "layout");
+  return count ? { ok: `Marked ${count} invoice${count === 1 ? "" : "s"} as paid.` } : { error: "None of the selected invoices had a balance to pay." };
+}

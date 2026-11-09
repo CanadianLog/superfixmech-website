@@ -220,6 +220,33 @@ function parseRate(rateText: string, taxCents: number, taxableCents: number): nu
   return Math.round(rate * 100) / 100;
 }
 
+/**
+ * Works out what a Housecall Pro job was worth and how much was paid, from whichever columns
+ * the export has: a paid amount, an amount due/balance, or a payment/invoice status saying "paid".
+ */
+function moneyFrom(r: Row) {
+  const amount = toCents(r.get("Amount", "Total", "Total Amount", "Job Amount", "Job Total", "Invoice Total", "Invoice Amount", "Grand Total", "Total Price"));
+  const taxCents = toCents(r.get("Tax", "Tax Amount", "Total Tax"));
+  const subtotal = toCents(r.get("Subtotal", "Sub Total", "Sub-total")) || Math.max(0, amount - taxCents);
+  const taxable = toCents(r.get("Taxable Amount")) || (taxCents > 0 ? subtotal : 0);
+  const rate = parseRate(r.get("Tax rate", "Tax Rate", "Tax %"), taxCents, taxable);
+  const total = amount || subtotal + taxCents;
+
+  // Only trust plain money values (a date in a "Due" column must not be read as an amount).
+  const isMoney = (v: string) => /^\(?-?\$?\s*-?[\d,]+(\.\d{1,2})?\)?$/.test(v.trim());
+  const moneyCol = (...names: string[]) => names.map((n) => r.get(n)).find((v) => v && isMoney(v)) ?? "";
+  const paidText = moneyCol("Paid Amount", "Amount Paid", "Total Paid", "Paid", "Payments", "Payment Amount", "Collected", "Amount Collected");
+  const dueText = moneyCol("Due", "Amount Due", "Due Amount", "Balance", "Balance Due", "Outstanding", "Outstanding Balance", "Open Balance", "Remaining Balance");
+  const statusText = `${r.get("Payment", "Payment Status", "Invoice Status", "Paid?", "Paid Status")} ${r.get("Job Status", "Status")}`.toLowerCase();
+
+  let paid = 0;
+  if (paidText && isMoney(paidText) && toCents(paidText) > 0) paid = toCents(paidText);
+  else if (dueText && isMoney(dueText)) paid = Math.max(0, total - toCents(dueText));
+  else if (/\b(paid in full|fully paid|paid)\b/.test(statusText) && !/\b(unpaid|not paid|partial|partially)\b/.test(statusText)) paid = total;
+  else if (/^(yes|true|y|1)$/i.test(r.get("Paid?", "Paid", "Is Paid"))) paid = total;
+  return { amount: total, taxCents, subtotal, taxable, rate, paid: Math.min(paid, total || paid) };
+}
+
 export function importJobs(text: string, tz: string): ImportReport {
   const { rows } = table(text);
   const report: ImportReport = { created: 0, updated: 0, skipped: 0, warnings: [] };
@@ -231,8 +258,37 @@ export function importJobs(text: string, tz: string): ImportReport {
       const invoiceNo = r.get("Invoice", "Invoice #", "Invoice Number", "Job #", "Job Number");
       const hcpId = r.get("HCP Id", "Job ID", "ID");
       const externalId = hcpId || (invoiceNo ? `invoice:${invoiceNo}` : "");
-      if (externalId && get("SELECT id FROM jobs WHERE external_id = ?", externalId)) {
-        report.skipped++;
+      const existingJob = externalId ? get<{ id: number }>("SELECT id FROM jobs WHERE external_id = ?", externalId) : undefined;
+      if (existingJob) {
+        // Already imported: only bring payments up to date (fixes invoices imported as unpaid).
+        const m = moneyFrom(r);
+        let inv = get<{ id: number; issued_on: string; created_at: string }>(
+          "SELECT id, issued_on, created_at FROM invoices WHERE job_id = ? AND status != 'void' ORDER BY id LIMIT 1",
+          existingJob.id,
+        );
+        // If the first import couldn't read the dates, it dated the invoice on the import day; correct it now.
+        const realDate = parseDateTime(r.get("Finished", "Finished At", "Completed", "Completed At", "Completed Date", "Completed On", "Completion Date", "Job Completed", "Job Completed At"), tz).date ?? parseDateTime(r.get("Date", "Job Date", "Scheduled Date", "Scheduled For", "Schedule Date", "Scheduled Start", "Scheduled Start Date", "Job Scheduled Start", "Start Date", "Appointment Date", "Start"), tz).date;
+        let fixedDate = false;
+        if (inv && realDate && inv.issued_on !== realDate && inv.issued_on === inv.created_at.slice(0, 10)) {
+          run("UPDATE invoices SET issued_on = ?, due_on = ? WHERE id = ? AND notes = 'Imported from Housecall Pro'", realDate, realDate, inv.id);
+          run("UPDATE payments SET paid_on = ? WHERE invoice_id = ? AND reference = 'Paid in Housecall Pro'", realDate, inv.id);
+          run("UPDATE jobs SET completed_at = ? WHERE id = ? AND status = 'completed'", `${realDate}T17:00:00.000Z`, existingJob.id);
+          inv = { ...inv, issued_on: realDate };
+          fixedDate = true;
+        }
+        const alreadyPaid = inv ? get<{ s: number }>("SELECT COALESCE(SUM(amount_cents), 0) AS s FROM payments WHERE invoice_id = ?", inv.id)!.s : 0;
+        if (inv && m.paid > alreadyPaid) {
+          run(
+            "INSERT INTO payments (invoice_id, amount_cents, method, reference, paid_on, token) VALUES (?, ?, 'other', 'Paid in Housecall Pro', ?, ?)",
+            inv.id,
+            m.paid - alreadyPaid,
+            inv.issued_on,
+            randomToken(),
+          );
+          run("UPDATE invoices SET status = 'sent' WHERE id = ? AND status = 'draft'", inv.id);
+          report.updated++;
+        } else if (fixedDate) report.updated++;
+        else report.skipped++;
         continue;
       }
 
@@ -270,7 +326,7 @@ export function importJobs(text: string, tz: string): ImportReport {
       });
 
       // Schedule & status
-      const when = parseDateTime(r.get("Date", "Scheduled Date", "Scheduled Start", "Start"), tz);
+      const when = parseDateTime(r.get("Date", "Job Date", "Scheduled Date", "Scheduled For", "Schedule Date", "Scheduled Start", "Scheduled Start Date", "Job Scheduled Start", "Start Date", "Appointment Date", "Start"), tz);
       const window = r.get("Window", "Arrival Window");
       const startTime = when.time ?? (window ? parseTime(window) : undefined) ?? "09:00";
       const endParsed = parseDateTime(r.get("End Time", "Scheduled End", "End"), tz);
@@ -282,7 +338,7 @@ export function importJobs(text: string, tz: string): ImportReport {
         const t = Math.min(h * 60 + m + 120, 23 * 60 + 59);
         end = `${when.date}T${pad(Math.floor(t / 60))}:${pad(t % 60)}`;
       }
-      const status = mapStatus(r.get("Job Status", "Status", "Work Status"), r.get("Finished", "Completed", "Completed At"), !!start);
+      const status = mapStatus(r.get("Job Status", "Status", "Work Status"), r.get("Finished", "Finished At", "Completed", "Completed At", "Completed Date", "Completed On", "Completion Date", "Job Completed", "Job Completed At"), !!start);
 
       // Technician
       const employees = r.get("Employee", "Employees", "Assigned Employees", "Assigned To");
@@ -297,12 +353,7 @@ export function importJobs(text: string, tz: string): ImportReport {
       }
 
       // Money
-      const amount = toCents(r.get("Amount", "Total", "Job Amount", "Invoice Total"));
-      const taxCents = toCents(r.get("Tax", "Tax Amount"));
-      const subtotal = toCents(r.get("Subtotal")) || Math.max(0, amount - taxCents);
-      const taxable = toCents(r.get("Taxable Amount")) || (taxCents > 0 ? subtotal : 0);
-      const rate = parseRate(r.get("Tax rate", "Tax Rate"), taxCents, taxable);
-      const paid = toCents(r.get("Paid Amount", "Amount Paid", "Paid"));
+      const { taxCents, subtotal, rate, paid } = moneyFrom(r);
       const lineText = r.get("Line Items");
       const description = r.get("Description", "Job Description");
 
@@ -317,9 +368,9 @@ export function importJobs(text: string, tz: string): ImportReport {
       ]
         .filter(Boolean)
         .join("\n");
-      const completedIso = status === "completed" ? `${(parseDateTime(r.get("Finished", "Completed At"), tz).date ?? when.date ?? new Date().toISOString().slice(0, 10))}T17:00:00.000Z` : null;
+      const completedIso = status === "completed" ? `${(parseDateTime(r.get("Finished", "Finished At", "Completed", "Completed At", "Completed Date", "Completed On", "Completion Date", "Job Completed", "Job Completed At"), tz).date ?? when.date ?? new Date().toISOString().slice(0, 10))}T17:00:00.000Z` : null;
       const createdIso = (() => {
-        const c = parseDateTime(r.get("Created At", "Created"), tz);
+        const c = parseDateTime(r.get("Created At", "Created", "Created Date", "Created On", "Date Created"), tz);
         return c.date ? `${c.date}T${c.time ?? "12:00"}:00.000Z` : new Date().toISOString();
       })();
 
@@ -385,10 +436,11 @@ export function importJobs(text: string, tz: string): ImportReport {
         );
         if (paid > 0) {
           run(
-            "INSERT INTO payments (invoice_id, amount_cents, method, reference, paid_on) VALUES (?, ?, 'other', 'Paid in Housecall Pro', ?)",
+            "INSERT INTO payments (invoice_id, amount_cents, method, reference, paid_on, token) VALUES (?, ?, 'other', 'Paid in Housecall Pro', ?, ?)",
             invId,
             paid,
             issued,
+            randomToken(),
           );
         }
       }
