@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { ServiceDetail } from "@/components/sections/service-detail";
+import { type ExtraSection, ServiceDetail } from "@/components/sections/service-detail";
 import { installationPages } from "@/lib/site-data";
 
 const installationContent: Record<
@@ -9,6 +9,9 @@ const installationContent: Record<
     overview: string;
     bullets: string[];
     image: string;
+    metaTitle?: string;
+    metaDescription?: string;
+    extraSections?: ExtraSection[];
     faq: { question: string; answer: string }[];
   }
 > = {
@@ -52,6 +55,31 @@ const installationContent: Record<
       "Load test to confirm heating and cycle performance",
     ],
     image: "/service-photos/dryer-installation.jpg",
+    metaTitle: "Dryer Installation in Ottawa | SuperFix Mechanical",
+    metaDescription:
+      "Electric and gas dryer installation in Ottawa with vent check and load test. Serving Kanata, Orleans, Nepean and Barrhaven. Call 613-366-7009.",
+    extraSections: [
+      {
+        heading: "Before your dryer installation",
+        points: [
+          "Confirm whether your hookup is electric or gas. A gas dryer needs a gas line already in place.",
+          "Check that the new dryer's plug matches your outlet. We flag any mismatch before we start.",
+          "Leave clear access to the dryer space and the vent opening.",
+          "Tell us when booking if you want the old dryer removed.",
+        ],
+      },
+      {
+        heading: "Why dryer venting matters",
+        paragraphs: [
+          "A restricted vent makes a dryer work harder, stretches drying times and is a fire risk. We check the existing vent run for lint buildup and kinks as part of every install.",
+          "Already living with a slow dryer? These guides can help:",
+        ],
+        links: [
+          { href: "/blog/dryer-taking-too-long-to-dry", label: "Why is my dryer taking so long?" },
+          { href: "/repair/dryer-repair", label: "Dryer repair in Ottawa" },
+        ],
+      },
+    ],
     faq: [
       {
         question: "Do you install gas dryers as well as electric?",
@@ -81,6 +109,31 @@ const installationContent: Record<
       "Full cycle test for leaks and drainage",
     ],
     image: "/service-photos/dishwasher-installation.jpg",
+    metaTitle: "Dishwasher Installation in Ottawa | SuperFix Mechanical",
+    metaDescription:
+      "Dishwasher installation in Ottawa with water, drain and power hookup and a full test cycle. Serving Kanata, Orleans and Nepean. Call 613-366-7009.",
+    extraSections: [
+      {
+        heading: "How to prepare for your dishwasher installation",
+        points: [
+          "Measure the cabinet opening and compare it with the new dishwasher's spec sheet.",
+          "Clear the space under the sink so we can reach the shut-off valve and drain connection.",
+          "Make sure the water shut-off valve turns and a power connection is nearby.",
+          "Tell us when booking if you want the old dishwasher removed.",
+        ],
+      },
+      {
+        heading: "Repair it or replace it?",
+        paragraphs: [
+          "If your current dishwasher keeps leaking, won't drain or has worn out, it may be time for a new one. These pages can help you decide:",
+        ],
+        links: [
+          { href: "/blog/repair-or-replace-appliance", label: "Repair or replace an appliance?" },
+          { href: "/blog/dishwasher-not-draining", label: "Dishwasher not draining" },
+          { href: "/repair/dishwasher-repair", label: "Dishwasher repair in Ottawa" },
+        ],
+      },
+    ],
     faq: [
       {
         question: "Can you install a dishwasher in a cabinet opening built for a different brand?",
@@ -185,6 +238,13 @@ export default async function InstallationServicePage({ params }: Props) {
       path={`/installation/${slug}`}
       parent={{ name: "Installation", path: "/installation" }}
       serviceType="Appliance installation"
+      extraSections={content.extraSections}
+      areasHeading={content.extraSections ? "Appliance installation across Ottawa" : undefined}
+      areasIntro={
+        content.extraSections
+          ? `We install ${installation.name.replace(/ installation$/i, "").toLowerCase()}s in Ottawa and nearby communities. Find your neighbourhood:`
+          : undefined
+      }
     />
   );
 }
@@ -202,7 +262,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   }
 
   return {
-    title: `${installation.name} Ottawa | SuperFix Mechanical`,
-    description: `Professional ${installation.name.toLowerCase()} in Ottawa. Certified technicians, safe hookup, and full testing on every install. Call 613-366-7009 to book.`,
+    title: installationContent[slug]?.metaTitle ?? `${installation.name} Ottawa | SuperFix Mechanical`,
+    description: installationContent[slug]?.metaDescription ?? `Professional ${installation.name.toLowerCase()} in Ottawa. Certified technicians, safe hookup, and full testing on every install. Call 613-366-7009 to book.`,
   };
 }
