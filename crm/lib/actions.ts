@@ -961,7 +961,16 @@ export async function importHousecallPro(_: FormState, fd: FormData): Promise<Fo
     if (/\.(xlsx?|numbers)$/i.test(file.name)) {
       return { error: `${file.name} is an Excel file. Open it in Excel or Google Sheets, choose File → Save As (or Download) → CSV, and upload the .csv instead.` };
     }
-    const text = await file.text();
+    let text: string;
+    if (/\.zip$/i.test(file.name)) {
+      // Housecall Pro emails the customer list as a .zip; use the CSV inside it.
+      const { firstCsvInZip } = await import("./unzip");
+      const found = firstCsvInZip(Buffer.from(await file.arrayBuffer()));
+      if (!found) return { error: `Couldn't find a CSV file inside ${file.name}. Unzip it and upload the .csv instead.` };
+      text = found.text;
+    } else {
+      text = await file.text();
+    }
     try {
       const r =
         key === "customers" ? importCustomers(text) : key === "jobs" ? importJobs(text, timeZone()) : importPricebook(text);
