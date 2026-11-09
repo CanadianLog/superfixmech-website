@@ -33,21 +33,32 @@ async function call<T>(url: string, init: RequestInit, fieldMask: string): Promi
   return json;
 }
 
-/** Finds the business's Google Place ID from its name and address (saved after the first lookup). */
-export async function findPlaceId(query?: string): Promise<{ id: string; name: string; address: string } | null> {
-  const s = getSettings();
-  const q = query || `${s.company_name} ${s.company_address}`;
-  const r = await call<{ places?: { id: string; displayName?: { text: string }; formattedAddress?: string }[] }>(
+export type PlaceCandidate = { id: string; name: string; address: string; mapsUri: string; rating: number | null; count: number; isYours: boolean };
+
+/** Searches Google for businesses matching the name; the one matching your Google Maps listing id is flagged. */
+export async function searchBusinesses(query: string): Promise<PlaceCandidate[]> {
+  const cid = getSettings().google_cid;
+  const r = await call<{
+    places?: { id: string; displayName?: { text: string }; formattedAddress?: string; googleMapsUri?: string; rating?: number; userRatingCount?: number }[];
+  }>(
     "https://places.googleapis.com/v1/places:searchText",
-    { method: "POST", body: JSON.stringify({ textQuery: q, regionCode: "ca", languageCode: "en" }) },
-    "places.id,places.displayName,places.formattedAddress",
+    { method: "POST", body: JSON.stringify({ textQuery: query, regionCode: "ca", languageCode: "en", pageSize: 6 }) },
+    "places.id,places.displayName,places.formattedAddress,places.googleMapsUri,places.rating,places.userRatingCount",
   );
-  const p = r.places?.[0];
-  return p ? { id: p.id, name: p.displayName?.text ?? "", address: p.formattedAddress ?? "" } : null;
+  return (r.places ?? []).map((p) => ({
+    id: p.id,
+    name: p.displayName?.text ?? "",
+    address: p.formattedAddress ?? "",
+    mapsUri: p.googleMapsUri ?? "",
+    rating: p.rating ?? null,
+    count: p.userRatingCount ?? 0,
+    isYours: !!cid && (p.googleMapsUri ?? "").includes(`cid=${cid}`),
+  }));
 }
 
 export async function getPublicReviews(force = false): Promise<PublicReviews | null> {
   const s = getSettings();
+  if (s.google_place_confirmed !== "1") return null;
   if (!force && s.reviews_cache) {
     try {
       const cached = JSON.parse(s.reviews_cache) as PublicReviews;
@@ -56,14 +67,9 @@ export async function getPublicReviews(force = false): Promise<PublicReviews | n
       /* refetch */
     }
   }
-  if (!placesKey()) return null;
-  let placeId = s.google_place_id;
-  if (!placeId) {
-    const found = await findPlaceId();
-    if (!found) return null;
-    placeId = found.id;
-    setSetting("google_place_id", placeId);
-  }
+  // Only ever show reviews for a business the owner confirmed in Settings.
+  if (!placesKey() || !s.google_place_id || s.google_place_confirmed !== "1") return null;
+  const placeId = s.google_place_id;
   type G = {
     displayName?: { text: string };
     rating?: number;

@@ -11,8 +11,8 @@ import { AddressSearchCard, MessagingCard, ReviewCard, WebsiteCard } from "@/com
 
 export const metadata = { title: "Settings" };
 
-export default async function SettingsPage({ searchParams }: { searchParams: Promise<{ qbo?: string }> }) {
-  const { qbo } = await searchParams;
+export default async function SettingsPage({ searchParams }: { searchParams: Promise<{ qbo?: string; place_q?: string }> }) {
+  const { qbo, place_q } = await searchParams;
   await requireUser(["admin"]);
   const s = getSettings();
   const origin = await appOrigin();
@@ -33,8 +33,24 @@ export default async function SettingsPage({ searchParams }: { searchParams: Pro
   return (
     <div className="mx-auto max-w-4xl">
       <PageHeader title="Settings" actions={<Link href="/import" className="btn-ghost">Import from Housecall Pro</Link>} />
+      <nav className="mb-6 flex flex-wrap gap-1.5 text-sm" aria-label="Settings sections">
+        {[
+          ["#company", "Company & tax"],
+          ["#messaging", "Texts & email"],
+          ["#reviews", "Google review requests"],
+          ["#address-search", "Address search"],
+          ["#website", "Your website"],
+          ["#quickbooks", "QuickBooks"],
+          ["#booking", "Booking key"],
+        ].map(([href, label]) => (
+          <a key={href} href={href} className="rounded-full border border-stone-300 bg-white px-3 py-1 text-stone-700 hover:border-amber-400 hover:bg-amber-50">
+            {label}
+          </a>
+        ))}
+      </nav>
+      <div id="company" className="scroll-mt-6" />
       <ActionForm action={saveSettings} className="space-y-6">
-        <Card title="Company (shown on estimates and invoices)">
+        <Card title="Company (shown on estimates and invoices)" className="scroll-mt-6">
           <div className="grid gap-4 sm:grid-cols-2">
             <Field label="Company name"><input className="input" name="company_name" defaultValue={s.company_name} /></Field>
             <Field label="Phone"><input className="input" name="company_phone" defaultValue={s.company_phone} /></Field>
@@ -63,10 +79,11 @@ export default async function SettingsPage({ searchParams }: { searchParams: Pro
       <MessagingCard s={s} />
       <ReviewCard s={s} />
       <AddressSearchCard s={s} fromEnv={!!process.env.GOOGLE_MAPS_API_KEY} />
-      <WebsiteCard s={s} origin={origin} />
+      <WebsiteCard s={s} origin={origin} placeQuery={place_q?.slice(0, 120)} />
       <QuickBooksCard origin={origin} status={qbo} />
 
-      <Card title="Website booking requests" className="mt-6">
+      <div id="booking" className="scroll-mt-6" />
+      <Card title="Website booking requests (other tools)" className="mt-6">
         <p className="text-sm text-stone-600">
           Your website (or any form tool) can send booking requests straight into the CRM. Each request creates or matches a customer and adds an
           <b> unscheduled job</b> tagged &ldquo;Online booking&rdquo;, ready to dispatch.

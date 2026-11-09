@@ -1235,23 +1235,30 @@ export async function saveWebsiteOrigins(_: FormState, fd: FormData): Promise<Fo
   return { ok: "Saved." };
 }
 
-export async function findGoogleBusiness(_: FormState, fd: FormData): Promise<FormState> {
+export async function linkGoogleBusiness(_: FormState, fd: FormData): Promise<FormState> {
   await requireUser(["admin"]);
-  const { placesKey } = await import("./places");
-  if (!placesKey()) return { error: "Add your Google API key under Google address search first." };
-  const { findPlaceId, getPublicReviews } = await import("./reviews");
+  const placeId = str(fd, "place_id");
+  if (!/^[\w-]{10,300}$/.test(placeId)) return { error: "Pick a business." };
+  const set = (k: string, v: string) => run("INSERT INTO settings (key, value) VALUES (?, ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value", k, v);
+  set("google_place_id", placeId);
+  set("google_place_confirmed", "1");
+  set("reviews_cache", "");
+  const { getPublicReviews } = await import("./reviews");
   try {
-    const found = await findPlaceId(str(fd, "query") || undefined);
-    if (!found) return { error: "Google didn't find a business with that name. Try your exact Google listing name plus “Ottawa”." };
-    run("INSERT INTO settings (key, value) VALUES ('google_place_id', ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value", found.id);
     const r = await getPublicReviews(true);
     revalidatePath("/settings");
-    return {
-      ok: `Linked to “${found.name}”, ${found.address}.${r ? ` ${r.rating ?? "–"}★ from ${r.count} reviews; ${r.reviews.length} shown on your website.` : ""} If that's not your business, search again with a more exact name.`,
-    };
+    return { ok: r ? `Linked to “${r.name}”: ${r.rating ?? "–"}★ from ${r.count} reviews. Your website will show these.` : "Linked." };
   } catch (e) {
-    return { error: (e as Error).message };
+    set("google_place_confirmed", "");
+    revalidatePath("/settings");
+    return { error: `Couldn't load that business from Google: ${(e as Error).message}` };
   }
+}
+
+export async function unlinkGoogleBusiness() {
+  await requireUser(["admin"]);
+  for (const k of ["google_place_id", "google_place_confirmed", "reviews_cache"]) run("UPDATE settings SET value = '' WHERE key = ?", k);
+  done("/settings#website");
 }
 
 export async function refreshGoogleReviews(): Promise<FormState> {
@@ -1259,7 +1266,7 @@ export async function refreshGoogleReviews(): Promise<FormState> {
   const { getPublicReviews } = await import("./reviews");
   try {
     const r = await getPublicReviews(true);
-    if (!r) return { error: "Link your Google business first." };
+    if (!r) return { error: "Choose your Google business first." };
     revalidatePath("/settings");
     return { ok: `Updated: ${r.rating ?? "–"}★ from ${r.count} reviews.` };
   } catch (e) {

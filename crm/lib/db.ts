@@ -227,6 +227,9 @@ const DEFAULT_SETTINGS: Record<string, string> = {
   // Google address search (Places API)
   google_maps_api_key: "",
   google_place_id: "",
+  google_place_confirmed: "",
+  // Your Google Maps listing id (the cid in your maps link), used to recognise your business in search results
+  google_cid: "7860337456778361550",
   reviews_cache: "",
   // Websites allowed to send bookings and show reviews without the API key (comma separated)
   website_origins: "https://superfixmech.ca, https://www.superfixmech.ca",

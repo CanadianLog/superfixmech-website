@@ -1,5 +1,6 @@
-import { findGoogleBusiness, refreshGoogleReviews, saveAddressSearchKey, saveMessagingSettings, saveReviewSettings, saveWebsiteOrigins, sendTestMessage } from "@/lib/actions";
+import { linkGoogleBusiness, unlinkGoogleBusiness, refreshGoogleReviews, saveAddressSearchKey, saveMessagingSettings, saveReviewSettings, saveWebsiteOrigins, sendTestMessage } from "@/lib/actions";
 import { emailConfigured, smsConfigured } from "@/lib/messaging";
+import { searchBusinesses, type PlaceCandidate } from "@/lib/reviews";
 import { ActionForm, SubmitButton } from "./forms";
 import { Card, Field } from "./ui";
 
@@ -132,12 +133,23 @@ export function AddressSearchCard({ s, fromEnv }: { s: Record<string, string>; f
   );
 }
 
-export function WebsiteCard({ s, origin }: { s: Record<string, string>; origin: string }) {
-  let cached: { name?: string; rating?: number | null; count?: number; fetchedAt?: string } = {};
+export async function WebsiteCard({ s, origin, placeQuery }: { s: Record<string, string>; origin: string; placeQuery?: string }) {
+  let cached: { name?: string; rating?: number | null; count?: number } = {};
   try {
     cached = s.reviews_cache ? JSON.parse(s.reviews_cache) : {};
   } catch {
     cached = {};
+  }
+  const linked = s.google_place_confirmed === "1" && !!s.google_place_id;
+  const hasKey = !!(process.env.GOOGLE_MAPS_API_KEY || s.google_maps_api_key);
+  let results: PlaceCandidate[] = [];
+  let searchError = "";
+  if (placeQuery && hasKey) {
+    try {
+      results = await searchBusinesses(placeQuery);
+    } catch (e) {
+      searchError = (e as Error).message;
+    }
   }
   return (
     <div id="website" className="mt-6 scroll-mt-6">
@@ -156,23 +168,66 @@ export function WebsiteCard({ s, origin }: { s: Record<string, string>; origin: 
         <div className="mt-6 border-t border-stone-100 pt-4">
           <h3 className="text-sm font-bold">Google reviews on your website</h3>
           <p className="mt-1 text-xs text-stone-500">
-            Uses the same Google API key as address search. Google shares up to 5 recent reviews; the website shows the 4★ and 5★ ones, plus your overall rating, and refreshes twice a day.
+            Uses the same Google API key as address search. Google shares up to 5 recent reviews; the website shows the 4★ and 5★ ones plus your overall rating, refreshed twice a day.
           </p>
-          {s.google_place_id ? (
-            <p className="mt-2 text-sm">
-              Linked{cached.name ? <> to <b>{cached.name}</b></> : ""}{cached.rating ? ` · ${cached.rating}★ from ${cached.count} reviews` : ""}.
-            </p>
+
+          {linked ? (
+            <div className="mt-3 flex flex-wrap items-center gap-3 rounded-lg bg-emerald-50 px-3 py-2 text-sm text-emerald-900">
+              <span>
+                Showing reviews for <b>{cached.name || "your business"}</b>
+                {cached.rating ? ` · ${cached.rating}★ from ${cached.count} reviews` : ""}
+              </span>
+              <form action={unlinkGoogleBusiness}>
+                <button className="text-xs underline">Unlink</button>
+              </form>
+            </div>
           ) : (
-            <p className="mt-2 text-sm text-stone-500">Not linked yet.</p>
+            <p className="mt-3 rounded-lg bg-amber-50 px-3 py-2 text-sm text-amber-900">No business chosen yet, so your website shows a “Read our Google reviews” button instead of reviews.</p>
           )}
-          <ActionForm action={findGoogleBusiness} className="mt-3 flex flex-wrap items-end gap-2">
-            <Field label="Find your Google business" className="min-w-72 flex-1">
-              <input className="input" name="query" defaultValue={`${s.company_name}, Ottawa`} />
-            </Field>
-            <SubmitButton className="btn-dark" pendingText="Searching…">{s.google_place_id ? "Search again" : "Find & link"}</SubmitButton>
-          </ActionForm>
-          {s.google_place_id && (
-            <ActionForm action={refreshGoogleReviews} className="mt-2">
+
+          {!hasKey ? (
+            <p className="mt-3 text-sm text-stone-500">Add your Google API key under “Google address search” first.</p>
+          ) : (
+            <form method="get" action="/settings#website" className="mt-3 flex flex-wrap items-end gap-2">
+              <Field label="Search Google for your business" className="min-w-72 flex-1">
+                <input className="input" name="place_q" defaultValue={placeQuery || "Super Fix Mechanical Ottawa"} />
+              </Field>
+              <button className="btn-dark">Search</button>
+            </form>
+          )}
+
+          {searchError && <p className="mt-3 text-sm text-rose-700">{searchError}</p>}
+          {placeQuery && hasKey && !searchError && (
+            <ul className="mt-3 divide-y divide-stone-100 rounded-lg border border-stone-200">
+              {results.length === 0 && <li className="px-3 py-3 text-sm text-stone-500">No businesses found. Try the exact name on your Google listing.</li>}
+              {[...results].sort((a, b) => Number(b.isYours) - Number(a.isYours)).map((r) => (
+                <li key={r.id} className={`flex flex-wrap items-center justify-between gap-3 px-3 py-3 ${r.isYours ? "bg-emerald-50" : ""}`}>
+                  <div className="min-w-0 text-sm">
+                    <div className="font-semibold">
+                      {r.name} {r.isYours && <span className="ml-1 rounded-full bg-emerald-600 px-2 py-0.5 text-[10px] font-bold uppercase text-white">Matches your website&apos;s map</span>}
+                    </div>
+                    <div className="text-xs text-stone-500">
+                      {r.address}
+                      {r.rating ? ` · ${r.rating}★ (${r.count})` : ""}
+                      {r.mapsUri && (
+                        <>
+                          {" · "}
+                          <a href={r.mapsUri} target="_blank" rel="noreferrer" className="link">View on Google Maps</a>
+                        </>
+                      )}
+                    </div>
+                  </div>
+                  <ActionForm action={linkGoogleBusiness}>
+                    <input type="hidden" name="place_id" value={r.id} />
+                    <SubmitButton className={r.isYours ? "btn-primary btn-sm" : "btn-ghost btn-sm"} pendingText="Linking…">This is my business</SubmitButton>
+                  </ActionForm>
+                </li>
+              ))}
+            </ul>
+          )}
+
+          {linked && (
+            <ActionForm action={refreshGoogleReviews} className="mt-3">
               <SubmitButton className="btn-ghost btn-sm" pendingText="Refreshing…">Refresh reviews now</SubmitButton>
             </ActionForm>
           )}
