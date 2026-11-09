@@ -3,6 +3,9 @@ import { requireUser, isOffice } from "@/lib/auth";
 import { listJobs } from "@/lib/data";
 import { Card, Empty, PageHeader, Tabs } from "@/components/ui";
 import { JobList } from "@/components/job-list";
+import { ActionForm } from "@/components/forms";
+import { BulkDeleteBar } from "@/components/bulk-bar";
+import { deleteSelected } from "@/lib/actions";
 
 export const metadata = { title: "Jobs" };
 
@@ -30,7 +33,20 @@ export default async function JobsPage({ searchParams }: { searchParams: Promise
         <input className="input max-w-md" name="q" defaultValue={q} placeholder="Search job #, title, customer, street…" />
         <button className="btn-ghost">Search</button>
       </form>
-      <Card pad={false}>{jobs.length ? <JobList jobs={jobs} /> : <Empty>No jobs here.</Empty>}</Card>
+      <Card pad={false}>
+        {jobs.length ? (
+          user.role === "admin" ? (
+            <ActionForm action={deleteSelected} className="[&>[role]]:m-4">
+              <BulkDeleteBar kind="jobs" noun="jobs" warning="Their line items and notes are deleted; invoices for them are kept." />
+              <JobList jobs={jobs} selectable />
+            </ActionForm>
+          ) : (
+            <JobList jobs={jobs} />
+          )
+        ) : (
+          <Empty>No jobs here.</Empty>
+        )}
+      </Card>
     </>
   );
 }

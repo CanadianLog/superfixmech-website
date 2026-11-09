@@ -3,12 +3,15 @@ import { customerName, fmtSchedule, money } from "@/lib/format";
 import type { JobRow } from "@/lib/data";
 import { StatusBadge, TechDot } from "./ui";
 
-export function JobList({ jobs, showTech = true }: { jobs: JobRow[]; showTech?: boolean }) {
+export function JobList({ jobs, showTech = true, selectable = false }: { jobs: JobRow[]; showTech?: boolean; selectable?: boolean }) {
   return (
     <ul className="divide-y divide-stone-100">
       {jobs.map((j) => (
-        <li key={j.id}>
-          <Link href={`/jobs/${j.id}`} className="flex items-start gap-3 px-5 py-3 hover:bg-amber-50/40">
+        <li key={j.id} className="flex items-start">
+          {selectable && (
+            <input type="checkbox" name="ids" value={j.id} aria-label={`Select job ${j.number}`} className="ml-4 mt-4 h-4 w-4 shrink-0 accent-amber-500" />
+          )}
+          <Link href={`/jobs/${j.id}`} className="flex min-w-0 flex-1 items-start gap-3 px-5 py-3 hover:bg-amber-50/40">
             <span className="mt-1.5 h-2.5 w-2.5 shrink-0 rounded-full" style={{ background: j.tech_color ?? "#d6d3d1" }} />
             <div className="min-w-0 flex-1">
               <div className="flex flex-wrap items-center gap-x-2 gap-y-1">

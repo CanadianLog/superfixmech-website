@@ -3,12 +3,12 @@ import { notFound, redirect } from "next/navigation";
 import { requireUser, isOffice } from "@/lib/auth";
 import { activitiesFor, getAddress, getCustomer, getJob, invoicePayments, lineItems, listInvoices, listPricebook, rateFor, timeZone, today } from "@/lib/data";
 import { addressLine, customerName, fmtSchedule, fmtStamp, mapsUrl, money } from "@/lib/format";
-import { createInvoiceFromJob, finishJob, saveJobItems, saveTechNotes, setJobStatus } from "@/lib/actions";
+import { createInvoiceFromJob, deleteJob, finishJob, saveJobItems, saveTechNotes, setJobStatus } from "@/lib/actions";
 import { getSettings } from "@/lib/db";
 import { emailConfigured, messagesForJob, smsConfigured } from "@/lib/messaging";
 import { PaidBadge, PaymentForm, ReceiptForm, ReviewStatus, SendInvoiceForm } from "@/components/checkout";
 import { Card, PageHeader, StatusBadge, TechDot } from "@/components/ui";
-import { ActionForm, SubmitButton } from "@/components/forms";
+import { ActionForm, ConfirmButton, SubmitButton } from "@/components/forms";
 import { LineItemsEditor } from "@/components/line-items-editor";
 import { Timeline } from "@/components/timeline";
 import { ApplianceSelect } from "@/components/job-form";
@@ -225,6 +225,15 @@ export default async function JobPage({ params }: { params: Promise<{ id: string
               <SubmitButton className="btn-ghost">Set</SubmitButton>
             </form>
           </Card>
+
+          {user.role === "admin" && (
+            <form action={deleteJob} className="flex justify-end">
+              <input type="hidden" name="id" value={job.id} />
+              <ConfirmButton message={`Delete job #${job.number}? Its line items and notes are deleted. ${invoices.length ? "Its invoice is kept. " : ""}This can't be undone.`}>
+                Delete job
+              </ConfirmButton>
+            </form>
+          )}
         </div>
       </div>
     </>

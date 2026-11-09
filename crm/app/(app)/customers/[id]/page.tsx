@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import { requireUser } from "@/lib/auth";
 import { activitiesFor, customerAddresses, customerBalance, getCustomer, listEstimates, listInvoices, listJobs, timeZone } from "@/lib/data";
 import { addressLine, customerName, fmtDate, mapsUrl, money } from "@/lib/format";
-import { createBlankInvoice, deleteAddress, saveAddress } from "@/lib/actions";
+import { createBlankInvoice, deleteAddress, deleteCustomer, saveAddress } from "@/lib/actions";
 import { Card, Empty, PageHeader, StatusBadge, Tabs } from "@/components/ui";
 import { JobList } from "@/components/job-list";
 import { Timeline } from "@/components/timeline";
@@ -12,7 +12,7 @@ import { AddressSearch } from "@/components/address-search";
 import { placesKey } from "@/lib/places";
 
 export default async function CustomerPage({ params, searchParams }: { params: Promise<{ id: string }>; searchParams: Promise<{ tab?: string; addr?: string }> }) {
-  await requireUser(["admin", "dispatcher"]);
+  const user = await requireUser(["admin", "dispatcher"]);
   const id = Number((await params).id);
   const { tab = "jobs", addr } = await searchParams;
   const c = getCustomer(id);
@@ -121,6 +121,16 @@ export default async function CustomerPage({ params, searchParams }: { params: P
             </Card>
           </div>
           <Timeline items={activitiesFor({ customerId: id })} tz={timeZone()} customerId={id} />
+          {user.role === "admin" && (
+            <form action={deleteCustomer} className="flex justify-end">
+              <input type="hidden" name="id" value={id} />
+              <ConfirmButton
+                message={`Delete ${name}? This also deletes their ${jobs.length} job(s), ${estimates.length} estimate(s), ${invoices.length} invoice(s), payments, addresses and notes. This can't be undone.`}
+              >
+                Delete customer
+              </ConfirmButton>
+            </form>
+          )}
         </div>
       </div>
     </>
