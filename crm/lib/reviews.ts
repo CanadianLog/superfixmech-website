@@ -1,4 +1,5 @@
 import "server-only";
+import { createHash } from "node:crypto";
 import { getSettings, run } from "./db";
 import { placesKey } from "./places";
 
@@ -56,20 +57,39 @@ export async function searchBusinesses(query: string): Promise<PlaceCandidate[]>
   }));
 }
 
-export async function getPublicReviews(force = false): Promise<PublicReviews | null> {
+export type StoredReview = PublicReviews["reviews"][number] & { id: string; source: "google" | "manual" };
+type GoogleCache = Omit<PublicReviews, "reviews"> & { reviews: StoredReview[] };
+
+const reviewId = (author: string, text: string) => createHash("sha1").update(`${author}\n${text}`).digest("hex").slice(0, 12);
+
+function readJson<T>(raw: string | undefined, fallback: T): T {
+  try {
+    return raw ? (JSON.parse(raw) as T) : fallback;
+  } catch {
+    return fallback;
+  }
+}
+
+export function manualReviews(): StoredReview[] {
+  return readJson<StoredReview[]>(getSettings().reviews_manual, []);
+}
+
+export function hiddenReviewIds(): string[] {
+  return readJson<string[]>(getSettings().reviews_hidden, []);
+}
+
+/** Everything Google currently shares (up to 5 reviews, any rating), cached for 12 hours. */
+export async function getGoogleReviews(force = false): Promise<GoogleCache | null> {
   const s = getSettings();
-  if (s.google_place_confirmed !== "1") return null;
+  // Only ever show reviews for a business the owner confirmed in Settings.
+  if (s.google_place_confirmed !== "1" || !s.google_place_id) return null;
   if (!force && s.reviews_cache) {
-    try {
-      const cached = JSON.parse(s.reviews_cache) as PublicReviews;
-      if (Date.now() - new Date(cached.fetchedAt).getTime() < TTL_MS) return cached;
-    } catch {
-      /* refetch */
+    const cached = readJson<GoogleCache | null>(s.reviews_cache, null);
+    if (cached && Date.now() - new Date(cached.fetchedAt).getTime() < TTL_MS) {
+      return { ...cached, reviews: cached.reviews.map((r) => ({ ...r, id: r.id ?? reviewId(r.author, r.text), source: "google" as const })) };
     }
   }
-  // Only ever show reviews for a business the owner confirmed in Settings.
-  if (!placesKey() || !s.google_place_id || s.google_place_confirmed !== "1") return null;
-  const placeId = s.google_place_id;
+  if (!placesKey()) return null;
   type G = {
     displayName?: { text: string };
     rating?: number;
@@ -84,27 +104,52 @@ export async function getPublicReviews(force = false): Promise<PublicReviews | n
     }[];
   };
   const g = await call<G>(
-    `https://places.googleapis.com/v1/places/${encodeURIComponent(placeId)}?languageCode=en`,
+    `https://places.googleapis.com/v1/places/${encodeURIComponent(s.google_place_id)}?languageCode=en`,
     { method: "GET" },
     "displayName,rating,userRatingCount,googleMapsUri,reviews",
   );
-  const out: PublicReviews = {
+  const out: GoogleCache = {
     name: g.displayName?.text ?? s.company_name,
     rating: g.rating ?? null,
     count: g.userRatingCount ?? 0,
     url: g.googleMapsUri ?? "",
     reviews: (g.reviews ?? [])
-      .filter((r) => (r.text?.text || r.originalText?.text) && (r.rating ?? 0) >= 4)
-      .map((r) => ({
-        author: r.authorAttribution?.displayName ?? "Google user",
-        authorUrl: r.authorAttribution?.uri ?? "",
-        photo: r.authorAttribution?.photoUri ?? "",
-        rating: r.rating ?? 5,
-        text: r.text?.text ?? r.originalText?.text ?? "",
-        when: r.relativePublishTimeDescription ?? "",
-      })),
+      .filter((r) => r.text?.text || r.originalText?.text)
+      .map((r) => {
+        const author = r.authorAttribution?.displayName ?? "Google user";
+        const text = r.text?.text ?? r.originalText?.text ?? "";
+        return {
+          id: reviewId(author, text),
+          source: "google" as const,
+          author,
+          authorUrl: r.authorAttribution?.uri ?? "",
+          photo: r.authorAttribution?.photoUri ?? "",
+          rating: r.rating ?? 5,
+          text,
+          when: r.relativePublishTimeDescription ?? "",
+        };
+      }),
     fetchedAt: new Date().toISOString(),
   };
   setSetting("reviews_cache", JSON.stringify(out));
   return out;
+}
+
+/** What the website shows: your added reviews first, then Google's, minus hidden and low-rated ones. */
+export async function getPublicReviews(force = false): Promise<PublicReviews | null> {
+  const s = getSettings();
+  const google = await getGoogleReviews(force);
+  const manual = manualReviews();
+  if (!google && manual.length === 0) return null;
+  const hidden = new Set(hiddenReviewIds());
+  const min = Number(s.reviews_min_rating || "4") || 0;
+  const strip = (r: StoredReview) => ({ author: r.author, authorUrl: r.authorUrl, photo: r.photo, rating: r.rating, text: r.text, when: r.when });
+  return {
+    name: google?.name ?? s.company_name,
+    rating: google?.rating ?? null,
+    count: google?.count ?? 0,
+    url: google?.url ?? "",
+    reviews: [...manual, ...(google?.reviews ?? []).filter((r) => r.rating >= min)].filter((r) => !hidden.has(r.id)).map(strip),
+    fetchedAt: google?.fetchedAt ?? new Date().toISOString(),
+  };
 }
