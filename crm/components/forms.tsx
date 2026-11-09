@@ -63,10 +63,24 @@ export function ActionForm({
 }
 
 /** Button that asks for confirmation before submitting its form. */
-export function ConfirmButton({ children, message, className = "btn-danger btn-sm" }: { children: React.ReactNode; message: string; className?: string }) {
+export function ConfirmButton({
+  children,
+  message,
+  className = "btn-danger btn-sm",
+  name,
+  value,
+}: {
+  children: React.ReactNode;
+  message: string;
+  className?: string;
+  name?: string;
+  value?: string;
+}) {
   return (
     <button
       type="submit"
+      name={name}
+      value={value}
       className={className}
       onClick={(e) => {
         if (!window.confirm(message)) e.preventDefault();

@@ -149,6 +149,67 @@ export async function setupAdmin(_: FormState, fd: FormData): Promise<FormState>
   redirect("/");
 }
 
+/* ---------- deleting records (admin only) ---------- */
+
+function removeCustomers(ids: number[]) {
+  for (const id of ids) {
+    for (const t of ["job", "estimate", "invoice"] as const) {
+      const table = t === "job" ? "jobs" : t === "estimate" ? "estimates" : "invoices";
+      run(`DELETE FROM line_items WHERE parent_type = ? AND parent_id IN (SELECT id FROM ${table} WHERE customer_id = ?)`, t, id);
+    }
+    run("DELETE FROM customers WHERE id = ?", id); // addresses, jobs, estimates, invoices, payments and notes go with it
+  }
+}
+
+function removeJobs(ids: number[]) {
+  for (const id of ids) {
+    run("DELETE FROM line_items WHERE parent_type = 'job' AND parent_id = ?", id);
+    run("DELETE FROM jobs WHERE id = ?", id); // invoices for the job are kept
+  }
+}
+
+function removeInvoices(ids: number[]) {
+  for (const id of ids) {
+    run("DELETE FROM line_items WHERE parent_type = 'invoice' AND parent_id = ?", id);
+    run("DELETE FROM invoices WHERE id = ?", id); // its payments go with it
+  }
+}
+
+function idList(fd: FormData, key = "ids"): number[] {
+  return fd
+    .getAll(key)
+    .map((v) => Number(v))
+    .filter((n) => Number.isInteger(n) && n > 0);
+}
+
+/** Bulk delete from a list page. `kind` says which list. */
+export async function deleteSelected(_: FormState, fd: FormData): Promise<FormState> {
+  await requireUser(["admin"]);
+  const ids = idList(fd);
+  const kind = str(fd, "kind");
+  if (!ids.length) return { error: "Tick the ones you want to delete first." };
+  if (kind === "customers") tx(() => removeCustomers(ids));
+  else if (kind === "jobs") tx(() => removeJobs(ids));
+  else if (kind === "invoices") tx(() => removeInvoices(ids));
+  else return { error: "Unknown list." };
+  revalidatePath("/", "layout");
+  const noun = kind === "customers" ? "customer" : kind === "jobs" ? "job" : "invoice";
+  return { ok: `Deleted ${ids.length} ${noun}${ids.length === 1 ? "" : "s"}.` };
+}
+
+export async function deleteInvoice(fd: FormData) {
+  await requireUser(["admin"]);
+  const id = num(fd, "id");
+  if (id) tx(() => removeInvoices([id]));
+  done("/invoices");
+}
+
+export async function deletePricebookItem(fd: FormData) {
+  await requireUser(["admin", "dispatcher"]);
+  run("DELETE FROM pricebook WHERE id = ?", num(fd, "id"));
+  done("/pricebook");
+}
+
 /* ---------- customers ---------- */
 
 export async function saveCustomer(_: FormState, fd: FormData): Promise<FormState> {
@@ -189,19 +250,7 @@ export async function saveCustomer(_: FormState, fd: FormData): Promise<FormStat
 export async function deleteCustomer(fd: FormData) {
   await requireUser(["admin"]);
   const id = num(fd, "id");
-  if (id) {
-    tx(() => {
-      for (const t of ["job", "estimate", "invoice"] as const) {
-        const table = t === "job" ? "jobs" : t === "estimate" ? "estimates" : "invoices";
-        run(
-          `DELETE FROM line_items WHERE parent_type = ? AND parent_id IN (SELECT id FROM ${table} WHERE customer_id = ?)`,
-          t,
-          id,
-        );
-      }
-      run("DELETE FROM customers WHERE id = ?", id);
-    });
-  }
+  if (id) tx(() => removeCustomers([id]));
   done("/customers");
 }
 
@@ -418,10 +467,7 @@ export async function quickSchedule(fd: FormData) {
 export async function deleteJob(fd: FormData) {
   await requireUser(["admin"]);
   const id = num(fd, "id");
-  tx(() => {
-    run("DELETE FROM line_items WHERE parent_type = 'job' AND parent_id = ?", id);
-    run("DELETE FROM jobs WHERE id = ?", id);
-  });
+  if (id) tx(() => removeJobs([id]));
   done("/jobs");
 }
 
@@ -1311,4 +1357,13 @@ export async function removeManualReview(fd: FormData) {
   const { manualReviews } = await import("./reviews");
   writeJsonSetting("reviews_manual", manualReviews().filter((r) => r.id !== str(fd, "id")));
   done("/settings#reviews-shown");
+}
+
+/** Invoices list: one form, two buttons (mark paid / delete). */
+export async function invoicesBulk(state: FormState, fd: FormData): Promise<FormState> {
+  if (str(fd, "op") === "delete") {
+    fd.set("kind", "invoices");
+    return deleteSelected(state, fd);
+  }
+  return markInvoicesPaid(state, fd);
 }

@@ -5,12 +5,14 @@ import { customerName, fmtDate, money } from "@/lib/format";
 import { Card, Empty, PageHeader, StatusBadge, Tabs } from "@/components/ui";
 import { ActionForm, SubmitButton } from "@/components/forms";
 import { SelectAll } from "@/components/select-all";
-import { markInvoicesPaid } from "@/lib/actions";
+import { invoicesBulk } from "@/lib/actions";
+import { ConfirmButton } from "@/components/forms";
 
 export const metadata = { title: "Invoices" };
 
 export default async function InvoicesPage({ searchParams }: { searchParams: Promise<{ status?: string }> }) {
-  await requireUser(["admin", "dispatcher"]);
+  const user = await requireUser(["admin", "dispatcher"]);
+  const isAdmin = user.role === "admin";
   const { status = "" } = await searchParams;
   const all = listInvoices();
   const unpaid = all.filter((i) => ["open", "partial", "overdue"].includes(i.display_status));
@@ -29,26 +31,35 @@ export default async function InvoicesPage({ searchParams }: { searchParams: Pro
       <PageHeader title="Invoices" subtitle={`${money(outstanding)} outstanding across ${unpaid.length} invoice${unpaid.length === 1 ? "" : "s"}`} />
       <Tabs current={status} items={tabs.map(([k, label, count]) => ({ key: k, label, count, href: `/invoices${k ? `?status=${k}` : ""}` }))} />
       <Card pad={false}>
-        <ActionForm action={markInvoicesPaid} className="[&>[role]]:m-4">
+        <ActionForm action={invoicesBulk} className="[&>[role]]:m-4">
         {rows.length === 0 ? (
           <Empty>No invoices here. Invoices are created from completed jobs or from a customer&apos;s page.</Empty>
         ) : (
           <>
-          {rows.some((i) => i.balance_cents > 0 && i.display_status !== "void") && (
+          {(isAdmin || rows.some((i) => i.balance_cents > 0 && i.display_status !== "void")) && (
             <div className="flex flex-wrap items-center gap-2 border-b border-stone-100 bg-stone-50 px-4 py-3 text-sm">
-              <span className="text-stone-600">Tick invoices that were already paid, then:</span>
-              <select name="method" className="input w-auto py-1.5" aria-label="Payment method" defaultValue="other">
-                <option value="e-transfer">e-Transfer</option>
-                <option value="card">Credit card</option>
-                <option value="cash">Cash</option>
-                <option value="cheque">Cheque</option>
-                <option value="other">Other / paid before CRM</option>
-              </select>
-              <select name="date_mode" className="input w-auto py-1.5" aria-label="Payment date" defaultValue="invoice">
-                <option value="invoice">Paid on the invoice date</option>
-                <option value="today">Paid today</option>
-              </select>
-              <SubmitButton className="btn-dark btn-sm" pendingText="Saving…">Mark selected as paid</SubmitButton>
+              <span className="text-stone-600">With the ticked invoices:</span>
+              {rows.some((i) => i.balance_cents > 0 && i.display_status !== "void") && (
+                <>
+                  <select name="method" className="input w-auto py-1.5" aria-label="Payment method" defaultValue="other">
+                    <option value="e-transfer">e-Transfer</option>
+                    <option value="card">Credit card</option>
+                    <option value="cash">Cash</option>
+                    <option value="cheque">Cheque</option>
+                    <option value="other">Other / paid before CRM</option>
+                  </select>
+                  <select name="date_mode" className="input w-auto py-1.5" aria-label="Payment date" defaultValue="invoice">
+                    <option value="invoice">Paid on the invoice date</option>
+                    <option value="today">Paid today</option>
+                  </select>
+                  <SubmitButton className="btn-dark btn-sm" pendingText="Saving…" name="op" value="paid">Mark selected as paid</SubmitButton>
+                </>
+              )}
+              {isAdmin && (
+                <ConfirmButton name="op" value="delete" className="btn-danger btn-sm ml-auto" message="Delete the selected invoices and any payments recorded on them? Jobs and customers are kept. Invoices already sent to QuickBooks stay in QuickBooks. This can't be undone.">
+                  Delete selected
+                </ConfirmButton>
+              )}
             </div>
           )}
           <div className="overflow-x-auto">
@@ -57,7 +68,7 @@ export default async function InvoicesPage({ searchParams }: { searchParams: Pro
               <tbody>
                 {rows.map((i) => (
                   <tr key={i.id}>
-                    <td>{i.balance_cents > 0 && i.display_status !== "void" && <input type="checkbox" name="ids" value={i.id} aria-label={`Select invoice ${i.number}`} className="h-4 w-4 accent-amber-500" />}</td>
+                    <td>{(isAdmin || (i.balance_cents > 0 && i.display_status !== "void")) && <input type="checkbox" name="ids" value={i.id} aria-label={`Select invoice ${i.number}`} className="h-4 w-4 accent-amber-500" />}</td>
                     <td><Link href={`/invoices/${i.id}`} className="link">{i.number}</Link></td>
                     <td><Link href={`/customers/${i.customer_id}`} className="hover:underline">{customerName({ first_name: i.customer_first, last_name: i.customer_last, company: i.customer_company })}</Link>{i.job_number && <div className="text-xs text-stone-400">Job #{i.job_number}</div>}</td>
                     <td className="hidden md:table-cell text-stone-500">{fmtDate(i.issued_on)}</td>

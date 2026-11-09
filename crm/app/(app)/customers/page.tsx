@@ -3,11 +3,15 @@ import { requireUser } from "@/lib/auth";
 import { searchCustomers } from "@/lib/data";
 import { customerName, money } from "@/lib/format";
 import { Card, Empty, PageHeader } from "@/components/ui";
+import { ActionForm } from "@/components/forms";
+import { BulkDeleteBar } from "@/components/bulk-bar";
+import { deleteSelected } from "@/lib/actions";
 
 export const metadata = { title: "Customers" };
 
 export default async function CustomersPage({ searchParams }: { searchParams: Promise<{ q?: string }> }) {
-  await requireUser(["admin", "dispatcher"]);
+  const user = await requireUser(["admin", "dispatcher"]);
+  const isAdmin = user.role === "admin";
   const { q = "" } = await searchParams;
   const customers = searchCustomers(q);
   return (
@@ -22,14 +26,17 @@ export default async function CustomersPage({ searchParams }: { searchParams: Pr
         {customers.length === 0 ? (
           <Empty action={<Link href="/customers/new" className="btn-primary">Add a customer</Link>}>{q ? "No customers match that search." : "No customers yet."}</Empty>
         ) : (
+          <ActionForm action={deleteSelected} className="[&>[role]]:m-4">
+          {isAdmin && <BulkDeleteBar kind="customers" noun="customers" warning="Their addresses, jobs, estimates, invoices, payments and notes are deleted too." />}
           <div className="overflow-x-auto">
             <table className="table">
               <thead>
-                <tr><th>Name</th><th>Phone</th><th className="hidden md:table-cell">Email</th><th className="hidden lg:table-cell">Source</th><th className="text-right">Jobs</th><th className="text-right">Balance</th></tr>
+                <tr>{isAdmin && <th className="w-8" />}<th>Name</th><th>Phone</th><th className="hidden md:table-cell">Email</th><th className="hidden lg:table-cell">Source</th><th className="text-right">Jobs</th><th className="text-right">Balance</th></tr>
               </thead>
               <tbody>
                 {customers.map((c) => (
                   <tr key={c.id}>
+                    {isAdmin && <td><input type="checkbox" name="ids" value={c.id} aria-label={`Select ${customerName(c)}`} className="h-4 w-4 accent-amber-500" /></td>}
                     <td>
                       <Link href={`/customers/${c.id}`} className="font-semibold text-stone-900 hover:underline">{customerName(c)}</Link>
                       {c.company && (c.first_name || c.last_name) && <div className="text-xs text-stone-500">{c.company}</div>}
@@ -45,6 +52,7 @@ export default async function CustomersPage({ searchParams }: { searchParams: Pr
               </tbody>
             </table>
           </div>
+          </ActionForm>
         )}
       </Card>
     </>

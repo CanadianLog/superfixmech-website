@@ -2,7 +2,8 @@ import Link from "next/link";
 import { requireUser } from "@/lib/auth";
 import { listPricebook } from "@/lib/data";
 import { APPLIANCE_TYPES, centsToInput, money } from "@/lib/format";
-import { savePricebookItem, togglePricebookItem } from "@/lib/actions";
+import { deletePricebookItem, savePricebookItem, togglePricebookItem } from "@/lib/actions";
+import { ConfirmButton } from "@/components/forms";
 import { Card, Empty, PageHeader } from "@/components/ui";
 import { SubmitButton } from "@/components/forms";
 import { ApplianceSelect } from "@/components/job-form";
@@ -121,6 +122,12 @@ export default async function PricebookPage({ searchParams }: { searchParams: Pr
                             <form action={togglePricebookItem} className="ml-3 inline">
                               <input type="hidden" name="id" value={i.id} />
                               <button className="text-xs text-stone-500 hover:text-stone-900">{i.active ? "Hide" : "Show"}</button>
+                            </form>
+                            <form action={deletePricebookItem} className="ml-3 inline">
+                              <input type="hidden" name="id" value={i.id} />
+                              <ConfirmButton className="text-xs text-stone-400 hover:text-rose-700" message={`Delete “${i.name}” from your catalogue? Jobs and invoices that already use it are not changed.`}>
+                                Delete
+                              </ConfirmButton>
                             </form>
                           </td>
                         </tr>

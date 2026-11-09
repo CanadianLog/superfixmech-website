@@ -6,6 +6,9 @@ export const dynamic = "force-dynamic";
 export const metadata: Metadata = {
   title: { default: "SuperFix CRM", template: "%s · SuperFix CRM" },
   robots: { index: false, follow: false },
+  // Opens full-screen with its own icon when added to an iPhone home screen.
+  appleWebApp: { capable: true, title: "SuperFix", statusBarStyle: "black" },
+  formatDetection: { telephone: false },
 };
 
 export const viewport: Viewport = { themeColor: "#1f1a10", width: "device-width", initialScale: 1 };
