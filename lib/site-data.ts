@@ -14,6 +14,8 @@ export const company = {
   hours: { label: "Every day, 8 am to 8 pm", opens: "08:00", closes: "20:00" },
   /** Flat diagnostic fee in CAD, before tax. */
   diagnosticFee: 89,
+  /** Flat price in CAD, before tax, for a standard dishwasher, range hood or OTR microwave install on existing connections. */
+  installPrice: 185,
   googleMaps: "https://maps.google.com/?cid=7860337456778361550",
   social: [
     "https://maps.google.com/?cid=7860337456778361550",
