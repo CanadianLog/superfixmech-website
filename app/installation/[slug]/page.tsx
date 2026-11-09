@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { type ExtraSection, ServiceDetail } from "@/components/sections/service-detail";
-import { installationPages } from "@/lib/site-data";
+import { company, installationPages } from "@/lib/site-data";
 
 const installationContent: Record<
   string,
@@ -100,7 +100,7 @@ const installationContent: Record<
   },
   "dishwasher-installation": {
     overview:
-      "Complete dishwasher installation in Ottawa, including water supply, drain, and electrical hookup, with a full cycle test before we leave to confirm proper fill, wash, and drain.",
+      "Complete dishwasher installation in Ottawa, including water supply, drain, and electrical hookup, with a full cycle test before we leave to confirm proper fill, wash, and drain. Standard installs are $185 plus tax.",
     bullets: [
       "Water supply line connection",
       "Drain hose routing and connection",
@@ -136,6 +136,10 @@ const installationContent: Record<
     ],
     faq: [
       {
+        question: "How much does dishwasher installation cost in Ottawa?",
+        answer: `A standard dishwasher installation is $${company.installPrice} plus tax. That covers connecting to your existing water shut-off, drain and electrical outlet. Extra plumbing or wiring, or hauling away the old unit, is quoted before we begin. We confirm the price before we start work.`,
+      },
+      {
         question: "Can you install a dishwasher in a cabinet opening built for a different brand?",
         answer:
           "In most cases, yes — standard dishwasher openings are a common size, and we'll check fit and adjust mounting brackets or trim kits as needed during the install.",
@@ -154,7 +158,7 @@ const installationContent: Record<
   },
   "range-hood-installation": {
     overview:
-      "Range hood installation in Ottawa covering mounting, ducting, and electrical connection, with an airflow check to confirm proper ventilation for your kitchen.",
+      "Range hood installation in Ottawa covering mounting, ducting, and electrical connection, with an airflow check to confirm proper ventilation for your kitchen. Standard installs are $185 plus tax.",
     bullets: [
       "Secure wall or under-cabinet mounting",
       "Ducted or ductless setup",
@@ -164,6 +168,10 @@ const installationContent: Record<
     ],
     image: "/service-photos/range-hood-installation.jpg",
     faq: [
+      {
+        question: "How much does range hood installation cost in Ottawa?",
+        answer: `A standard range hood installation is $${company.installPrice} plus tax. That covers mounting and connecting the hood to existing ductwork and power. New ducting, new wiring or a new outlet is quoted before we begin. We confirm the price before we start work.`,
+      },
       {
         question: "Can you install a range hood if I don't have existing ductwork?",
         answer:
@@ -183,7 +191,7 @@ const installationContent: Record<
   },
   "otr-microwave-installation": {
     overview:
-      "Over-the-range (OTR) microwave installation in Ottawa, including secure mounting, venting, and electrical hookup, matched to your cabinet and range clearance for safe everyday use.",
+      "Over-the-range (OTR) microwave installation in Ottawa, including secure mounting, venting, and electrical hookup, matched to your cabinet and range clearance for safe everyday use. Standard installs are $185 plus tax.",
     bullets: [
       "Secure wall/cabinet mounting bracket installation",
       "Venting (external exhaust or recirculating)",
@@ -193,6 +201,10 @@ const installationContent: Record<
     ],
     image: "/service-photos/otr-microwave-installation.jpg",
     faq: [
+      {
+        question: "How much does over-the-range microwave installation cost in Ottawa?",
+        answer: `A standard over-the-range microwave installation is $${company.installPrice} plus tax. That covers mounting and connecting to an existing outlet and venting. New ducting, new wiring or a new outlet is quoted before we begin. We confirm the price before we start work.`,
+      },
       {
         question: "Can you install an OTR microwave in the same spot as my old one?",
         answer:
