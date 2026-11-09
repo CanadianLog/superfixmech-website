@@ -1273,3 +1273,42 @@ export async function refreshGoogleReviews(): Promise<FormState> {
     return { error: (e as Error).message };
   }
 }
+
+/* ---------- choosing which reviews the website shows ---------- */
+
+function writeJsonSetting(key: string, value: unknown) {
+  run("INSERT INTO settings (key, value) VALUES (?, ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value", key, JSON.stringify(value));
+}
+
+export async function saveReviewSelection(_: FormState, fd: FormData): Promise<FormState> {
+  await requireUser(["admin"]);
+  const { getGoogleReviews, manualReviews } = await import("./reviews");
+  const shown = new Set(fd.getAll("show").map(String));
+  const all = [...manualReviews(), ...((await getGoogleReviews().catch(() => null))?.reviews ?? [])];
+  writeJsonSetting("reviews_hidden", all.filter((r) => !shown.has(r.id)).map((r) => r.id));
+  const min = str(fd, "reviews_min_rating");
+  if (["1", "2", "3", "4", "5"].includes(min)) run("UPDATE settings SET value = ? WHERE key = 'reviews_min_rating'", min);
+  revalidatePath("/settings");
+  return { ok: "Saved. Your website shows the ticked reviews (it can take up to 30 minutes for visitors' browsers to catch up)." };
+}
+
+export async function addManualReview(_: FormState, fd: FormData): Promise<FormState> {
+  await requireUser(["admin"]);
+  const author = str(fd, "author").slice(0, 80);
+  const text = str(fd, "text").slice(0, 2000);
+  const rating = Math.min(5, Math.max(1, Number(str(fd, "rating")) || 5));
+  if (!author || !text) return { error: "Add the reviewer's name and what they wrote." };
+  const { manualReviews } = await import("./reviews");
+  const list = manualReviews();
+  list.push({ id: `m${randomToken(6)}`, source: "manual", author, authorUrl: "", photo: "", rating, text, when: str(fd, "when").slice(0, 40) });
+  writeJsonSetting("reviews_manual", list);
+  revalidatePath("/settings");
+  return { ok: `Added ${author}'s review. It shows first on your website.` };
+}
+
+export async function removeManualReview(fd: FormData) {
+  await requireUser(["admin"]);
+  const { manualReviews } = await import("./reviews");
+  writeJsonSetting("reviews_manual", manualReviews().filter((r) => r.id !== str(fd, "id")));
+  done("/settings#reviews-shown");
+}

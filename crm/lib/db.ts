@@ -228,6 +228,9 @@ const DEFAULT_SETTINGS: Record<string, string> = {
   google_maps_api_key: "",
   google_place_id: "",
   google_place_confirmed: "",
+  reviews_hidden: "[]",
+  reviews_manual: "[]",
+  reviews_min_rating: "4",
   // Your Google Maps listing id (the cid in your maps link), used to recognise your business in search results
   google_cid: "7860337456778361550",
   reviews_cache: "",

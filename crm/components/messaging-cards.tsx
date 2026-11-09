@@ -1,7 +1,7 @@
-import { linkGoogleBusiness, unlinkGoogleBusiness, refreshGoogleReviews, saveAddressSearchKey, saveMessagingSettings, saveReviewSettings, saveWebsiteOrigins, sendTestMessage } from "@/lib/actions";
+import { addManualReview, removeManualReview, saveReviewSelection, linkGoogleBusiness, unlinkGoogleBusiness, refreshGoogleReviews, saveAddressSearchKey, saveMessagingSettings, saveReviewSettings, saveWebsiteOrigins, sendTestMessage } from "@/lib/actions";
 import { emailConfigured, smsConfigured } from "@/lib/messaging";
-import { searchBusinesses, type PlaceCandidate } from "@/lib/reviews";
-import { ActionForm, SubmitButton } from "./forms";
+import { getGoogleReviews, hiddenReviewIds, manualReviews, searchBusinesses, type PlaceCandidate, type StoredReview } from "@/lib/reviews";
+import { ActionForm, ConfirmButton, SubmitButton } from "./forms";
 import { Card, Field } from "./ui";
 
 const Pill = ({ on }: { on: boolean }) => (
@@ -142,6 +142,10 @@ export async function WebsiteCard({ s, origin, placeQuery }: { s: Record<string,
   }
   const linked = s.google_place_confirmed === "1" && !!s.google_place_id;
   const hasKey = !!(process.env.GOOGLE_MAPS_API_KEY || s.google_maps_api_key);
+  const google = linked ? await getGoogleReviews().catch(() => null) : null;
+  const manual = manualReviews();
+  const hidden = new Set(hiddenReviewIds());
+  const minRating = Number(s.reviews_min_rating || "4");
   let results: PlaceCandidate[] = [];
   let searchError = "";
   if (placeQuery && hasKey) {
@@ -231,6 +235,77 @@ export async function WebsiteCard({ s, origin, placeQuery }: { s: Record<string,
               <SubmitButton className="btn-ghost btn-sm" pendingText="Refreshing…">Refresh reviews now</SubmitButton>
             </ActionForm>
           )}
+        </div>
+
+        <div id="reviews-shown" className="mt-6 scroll-mt-6 border-t border-stone-100 pt-4">
+          <h3 className="text-sm font-bold">Choose which reviews your website shows</h3>
+          <p className="mt-1 text-xs text-stone-500">
+            Google only shares up to 5 reviews (the ones it picks as most relevant). Untick any you don&apos;t want shown. To feature a different review, copy it from your Google listing into
+            “Add a review” below.
+          </p>
+          {manual.length + (google?.reviews.length ?? 0) === 0 ? (
+            <p className="mt-3 text-sm text-stone-400">{linked ? "Google hasn't shared any reviews yet." : "Choose your Google business above, or add a review below."}</p>
+          ) : (
+            <ActionForm action={saveReviewSelection} className="mt-3 space-y-3">
+              <ul className="divide-y divide-stone-100 rounded-lg border border-stone-200">
+                {[...manual, ...(google?.reviews ?? [])].map((r: StoredReview) => {
+                  const lowRated = r.source === "google" && r.rating < minRating;
+                  return (
+                    <li key={r.id} className={`flex gap-3 px-3 py-3 text-sm ${lowRated ? "opacity-50" : ""}`}>
+                      <input type="checkbox" name="show" value={r.id} defaultChecked={!hidden.has(r.id)} className="mt-1 h-4 w-4 shrink-0 accent-amber-500" aria-label={`Show ${r.author}'s review`} />
+                      <div className="min-w-0 flex-1">
+                        <div className="flex flex-wrap items-center gap-x-2">
+                          <b>{r.author}</b>
+                          <span className="text-amber-500">{"★".repeat(r.rating)}<span className="text-stone-300">{"★".repeat(5 - r.rating)}</span></span>
+                          <span className="text-xs text-stone-400">{r.when}</span>
+                          <span className={`rounded-full px-1.5 text-[10px] font-semibold ${r.source === "manual" ? "bg-amber-100 text-amber-800" : "bg-stone-100 text-stone-600"}`}>
+                            {r.source === "manual" ? "Added by you" : "From Google"}
+                          </span>
+                          {lowRated && <span className="text-[10px] text-stone-500">(below your minimum stars)</span>}
+                        </div>
+                        <p className="mt-1 line-clamp-3 text-stone-600">{r.text}</p>
+                      </div>
+                    </li>
+                  );
+                })}
+              </ul>
+              <div className="flex flex-wrap items-end justify-between gap-3">
+                <Field label="Only show Google reviews with at least">
+                  <select name="reviews_min_rating" defaultValue={String(minRating)} className="input w-auto">
+                    {[5, 4, 3, 1].map((n) => <option key={n} value={n}>{n === 1 ? "Any rating" : `${n} stars`}</option>)}
+                  </select>
+                </Field>
+                <SubmitButton>Save selection</SubmitButton>
+              </div>
+            </ActionForm>
+          )}
+
+          {manual.length > 0 && (
+            <div className="mt-3 flex flex-wrap gap-2 text-xs">
+              {manual.map((r) => (
+                <form key={r.id} action={removeManualReview}>
+                  <input type="hidden" name="id" value={r.id} />
+                  <ConfirmButton className="rounded-full border border-stone-200 px-2 py-1 text-stone-500 hover:border-rose-300 hover:text-rose-700" message={`Remove ${r.author}'s review from your website?`}>
+                    Remove {r.author}&apos;s review ✕
+                  </ConfirmButton>
+                </form>
+              ))}
+            </div>
+          )}
+
+          <details className="mt-4 rounded-lg bg-stone-50 p-3">
+            <summary className="cursor-pointer text-sm font-semibold">+ Add a review</summary>
+            <ActionForm action={addManualReview} className="mt-3 grid gap-3 sm:grid-cols-4">
+              <Field label="Reviewer's name" className="sm:col-span-2"><input className="input" name="author" placeholder="e.g. Sarah M." required /></Field>
+              <Field label="Stars">
+                <select name="rating" className="input" defaultValue="5">{[5, 4, 3, 2, 1].map((n) => <option key={n} value={n}>{"★".repeat(n)}</option>)}</select>
+              </Field>
+              <Field label="When (optional)"><input className="input" name="when" placeholder="e.g. March 2026" /></Field>
+              <Field label="What they wrote" className="sm:col-span-4"><textarea className="input" name="text" required placeholder="Paste the review text exactly as it appears on Google" /></Field>
+              <p className="text-xs text-stone-500 sm:col-span-3">Only add real reviews, word for word, from your Google listing.</p>
+              <div className="flex justify-end"><SubmitButton className="btn-dark">Add review</SubmitButton></div>
+            </ActionForm>
+          </details>
         </div>
       </Card>
     </div>
