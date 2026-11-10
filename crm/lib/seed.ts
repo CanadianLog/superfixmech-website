@@ -148,8 +148,8 @@ export function seedDemoData(adminId: number, tz: string) {
       [inv3, "e-transfer"],
     ] as const) {
       run(
-        `INSERT INTO payments (invoice_id, amount_cents, method, paid_on, recorded_by)
-         SELECT ?, CAST(ROUND(SUM(quantity * unit_price_cents) * 1.13) AS INTEGER), ?, ?, ? FROM line_items WHERE parent_type = 'invoice' AND parent_id = ?`,
+        `INSERT INTO payments (invoice_id, amount_cents, method, paid_on, recorded_by, token)
+         SELECT ?, CAST(ROUND(SUM(quantity * unit_price_cents) * 1.13) AS INTEGER), ?, ?, ?, lower(hex(randomblob(16))) FROM line_items WHERE parent_type = 'invoice' AND parent_id = ?`,
         inv,
         method,
         addDays(today, -2),

@@ -35,7 +35,8 @@ export function DocumentView({
         <header className="flex flex-wrap items-start justify-between gap-6">
           <div>
             <div className="flex items-center gap-2">
-              <span className="grid h-10 w-10 place-items-center rounded-lg bg-brand text-sm font-black text-brand-ink">SF</span>
+{/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src="/logo.png" alt="" width={120} height={57} className="h-12 w-auto" />
               <span className="text-lg font-bold">{settings.company_name}</span>
             </div>
             <div className="mt-2 text-sm text-stone-500">
@@ -44,12 +45,12 @@ export function DocumentView({
               {settings.tax_number && <div>HST/GST # {settings.tax_number}</div>}
             </div>
           </div>
-          <div className="text-right">
+          <div className="sm:text-right">
             <div className="text-2xl font-bold">{kind}</div>
             <div className="text-stone-500">#{number}</div>
             <dl className="mt-2 text-sm">
               {meta.map(([k, v]) => (
-                <div key={k} className="flex justify-end gap-2"><dt className="text-stone-500">{k}</dt><dd className="font-medium">{v}</dd></div>
+                <div key={k} className="flex gap-2 sm:justify-end"><dt className="text-stone-500">{k}</dt><dd className="font-medium">{v}</dd></div>
               ))}
             </dl>
           </div>
@@ -77,8 +78,8 @@ export function DocumentView({
           <thead>
             <tr className="border-b-2 border-stone-800 text-left text-xs uppercase tracking-wide">
               <th className="py-2">Description</th>
-              <th className="py-2 text-right">Qty</th>
-              <th className="py-2 text-right">Price</th>
+              <th className="hidden py-2 text-right sm:table-cell">Qty</th>
+              <th className="hidden py-2 text-right sm:table-cell">Price</th>
               <th className="py-2 text-right">Amount</th>
             </tr>
           </thead>
@@ -88,10 +89,14 @@ export function DocumentView({
                 <td className="py-2.5 pr-2">
                   <div className="font-medium">{i.name}</div>
                   {i.description && <div className="whitespace-pre-line text-xs text-stone-500">{i.description}</div>}
+                  {/* On phones, quantity × price goes under the item instead of in its own columns */}
+                  <div className="text-xs tabular-nums text-stone-500 sm:hidden">
+                    {i.quantity} × {money(i.unit_price_cents)}
+                  </div>
                 </td>
-                <td className="py-2.5 text-right tabular-nums">{i.quantity}</td>
-                <td className="py-2.5 text-right tabular-nums">{money(i.unit_price_cents)}</td>
-                <td className="py-2.5 text-right tabular-nums">{money(lineTotal(i))}</td>
+                <td className="hidden py-2.5 text-right tabular-nums sm:table-cell">{i.quantity}</td>
+                <td className="hidden py-2.5 pl-3 text-right tabular-nums sm:table-cell">{money(i.unit_price_cents)}</td>
+                <td className="whitespace-nowrap py-2.5 pl-3 text-right tabular-nums">{money(lineTotal(i))}</td>
               </tr>
             ))}
           </tbody>
