@@ -2,6 +2,7 @@ import "server-only";
 import { DatabaseSync } from "node:sqlite";
 import fs from "node:fs";
 import path from "node:path";
+import { splitTaxInclusive } from "./format";
 
 /**
  * SQLite database (Node's built-in driver, no native dependencies).
@@ -293,6 +294,35 @@ function open(): DatabaseSync {
     UPDATE invoices SET notes = COALESCE((SELECT value FROM settings WHERE key = 'invoice_footer'), '') WHERE notes = 'Imported from Housecall Pro';
     UPDATE payments SET reference = '' WHERE reference = 'Paid in Housecall Pro';
   `);
+  // One-time: Housecall Pro totals already included 13% HST. Earlier imports recorded them as "No tax";
+  // split the HST out so those invoices show Subtotal, HST 13% and the same Total.
+  const done = db.prepare("SELECT value FROM settings WHERE key = 'hcp_hst_split_done'").get() as { value: string } | undefined;
+  if (!done) {
+    const convert = (table: "jobs" | "invoices", parentType: "job" | "invoice") => {
+      const where =
+        table === "jobs"
+          ? "p.external_id IS NOT NULL"
+          : "p.qbo_id IS NULL AND p.job_id IN (SELECT id FROM jobs WHERE external_id IS NOT NULL)";
+      const rows = db
+        .prepare(
+          `SELECT p.id, li.id AS line_id, li.quantity, li.unit_price_cents
+             FROM ${table} p JOIN line_items li ON li.parent_type = '${parentType}' AND li.parent_id = p.id
+            WHERE ${where} AND COALESCE(p.tax_rate, 0) = 0 AND li.taxable = 0
+              AND (SELECT COUNT(*) FROM line_items x WHERE x.parent_type = '${parentType}' AND x.parent_id = p.id) = 1`,
+        )
+        .all() as { id: number; line_id: number; quantity: number; unit_price_cents: number }[];
+      for (const r of rows) {
+        const total = Math.round(r.quantity * r.unit_price_cents);
+        if (total <= 0) continue;
+        const { subtotal } = splitTaxInclusive(total, 13);
+        db.prepare("UPDATE line_items SET quantity = 1, unit_price_cents = ?, taxable = 1 WHERE id = ?").run(subtotal, r.line_id);
+        db.prepare(`UPDATE ${table} SET tax_rate = 13 WHERE id = ?`).run(r.id);
+      }
+    };
+    convert("jobs", "job");
+    convert("invoices", "invoice");
+    db.prepare("INSERT OR REPLACE INTO settings (key, value) VALUES ('hcp_hst_split_done', '1')").run();
+  }
   // One-time: replace the original placeholder company address with the real one (only if it was never edited).
   db.prepare("UPDATE settings SET value = ? WHERE key = 'company_address' AND value = '200 Bay Street, Ottawa, ON'").run("440-7305 Woodbine Ave, Markham, Ontario L3R 3V7");
   const insert = db.prepare("INSERT OR IGNORE INTO settings (key, value) VALUES (?, ?)");

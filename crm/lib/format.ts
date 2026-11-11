@@ -192,3 +192,15 @@ export const TAX_OPTIONS = [
 export function taxLabel(rate: number): string {
   return TAX_OPTIONS.find((t) => t.rate === rate)?.label ?? `Tax ${rate}%`;
 }
+
+/**
+ * Splits a total that already includes tax into its pre-tax amount, using the same rounding as
+ * computeTotals. Returns the largest pre-tax amount whose total does not exceed the original
+ * (at most a cent below when no exact split exists), so a paid invoice never shows a balance.
+ */
+export function splitTaxInclusive(totalCents: number, ratePercent: number): { subtotal: number; tax: number } {
+  if (totalCents <= 0 || ratePercent <= 0) return { subtotal: totalCents, tax: 0 };
+  let s = Math.floor(totalCents / (1 + ratePercent / 100)) + 2;
+  while (s > 0 && s + Math.round((s * ratePercent) / 100) > totalCents) s--;
+  return { subtotal: s, tax: Math.round((s * ratePercent) / 100) };
+}
