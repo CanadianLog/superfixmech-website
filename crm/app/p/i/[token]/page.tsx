@@ -32,7 +32,10 @@ export default async function InvoicePortal({ params }: { params: Promise<{ toke
         <>
           {payments.map((p) => (
             <div key={p.id} className="flex justify-between text-stone-500">
-              <dt className="capitalize">Paid {fmtDate(p.paid_on, { year: undefined })} ({p.method})</dt>
+              <dt>
+                Paid {fmtDate(p.paid_on, { year: undefined })}
+                {p.method !== "other" && <> ({p.method === "card" ? "credit card" : p.method === "e-transfer" ? "e-Transfer" : p.method})</>}
+              </dt>
               <dd className="tabular-nums">−{money(p.amount_cents)}</dd>
             </div>
           ))}

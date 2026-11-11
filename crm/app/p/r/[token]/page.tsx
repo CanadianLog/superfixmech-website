@@ -44,7 +44,7 @@ export default async function ReceiptPage({ params }: { params: Promise<{ token:
         </div>
 
         <dl className="mt-8 space-y-2 border-t border-stone-200 pt-4 text-sm">
-          <Row k="Paid by" v={<span className="capitalize">{method}</span>} />
+          {p.method !== "other" && <Row k="Paid by" v={<span className="capitalize">{method}</span>} />}
           {p.reference && <Row k="Reference" v={p.reference} />}
           <Row k="Date" v={fmtDate(p.paid_on)} />
           <Row k="Invoice" v={`#${inv.number}`} />
