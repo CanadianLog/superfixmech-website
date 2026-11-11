@@ -2,7 +2,7 @@ import "server-only";
 import { all, get, getSettings, nextNumber, run, tx } from "./db";
 import { parseCSV } from "./csv";
 import { randomToken } from "./auth";
-import { APPLIANCE_TYPES, toCents } from "./format";
+import { APPLIANCE_TYPES, splitTaxInclusive, toCents } from "./format";
 
 /**
  * Imports the CSV exports from Housecall Pro (customers, jobs, price book).
@@ -308,7 +308,7 @@ function parseRate(rateText: string, taxCents: number, taxableCents: number): nu
  * Works out what a Housecall Pro job was worth and how much was paid, from whichever columns
  * the export has: a paid amount, an amount due/balance, or a payment/invoice status saying "paid".
  */
-function moneyFrom(r: Row) {
+function moneyFrom(r: Row, includesHst = false) {
   const amount = toCents(r.get("Amount", "Total", "Total Amount", "Job Amount", "Job Total", "Invoice Total", "Invoice Amount", "Grand Total", "Total Price"));
   const taxCents = toCents(r.get("Tax", "Tax Amount", "Total Tax"));
   const subtotal = toCents(r.get("Subtotal", "Sub Total", "Sub-total")) || Math.max(0, amount - taxCents);
@@ -328,10 +328,17 @@ function moneyFrom(r: Row) {
   else if (dueText && isMoney(dueText)) paid = Math.max(0, total - toCents(dueText));
   else if (/\b(paid in full|fully paid|paid)\b/.test(statusText) && !/\b(unpaid|not paid|partial|partially)\b/.test(statusText)) paid = total;
   else if (/^(yes|true|y|1)$/i.test(r.get("Paid?", "Paid", "Is Paid"))) paid = total;
+  // Housecall Pro's job export gives only the total. When it includes HST, split the 13% out so invoices
+  // show Subtotal, HST 13% and Total (the total stays what the customer was charged).
+  const hasTaxColumn = !!r.get("Tax", "Tax Amount", "Total Tax", "Tax rate", "Tax Rate", "Tax %", "Subtotal", "Sub Total");
+  if (includesHst && !hasTaxColumn && taxCents === 0 && total > 0) {
+    const split = splitTaxInclusive(total, 13);
+    return { amount: split.subtotal + split.tax, taxCents: split.tax, subtotal: split.subtotal, taxable: split.subtotal, rate: 13, paid: Math.min(paid, split.subtotal + split.tax) };
+  }
   return { amount: total, taxCents, subtotal, taxable, rate, paid: Math.min(paid, total || paid) };
 }
 
-export function importJobs(text: string, tz: string): ImportReport {
+export function importJobs(text: string, tz: string, includesHst = true): ImportReport {
   const { rows, rawHeaders } = table(text);
   const findDate = dateFinder(rawHeaders);
   let undated = 0;
@@ -372,7 +379,7 @@ export function importJobs(text: string, tz: string): ImportReport {
       const existingJob = externalId ? get<{ id: number }>("SELECT id FROM jobs WHERE external_id = ?", externalId) : undefined;
       if (existingJob) {
         // Already imported: only bring payments up to date (fixes invoices imported as unpaid).
-        const m = moneyFrom(r);
+        const m = moneyFrom(r, includesHst);
         let inv = get<{ id: number; issued_on: string; created_at: string }>(
           "SELECT id, issued_on, created_at FROM invoices WHERE job_id = ? AND status != 'void' ORDER BY id LIMIT 1",
           existingJob.id,
@@ -498,7 +505,7 @@ export function importJobs(text: string, tz: string): ImportReport {
       }
 
       // Money
-      const { taxCents, subtotal, rate, paid } = moneyFrom(r);
+      const { taxCents, subtotal, rate, paid } = moneyFrom(r, includesHst);
       const lineText = r.get("Line Items");
       const description = r.get("Description", "Job Description");
 

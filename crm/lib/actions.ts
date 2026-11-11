@@ -973,7 +973,7 @@ export async function importHousecallPro(_: FormState, fd: FormData): Promise<Fo
     }
     try {
       const r =
-        key === "customers" ? importCustomers(text) : key === "jobs" ? importJobs(text, timeZone()) : importPricebook(text);
+        key === "customers" ? importCustomers(text) : key === "jobs" ? importJobs(text, timeZone(), !!fd.get("includes_hst")) : importPricebook(text);
       lines.push(`${label}: ${r.created} added, ${r.updated} matched/updated, ${r.skipped} skipped`);
       warnings.push(...r.warnings);
     } catch (e) {

@@ -55,6 +55,13 @@ export default async function ImportPage() {
               <input type="file" name={name} accept=".csv,.tsv,.txt,.zip,text/csv,application/zip" className="block w-full text-sm file:mr-3 file:rounded-lg file:border-0 file:bg-stone-900 file:px-3 file:py-2 file:text-sm file:font-semibold file:text-white" />
             </label>
           ))}
+          <label className="flex items-start gap-2 text-sm">
+            <input type="checkbox" name="includes_hst" defaultChecked className="mt-0.5 h-4 w-4 accent-amber-500" />
+            <span>
+              Job amounts in Housecall Pro already include 13% HST
+              <span className="block text-xs text-stone-500">Invoices then show the subtotal and HST 13% on separate lines, with the same total the customer paid.</span>
+            </span>
+          </label>
           <ul className="list-disc space-y-1 pl-5 text-xs text-stone-500">
             <li>Upload one file or all three. Customers are matched by Housecall Pro ID, email, phone or name, so nobody gets duplicated.</li>
             <li>Importing the same file again is safe: anything already imported is skipped.</li>
