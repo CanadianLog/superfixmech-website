@@ -191,7 +191,7 @@ const DEFAULT_SETTINGS: Record<string, string> = {
   company_name: "SuperFix Mechanical Inc.",
   company_phone: "613-366-7009",
   company_email: "service@superfixmech.ca",
-  company_address: "200 Bay Street, Ottawa, ON",
+  company_address: "440-7305 Woodbine Ave, Markham, Ontario L3R 3V7",
   company_website: "https://superfixmech.ca",
   tax_name: "HST",
   tax_rate: "13",
@@ -283,6 +283,18 @@ function open(): DatabaseSync {
   const db = new DatabaseSync(file);
   db.exec(SCHEMA);
   migrate(db);
+  // Clean up records made by the first Housecall Pro imports so customers never see the old system's name:
+  // the invoice line becomes the job's description, and the import note/payment reference are cleared.
+  db.exec(`
+    UPDATE line_items SET name = COALESCE((SELECT NULLIF(NULLIF(j.title, ''), 'Imported job') FROM jobs j WHERE j.id = line_items.parent_id), 'Appliance service')
+     WHERE parent_type = 'job' AND name LIKE 'Housecall Pro job #%';
+    UPDATE line_items SET name = COALESCE((SELECT NULLIF(NULLIF(j.title, ''), 'Imported job') FROM invoices i JOIN jobs j ON j.id = i.job_id WHERE i.id = line_items.parent_id), 'Appliance service')
+     WHERE parent_type = 'invoice' AND name LIKE 'Housecall Pro job #%';
+    UPDATE invoices SET notes = COALESCE((SELECT value FROM settings WHERE key = 'invoice_footer'), '') WHERE notes = 'Imported from Housecall Pro';
+    UPDATE payments SET reference = '' WHERE reference = 'Paid in Housecall Pro';
+  `);
+  // One-time: replace the original placeholder company address with the real one (only if it was never edited).
+  db.prepare("UPDATE settings SET value = ? WHERE key = 'company_address' AND value = '200 Bay Street, Ottawa, ON'").run("440-7305 Woodbine Ave, Markham, Ontario L3R 3V7");
   const insert = db.prepare("INSERT OR IGNORE INTO settings (key, value) VALUES (?, ?)");
   for (const [k, v] of Object.entries(DEFAULT_SETTINGS)) insert.run(k, v);
   return db;

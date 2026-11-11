@@ -28,7 +28,8 @@ export default async function ReceiptPage({ params }: { params: Promise<{ token:
     <div className="mx-auto max-w-md px-4 py-10 print:p-0">
       <article className="card p-6 sm:p-8 print:border-0 print:shadow-none">
         <div className="flex items-center gap-2">
-          <span className="grid h-10 w-10 place-items-center rounded-lg bg-brand text-sm font-black text-brand-ink">SF</span>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/logo.png" alt="" width={100} height={47} className="h-11 w-auto" />
           <div>
             <div className="font-bold">{s.company_name}</div>
             <div className="text-xs text-stone-500">{[s.company_phone, s.company_email].filter(Boolean).join(" · ")}</div>
@@ -43,7 +44,7 @@ export default async function ReceiptPage({ params }: { params: Promise<{ token:
         </div>
 
         <dl className="mt-8 space-y-2 border-t border-stone-200 pt-4 text-sm">
-          <Row k="Paid by" v={<span className="capitalize">{method}</span>} />
+          {p.method !== "other" && <Row k="Paid by" v={<span className="capitalize">{method}</span>} />}
           {p.reference && <Row k="Reference" v={p.reference} />}
           <Row k="Date" v={fmtDate(p.paid_on)} />
           <Row k="Invoice" v={`#${inv.number}`} />

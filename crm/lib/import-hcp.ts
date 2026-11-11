@@ -1,5 +1,5 @@
 import "server-only";
-import { all, get, nextNumber, run, tx } from "./db";
+import { all, get, getSettings, nextNumber, run, tx } from "./db";
 import { parseCSV } from "./csv";
 import { randomToken } from "./auth";
 import { APPLIANCE_TYPES, toCents } from "./format";
@@ -382,8 +382,8 @@ export function importJobs(text: string, tz: string): ImportReport {
         const realDate = d.done;
         let fixedDate = false;
         if (inv && realDate && inv.issued_on !== realDate && inv.issued_on === inv.created_at.slice(0, 10)) {
-          run("UPDATE invoices SET issued_on = ?, due_on = ? WHERE id = ? AND notes = 'Imported from Housecall Pro'", realDate, realDate, inv.id);
-          run("UPDATE payments SET paid_on = ? WHERE invoice_id = ? AND reference = 'Paid in Housecall Pro'", realDate, inv.id);
+          run("UPDATE invoices SET issued_on = ?, due_on = ? WHERE id = ?", realDate, realDate, inv.id);
+          run("UPDATE payments SET paid_on = ? WHERE invoice_id = ? AND recorded_by IS NULL", realDate, inv.id);
           inv = { ...inv, issued_on: realDate };
           fixedDate = true;
         }
@@ -429,7 +429,7 @@ export function importJobs(text: string, tz: string): ImportReport {
         const alreadyPaid = inv ? get<{ s: number }>("SELECT COALESCE(SUM(amount_cents), 0) AS s FROM payments WHERE invoice_id = ?", inv.id)!.s : 0;
         if (inv && m.paid > alreadyPaid) {
           run(
-            "INSERT INTO payments (invoice_id, amount_cents, method, reference, paid_on, token) VALUES (?, ?, 'other', 'Paid in Housecall Pro', ?, ?)",
+            "INSERT INTO payments (invoice_id, amount_cents, method, reference, paid_on, token) VALUES (?, ?, 'other', '', ?, ?)",
             inv.id,
             m.paid - alreadyPaid,
             inv.issued_on,
@@ -540,12 +540,16 @@ export function importJobs(text: string, tz: string): ImportReport {
       ).id;
 
       if (subtotal > 0) {
+        // The invoice line describes the work (Housecall Pro's export has no per-item breakdown).
+        const descLines = description.split(/\r?\n/).map((x) => x.trim()).filter(Boolean);
+        const lineName = (descLines[0] || lineText.split(/[\r\n;]/)[0] || "Appliance service").trim().slice(0, 200);
+        const lineDesc = [...descLines.slice(1), lineText && lineText !== lineName ? lineText : ""].filter(Boolean).join("\n").slice(0, 2000);
         run(
           `INSERT INTO line_items (parent_type, parent_id, kind, name, description, quantity, unit_price_cents, taxable, sort)
            VALUES ('job', ?, 'service', ?, ?, 1, ?, ?, 0)`,
           jobId,
-          `Housecall Pro job #${invoiceNo || number}`,
-          lineText,
+          lineName,
+          lineDesc,
           subtotal,
           taxCents > 0 ? 1 : 0,
         );
@@ -563,13 +567,14 @@ export function importJobs(text: string, tz: string): ImportReport {
         const issued = (completedIso ?? createdIso).slice(0, 10);
         const invId = run(
           `INSERT INTO invoices (number, customer_id, job_id, status, token, issued_on, due_on, notes, tax_rate)
-           VALUES (?, ?, ?, 'sent', ?, ?, ?, 'Imported from Housecall Pro', ?)`,
+           VALUES (?, ?, ?, 'sent', ?, ?, ?, ?, ?)`,
           nextNumber("invoices", 2001),
           customerId,
           jobId,
           randomToken(),
           issued,
           issued,
+          getSettings().invoice_footer || "",
           rate,
         ).id;
         run(
@@ -580,7 +585,7 @@ export function importJobs(text: string, tz: string): ImportReport {
         );
         if (paid > 0) {
           run(
-            "INSERT INTO payments (invoice_id, amount_cents, method, reference, paid_on, token) VALUES (?, ?, 'other', 'Paid in Housecall Pro', ?, ?)",
+            "INSERT INTO payments (invoice_id, amount_cents, method, reference, paid_on, token) VALUES (?, ?, 'other', '', ?, ?)",
             invId,
             paid,
             issued,
