@@ -72,6 +72,7 @@ function parseItems(fd: FormData): LineItemInput[] {
         quantity: Number.isFinite(Number(i.quantity)) ? Number(i.quantity) : 1,
         unit_price_cents: Math.round(Number(i.unit_price_cents) || 0),
         taxable: !!i.taxable,
+        cost_cents: Math.max(0, Math.round(Number(i.cost_cents) || 0)),
       }));
   } catch {
     return [];
@@ -82,8 +83,8 @@ function replaceItems(parentType: "job" | "estimate" | "invoice", parentId: numb
   run("DELETE FROM line_items WHERE parent_type = ? AND parent_id = ?", parentType, parentId);
   items.forEach((i, idx) =>
     run(
-      `INSERT INTO line_items (parent_type, parent_id, kind, name, description, quantity, unit_price_cents, taxable, sort)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      `INSERT INTO line_items (parent_type, parent_id, kind, name, description, quantity, unit_price_cents, taxable, sort, cost_cents)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       parentType,
       parentId,
       i.kind,
@@ -93,6 +94,7 @@ function replaceItems(parentType: "job" | "estimate" | "invoice", parentId: numb
       i.unit_price_cents,
       i.taxable ? 1 : 0,
       idx,
+      i.cost_cents ?? 0,
     ),
   );
 }

@@ -1,13 +1,19 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { centsToInput, computeTotals, lineTotal, money, taxLabel, TAX_OPTIONS, toCents } from "@/lib/format";
 import type { LineItemInput, PricebookItem } from "@/lib/types";
 
-type Row = LineItemInput & { key: number; priceText: string };
+type Row = LineItemInput & { key: number; priceText: string; costText: string };
 
 let seq = 0;
-const toRow = (i: LineItemInput): Row => ({ ...i, key: ++seq, priceText: centsToInput(i.unit_price_cents) });
+const toRow = (i: LineItemInput): Row => ({
+  ...i,
+  cost_cents: i.cost_cents ?? 0,
+  key: ++seq,
+  priceText: centsToInput(i.unit_price_cents),
+  costText: i.cost_cents ? centsToInput(i.cost_cents) : "",
+});
 
 /**
  * Editable list of services, materials and discounts with live totals.
@@ -28,12 +34,25 @@ export function LineItemsEditor({
   readOnly?: boolean;
 }) {
   const [rows, setRows] = useState<Row[]>(() => initial.map(toRow));
+  // After a save, the browser resets the form, which can leave dropdowns and tick boxes showing their
+  // defaults instead of what's saved. Redraw the editor from its state whenever that happens.
+  const rootRef = useRef<HTMLDivElement>(null);
+  const [redraw, setRedraw] = useState(0);
+  useEffect(() => {
+    const form = rootRef.current?.closest("form");
+    if (!form) return;
+    const onReset = () => setTimeout(() => setRedraw((n) => n + 1), 0);
+    form.addEventListener("reset", onReset);
+    return () => form.removeEventListener("reset", onReset);
+  }, []);
   const [pick, setPick] = useState("");
   const [taxRate, setTaxRate] = useState(initialRate);
 
   const totals = useMemo(() => computeTotals(rows, taxRate), [rows, taxRate]);
+  const cost = useMemo(() => rows.reduce((s, r) => s + (r.kind === "discount" ? 0 : Math.round((r.cost_cents ?? 0) * r.quantity)), 0), [rows]);
+  const profit = totals.subtotal - cost;
   const serialised = JSON.stringify(
-    rows.map((r) => ({ kind: r.kind, name: r.name, description: r.description, quantity: r.quantity, unit_price_cents: r.unit_price_cents, taxable: r.taxable })),
+    rows.map((r) => ({ kind: r.kind, name: r.name, description: r.description, quantity: r.quantity, unit_price_cents: r.unit_price_cents, taxable: r.taxable, cost_cents: r.cost_cents ?? 0 })),
   );
 
   const update = (key: number, patch: Partial<Row>) => setRows((rs) => rs.map((r) => (r.key === key ? { ...r, ...patch } : r)));
@@ -63,16 +82,19 @@ export function LineItemsEditor({
   }, [pricebook, appliance]);
 
   return (
-    <div>
+    <div ref={rootRef} key={redraw}>
       <input type="hidden" name="items" value={serialised} />
       {!readOnly && <input type="hidden" name="tax_rate" value={taxRate} />}
       <div className="overflow-x-auto">
-        <table className="w-full min-w-[640px] text-sm">
+        <table className="w-full min-w-[760px] text-sm">
           <thead>
             <tr className="text-left text-xs font-semibold uppercase tracking-wide text-stone-500">
               <th className="py-2 pr-2">Item</th>
               <th className="w-20 px-2 py-2">Qty</th>
               <th className="w-28 px-2 py-2">Price</th>
+              <th className="w-28 px-2 py-2" title="What this costs you, per unit. Customers never see it.">
+                Your cost <span aria-hidden>🔒</span>
+              </th>
               <th className="w-14 px-2 py-2 text-center">Tax</th>
               <th className="w-28 px-2 py-2 text-right">Amount</th>
               {!readOnly && <th className="w-20" />}
@@ -152,6 +174,21 @@ export function LineItemsEditor({
                     />
                   )}
                 </td>
+                <td className="px-2 py-2">
+                  {readOnly ? (
+                    <span className="text-stone-500">{r.cost_cents ? money(r.cost_cents) : "—"}</span>
+                  ) : (
+                    <input
+                      aria-label="Your cost per unit (not shown to customers)"
+                      className="input bg-stone-50 px-2"
+                      inputMode="decimal"
+                      placeholder="0.00"
+                      value={r.costText}
+                      onChange={(e) => update(r.key, { costText: e.target.value, cost_cents: toCents(e.target.value) })}
+                      onBlur={() => update(r.key, { costText: r.cost_cents ? centsToInput(r.cost_cents) : "" })}
+                    />
+                  )}
+                </td>
                 <td className="px-2 py-3 text-center">
                   <input
                     aria-label="Taxable"
@@ -199,7 +236,7 @@ export function LineItemsEditor({
               value={pick}
               onChange={(e) => {
                 const p = pricebook.find((x) => String(x.id) === e.target.value);
-                if (p) add({ kind: p.kind, name: p.name, description: p.description, unit_price_cents: p.unit_price_cents, taxable: !!p.taxable });
+                if (p) add({ kind: p.kind, name: p.name, description: p.description, unit_price_cents: p.unit_price_cents, taxable: !!p.taxable, cost_cents: p.cost_cents });
                 setPick("");
               }}
             >
@@ -250,6 +287,22 @@ export function LineItemsEditor({
           <dd className="tabular-nums">{money(totals.total)}</dd>
         </div>
       </dl>
+
+      {/* Internal only: never on anything the customer sees */}
+      <div className="ml-auto mt-3 w-full max-w-xs rounded-lg bg-stone-100 px-3 py-2 text-sm">
+        <div className="flex justify-between text-stone-600">
+          <span>Your cost</span>
+          <span className="tabular-nums">{money(cost)}</span>
+        </div>
+        <div className={`flex justify-between font-semibold ${profit < 0 ? "text-rose-700" : "text-emerald-700"}`}>
+          <span>Profit (before HST)</span>
+          <span className="tabular-nums">
+            {money(profit)}
+            {totals.subtotal > 0 && <span className="ml-1 text-xs font-normal text-stone-500">({Math.round((profit / totals.subtotal) * 100)}%)</span>}
+          </span>
+        </div>
+        <div className="mt-1 text-[11px] text-stone-400">🔒 Only your team sees this.</div>
+      </div>
     </div>
   );
 }

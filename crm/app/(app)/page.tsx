@@ -2,7 +2,7 @@ import Link from "next/link";
 import { requireUser, isOffice } from "@/lib/auth";
 import { all, get } from "@/lib/db";
 import { addDays, fmtStamp, money } from "@/lib/format";
-import { jobsInRange, listEstimates, listInvoices, paymentsBetween, timeZone, today, unscheduledJobs } from "@/lib/data";
+import { jobsInRange, listEstimates, listInvoices, paymentsBetween, profitBetween, timeZone, today, unscheduledJobs } from "@/lib/data";
 import { loadDemoData } from "@/lib/actions";
 import { Card, Empty, PageHeader, Stat } from "@/components/ui";
 import { JobList } from "@/components/job-list";
@@ -40,6 +40,7 @@ export default async function Dashboard({ searchParams }: { searchParams: Promis
 
   const monthStart = `${day.slice(0, 7)}-01`;
   const collected = paymentsBetween(monthStart, addDays(day, 1)).reduce((s, p) => s + p.amount_cents, 0);
+  const month = profitBetween(monthStart, addDays(day, 1));
   const unpaid = listInvoices({ status: "unpaid" });
   const unpaidTotal = unpaid.reduce((s, i) => s + i.balance_cents, 0);
   const overdue = unpaid.filter((i) => i.display_status === "overdue").length;
@@ -83,12 +84,20 @@ export default async function Dashboard({ searchParams }: { searchParams: Promis
         </div>
       )}
 
-      <div className="mb-6 grid grid-cols-2 gap-3 lg:grid-cols-5">
+      <div className="mb-6 grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-6">
         <Stat label="Jobs today" value={todays.length} hint={`${todays.filter((j) => j.status === "completed").length} completed`} href="/schedule" />
         <Stat label="Unscheduled" value={unscheduled.length} hint="Waiting for a time" href="/jobs?status=unscheduled" />
         <Stat label="Open estimates" value={money(openEstimates.reduce((s, e) => s + e.total_cents, 0))} hint={`${openEstimates.length} sent or approved`} href="/estimates" />
         <Stat label="Unpaid invoices" value={money(unpaidTotal)} hint={overdue ? `${overdue} overdue` : `${unpaid.length} open`} href="/invoices?status=unpaid" />
         <Stat label="Collected this month" value={money(collected)} href="/reports" />
+        {user.role === "admin" && (
+          <Stat
+            label="Profit this month"
+            value={<span className={month.profit < 0 ? "text-rose-700" : "text-emerald-700"}>{money(month.profit)}</span>}
+            hint={`Sales ${money(month.sales)} − materials ${money(month.cost)}`}
+            href="/reports"
+          />
+        )}
       </div>
 
       <div className="grid gap-6 xl:grid-cols-3">

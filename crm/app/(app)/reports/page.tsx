@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { requireUser } from "@/lib/auth";
 import { all } from "@/lib/db";
-import { listEstimates, listInvoices, paymentsBetween, today, totalsFor } from "@/lib/data";
+import { listEstimates, listInvoices, paymentsBetween, profitBetween, today, totalsFor } from "@/lib/data";
 import { addDays, fmtDate, money } from "@/lib/format";
 import { Card, PageHeader, Stat, Tabs } from "@/components/ui";
 
@@ -27,12 +27,13 @@ function range(period: string, now: string): [string, string, string] {
 }
 
 export default async function ReportsPage({ searchParams }: { searchParams: Promise<{ period?: string }> }) {
-  await requireUser(["admin", "dispatcher"]);
+  const user = await requireUser(["admin", "dispatcher"]);
   const { period = "month" } = await searchParams;
   const now = today();
   const [from, to, label] = range(period, now);
 
   const payments = paymentsBetween(from, to);
+  const profit = profitBetween(from, to);
   const collected = payments.reduce((s, p) => s + p.amount_cents, 0);
   const byMethod = new Map<string, number>();
   for (const p of payments) byMethod.set(p.method, (byMethod.get(p.method) ?? 0) + p.amount_cents);
@@ -88,11 +89,12 @@ export default async function ReportsPage({ searchParams }: { searchParams: Prom
         current={period}
         items={[["month", "This month"], ["last_month", "Last month"], ["30d", "Last 30 days"], ["year", "Year to date"]].map(([k, l]) => ({ key: k, label: l, href: `/reports?period=${k}` }))}
       />
-      <div className="mb-6 grid grid-cols-2 gap-3 lg:grid-cols-5">
+      <div className="mb-6 grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-6">
         <Stat label="Collected" value={money(collected)} hint={`${payments.length} payments`} />
         <Stat label="Invoiced" value={money(invoiced)} hint={`${invoices.length} invoices`} />
         <Stat label="Jobs completed" value={completed.length} />
         <Stat label="Average ticket" value={money(avgTicket)} />
+        {user.role === "admin" && <Stat label="Profit (before HST)" value={money(profit.profit)} hint={`Sales ${money(profit.sales)} − materials ${money(profit.cost)}`} />}
         <Stat label="Estimate win rate" value={winRate === null ? "—" : `${winRate}%`} hint={`${won.length} of ${decided.length} decided`} />
       </div>
 

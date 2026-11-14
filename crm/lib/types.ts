@@ -135,6 +135,7 @@ export type LineItem = {
   unit_price_cents: number;
   taxable: number;
   sort: number;
+  cost_cents: number;
 };
 
 /** Shape exchanged with the line-item editor (client component). */
@@ -145,6 +146,8 @@ export type LineItemInput = {
   quantity: number;
   unit_price_cents: number;
   taxable: boolean;
+  /** Your cost per unit (internal only). */
+  cost_cents?: number;
 };
 
 export type PricebookItem = {
