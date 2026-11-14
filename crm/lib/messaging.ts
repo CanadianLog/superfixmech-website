@@ -32,7 +32,9 @@ export function toE164(phone: string): string | null {
 }
 
 export function fill(template: string, vars: Record<string, string>): string {
-  return template.replace(/\{(\w+)\}/g, (m, k) => (k in vars ? vars[k] : m));
+  return template
+    .replace(/\{(\w+)\}/g, (m, k) => (k in vars ? vars[k] : m))
+    .replace(/(\w)\.\.(?!\.)/g, "$1."); // "Inc." + "." -> "Inc." (but keep "..." as is)
 }
 
 async function sendSms(to: string, body: string) {

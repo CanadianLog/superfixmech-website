@@ -225,6 +225,10 @@ const DEFAULT_SETTINGS: Record<string, string> = {
   smtp_user: "",
   smtp_pass: "",
   smtp_from_name: "SuperFix Mechanical",
+  // Email the owner a copy whenever an invoice or receipt is sent to a customer (blank address = company email)
+  notify_email: "",
+  notify_invoice: "1",
+  notify_receipt: "1",
   // Google address search (Places API)
   google_maps_api_key: "",
   google_place_id: "",

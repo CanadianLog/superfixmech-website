@@ -44,6 +44,19 @@ export function MessagingCard({ s }: { s: Record<string, string> }) {
               <Field label="Password / app password"><input className="input" type="password" name="smtp_pass" autoComplete="off" placeholder={s.smtp_pass ? "•••••••• (saved)" : ""} /></Field>
             </div>
           </section>
+          <section>
+            <h3 className="mb-2 text-sm font-bold">Copies to you</h3>
+            <input type="hidden" name="notify_present" value="1" />
+            <div className="grid gap-3 sm:grid-cols-[1fr_auto] sm:items-end">
+              <Field label="Email me when these go to a customer" hint={`Leave blank to use ${s.company_email || "your company email"}. Needs email set up above.`}>
+                <input className="input" type="email" name="notify_email" defaultValue={s.notify_email} placeholder={s.company_email} />
+              </Field>
+              <div className="flex flex-wrap gap-4 pb-2 text-sm">
+                <label className="flex items-center gap-2"><input type="checkbox" name="notify_invoice" defaultChecked={s.notify_invoice === "1"} className="h-4 w-4 accent-amber-500" /> Invoices</label>
+                <label className="flex items-center gap-2"><input type="checkbox" name="notify_receipt" defaultChecked={s.notify_receipt === "1"} className="h-4 w-4 accent-amber-500" /> Receipts</label>
+              </div>
+            </div>
+          </section>
           <div className="flex justify-end"><SubmitButton>Save</SubmitButton></div>
         </ActionForm>
 
