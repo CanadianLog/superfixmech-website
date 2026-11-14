@@ -359,3 +359,24 @@ export function paymentsBetween(from: string, to: string): { day: string; amount
     to,
   );
 }
+
+/**
+ * Profit on invoices issued in [from, to): sales before tax minus your material costs (internal only).
+ * Drafts and void invoices are left out.
+ */
+export function profitBetween(from: string, to: string): { sales: number; cost: number; profit: number; invoices: number } {
+  const rows = all<{ sales: number | null; cost: number | null; n: number }>(
+    `SELECT
+       SUM(CASE WHEN li.kind = 'discount' THEN -ABS(ROUND(li.quantity * li.unit_price_cents)) ELSE ROUND(li.quantity * li.unit_price_cents) END) AS sales,
+       SUM(CASE WHEN li.kind = 'discount' THEN 0 ELSE ROUND(li.quantity * li.cost_cents) END) AS cost,
+       COUNT(DISTINCT i.id) AS n
+     FROM invoices i
+     JOIN line_items li ON li.parent_type = 'invoice' AND li.parent_id = i.id
+     WHERE i.status = 'sent' AND i.issued_on >= ? AND i.issued_on < ?`,
+    from,
+    to,
+  )[0];
+  const sales = Math.round(rows?.sales ?? 0);
+  const cost = Math.round(rows?.cost ?? 0);
+  return { sales, cost, profit: sales - cost, invoices: rows?.n ?? 0 };
+}

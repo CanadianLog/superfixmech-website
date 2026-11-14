@@ -271,6 +271,8 @@ const MIGRATIONS: [table: string, column: string, definition: string][] = [
   ["pricebook", "external_id", "TEXT"],
   ["payments", "token", "TEXT"],
   ["customers", "no_review", "INTEGER NOT NULL DEFAULT 0"],
+  // What a line costs you (per unit). Internal only: never shown to customers.
+  ["line_items", "cost_cents", "INTEGER NOT NULL DEFAULT 0"],
 ];
 
 function migrate(db: DatabaseSync) {
