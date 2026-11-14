@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useId, useMemo, useRef, useState } from "react";
 import { centsToInput, computeTotals, lineTotal, money, taxLabel, TAX_OPTIONS, toCents } from "@/lib/format";
 import type { LineItemInput, PricebookItem } from "@/lib/types";
 
@@ -25,6 +25,7 @@ export function LineItemsEditor({
   taxRate: initialRate,
   appliance = "",
   readOnly = false,
+  suppliers = [],
 }: {
   initial: LineItemInput[];
   pricebook: PricebookItem[];
@@ -32,6 +33,8 @@ export function LineItemsEditor({
   /** Appliance on the job; its parts are listed first in the catalogue picker. */
   appliance?: string;
   readOnly?: boolean;
+  /** Supplier names to suggest in "Bought from". */
+  suppliers?: string[];
 }) {
   const [rows, setRows] = useState<Row[]>(() => initial.map(toRow));
   // After a save, the browser resets the form, which can leave dropdowns and tick boxes showing their
@@ -51,8 +54,13 @@ export function LineItemsEditor({
   const totals = useMemo(() => computeTotals(rows, taxRate), [rows, taxRate]);
   const cost = useMemo(() => rows.reduce((s, r) => s + (r.kind === "discount" ? 0 : Math.round((r.cost_cents ?? 0) * r.quantity)), 0), [rows]);
   const profit = totals.subtotal - cost;
+  const listId = useId();
+  const supplierOptions = useMemo(() => {
+    const all = [...suppliers, ...pricebook.map((p) => p.supplier ?? ""), ...rows.map((r) => r.supplier ?? "")].map((s) => s.trim()).filter(Boolean);
+    return [...new Map(all.map((s) => [s.toLowerCase(), s])).values()];
+  }, [suppliers, pricebook, rows]);
   const serialised = JSON.stringify(
-    rows.map((r) => ({ kind: r.kind, name: r.name, description: r.description, quantity: r.quantity, unit_price_cents: r.unit_price_cents, taxable: r.taxable, cost_cents: r.cost_cents ?? 0 })),
+    rows.map((r) => ({ kind: r.kind, name: r.name, description: r.description, quantity: r.quantity, unit_price_cents: r.unit_price_cents, taxable: r.taxable, cost_cents: r.cost_cents ?? 0, supplier: r.supplier ?? "" })),
   );
 
   const update = (key: number, patch: Partial<Row>) => setRows((rs) => rs.map((r) => (r.key === key ? { ...r, ...patch } : r)));
@@ -84,6 +92,11 @@ export function LineItemsEditor({
   return (
     <div ref={rootRef} key={redraw}>
       <input type="hidden" name="items" value={serialised} />
+      <datalist id={listId}>
+        {supplierOptions.map((s) => (
+          <option key={s} value={s} />
+        ))}
+      </datalist>
       {!readOnly && <input type="hidden" name="tax_rate" value={taxRate} />}
       <div className="overflow-x-auto">
         <table className="w-full min-w-[760px] text-sm">
@@ -188,6 +201,19 @@ export function LineItemsEditor({
                       onBlur={() => update(r.key, { costText: r.cost_cents ? centsToInput(r.cost_cents) : "" })}
                     />
                   )}
+                  {r.kind === "material" &&
+                    (readOnly ? (
+                      r.supplier && <div className="mt-1 truncate text-xs text-stone-500">from {r.supplier}</div>
+                    ) : (
+                      <input
+                        aria-label="Bought from (not shown to customers)"
+                        className="input mt-1 bg-stone-50 px-2 text-xs"
+                        placeholder="Bought from"
+                        list={listId}
+                        value={r.supplier ?? ""}
+                        onChange={(e) => update(r.key, { supplier: e.target.value })}
+                      />
+                    ))}
                 </td>
                 <td className="px-2 py-3 text-center">
                   <input
@@ -236,7 +262,7 @@ export function LineItemsEditor({
               value={pick}
               onChange={(e) => {
                 const p = pricebook.find((x) => String(x.id) === e.target.value);
-                if (p) add({ kind: p.kind, name: p.name, description: p.description, unit_price_cents: p.unit_price_cents, taxable: !!p.taxable, cost_cents: p.cost_cents });
+                if (p) add({ kind: p.kind, name: p.name, description: p.description, unit_price_cents: p.unit_price_cents, taxable: !!p.taxable, cost_cents: p.cost_cents, supplier: p.supplier ?? "" });
                 setPick("");
               }}
             >

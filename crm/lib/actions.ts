@@ -73,6 +73,7 @@ function parseItems(fd: FormData): LineItemInput[] {
         unit_price_cents: Math.round(Number(i.unit_price_cents) || 0),
         taxable: !!i.taxable,
         cost_cents: Math.max(0, Math.round(Number(i.cost_cents) || 0)),
+        supplier: String(i.supplier ?? "").trim().slice(0, 100),
       }));
   } catch {
     return [];
@@ -83,8 +84,8 @@ function replaceItems(parentType: "job" | "estimate" | "invoice", parentId: numb
   run("DELETE FROM line_items WHERE parent_type = ? AND parent_id = ?", parentType, parentId);
   items.forEach((i, idx) =>
     run(
-      `INSERT INTO line_items (parent_type, parent_id, kind, name, description, quantity, unit_price_cents, taxable, sort, cost_cents)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      `INSERT INTO line_items (parent_type, parent_id, kind, name, description, quantity, unit_price_cents, taxable, sort, cost_cents, supplier)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       parentType,
       parentId,
       i.kind,
@@ -95,6 +96,7 @@ function replaceItems(parentType: "job" | "estimate" | "invoice", parentId: numb
       i.taxable ? 1 : 0,
       idx,
       i.cost_cents ?? 0,
+      i.supplier ?? "",
     ),
   );
 }
@@ -730,17 +732,18 @@ export async function savePricebookItem(fd: FormData) {
     toCents(str(fd, "price")),
     toCents(str(fd, "cost")),
     fd.get("taxable") ? 1 : 0,
+    str(fd, "supplier").slice(0, 100),
   ] as const;
   if (!vals[3]) done("/pricebook");
   if (id) {
     run(
-      "UPDATE pricebook SET kind = ?, appliance = ?, category = ?, name = ?, description = ?, unit_price_cents = ?, cost_cents = ?, taxable = ? WHERE id = ?",
+      "UPDATE pricebook SET kind = ?, appliance = ?, category = ?, name = ?, description = ?, unit_price_cents = ?, cost_cents = ?, taxable = ?, supplier = ? WHERE id = ?",
       ...vals,
       id,
     );
   } else {
     run(
-      "INSERT INTO pricebook (kind, appliance, category, name, description, unit_price_cents, cost_cents, taxable) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+      "INSERT INTO pricebook (kind, appliance, category, name, description, unit_price_cents, cost_cents, taxable, supplier) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
       ...vals,
     );
   }

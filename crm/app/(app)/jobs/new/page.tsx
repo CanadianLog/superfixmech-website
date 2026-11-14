@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 import { requireUser } from "@/lib/auth";
-import { customerAddresses, getCustomer, listPricebook, listTechs, taxRate } from "@/lib/data";
+import { customerAddresses, getCustomer, listPricebook, listSuppliers, listTechs, taxRate } from "@/lib/data";
 import { PageHeader } from "@/components/ui";
 import { JobForm } from "@/components/job-form";
 import { CustomerChooser } from "@/components/customer-chooser";
@@ -28,6 +28,7 @@ export default async function NewJobPage({ searchParams }: { searchParams: Promi
         addresses={customerAddresses(customer.id)}
         techs={listTechs()}
         pricebook={listPricebook()}
+        suppliers={listSuppliers()}
         taxRate={taxRate()}
         defaultDate={sp.date}
       />

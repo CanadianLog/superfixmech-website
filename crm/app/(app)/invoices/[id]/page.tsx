@@ -2,7 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { requireUser } from "@/lib/auth";
 import { getSettings, get } from "@/lib/db";
-import { getCustomer, getInvoice, invoicePayments, lineItems, listPricebook, rateFor, timeZone, today } from "@/lib/data";
+import { getCustomer, getInvoice, invoicePayments, lineItems, listPricebook, listSuppliers, rateFor, timeZone, today } from "@/lib/data";
 import { customerName, fmtDate, fmtStamp, money } from "@/lib/format";
 import { appOrigin } from "@/lib/origin";
 import { deleteInvoice, deletePayment, saveInvoice, setInvoiceStatus, syncInvoiceToQbo } from "@/lib/actions";
@@ -57,6 +57,7 @@ export default async function InvoicePage({ params }: { params: Promise<{ id: st
               <LineItemsEditor
                 initial={lineItems("invoice", inv.id).map((i) => ({ ...i, taxable: !!i.taxable }))}
                 pricebook={listPricebook()}
+                suppliers={listSuppliers()}
                 taxRate={rateFor("invoice", inv.id)}
                 readOnly={locked}
               />

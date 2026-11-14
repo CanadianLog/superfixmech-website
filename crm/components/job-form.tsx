@@ -17,6 +17,7 @@ export function JobForm({
   job,
   items = [],
   defaultDate,
+  suppliers = [],
 }: {
   customer: Customer;
   addresses: Address[];
@@ -26,6 +27,7 @@ export function JobForm({
   job?: Job;
   items?: LineItemInput[];
   defaultDate?: string;
+  suppliers?: string[];
 }) {
   const date = job?.scheduled_start?.slice(0, 10) ?? defaultDate ?? "";
   return (
@@ -85,7 +87,7 @@ export function JobForm({
       </Card>
 
       <Card title="Line items">
-        <LineItemsEditor initial={items} pricebook={pricebook} taxRate={job?.tax_rate ?? taxRate} appliance={job?.appliance} />
+        <LineItemsEditor initial={items} pricebook={pricebook} taxRate={job?.tax_rate ?? taxRate} appliance={job?.appliance} suppliers={suppliers} />
       </Card>
 
       <div className="flex justify-end gap-2">

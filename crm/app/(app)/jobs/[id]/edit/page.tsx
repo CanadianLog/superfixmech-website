@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 import { requireUser } from "@/lib/auth";
-import { customerAddresses, getCustomer, getJob, lineItems, listPricebook, listTechs, taxRate } from "@/lib/data";
+import { customerAddresses, getCustomer, getJob, lineItems, listPricebook, listSuppliers, listTechs, taxRate } from "@/lib/data";
 import { deleteJob } from "@/lib/actions";
 import { PageHeader } from "@/components/ui";
 import { JobForm } from "@/components/job-form";
@@ -22,6 +22,7 @@ export default async function EditJobPage({ params }: { params: Promise<{ id: st
         addresses={customerAddresses(customer.id)}
         techs={listTechs()}
         pricebook={listPricebook()}
+        suppliers={listSuppliers()}
         taxRate={taxRate()}
         items={lineItems("job", job.id).map((i) => ({ ...i, taxable: !!i.taxable }))}
       />

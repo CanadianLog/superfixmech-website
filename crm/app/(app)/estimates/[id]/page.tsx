@@ -2,7 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { requireUser } from "@/lib/auth";
 import { getSettings } from "@/lib/db";
-import { customerAddresses, getCustomer, getEstimate, lineItems, listPricebook, taxRate, timeZone } from "@/lib/data";
+import { customerAddresses, getCustomer, getEstimate, lineItems, listPricebook, listSuppliers, taxRate, timeZone } from "@/lib/data";
 import { customerName, fmtStamp } from "@/lib/format";
 import { appOrigin } from "@/lib/origin";
 import { convertEstimateToJob, deleteEstimate, setEstimateStatus } from "@/lib/actions";
@@ -60,6 +60,7 @@ export default async function EstimatePage({ params }: { params: Promise<{ id: s
         customerId={c.id}
         addresses={customerAddresses(c.id)}
         pricebook={listPricebook()}
+        suppliers={listSuppliers()}
         taxRate={taxRate()}
         items={lineItems("estimate", est.id).map((i) => ({ ...i, taxable: !!i.taxable }))}
         readOnly={locked}
