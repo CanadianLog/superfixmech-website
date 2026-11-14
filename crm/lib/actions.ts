@@ -700,7 +700,7 @@ export async function recordPayment(_: FormState, fd: FormData): Promise<FormSta
   let receiptNote = "";
   let links: { label: string; href: string }[] = [];
   if (channels.length) {
-    const r = await sendDocument({ kind: "receipt", invoiceId, paymentId, channels });
+    const r = await sendDocument({ kind: "receipt", invoiceId, paymentId, channels, byName: user.name });
     receiptNote = r.note;
     links = r.links;
   }
@@ -993,6 +993,7 @@ async function sendDocument(opts: {
   invoiceId: number;
   paymentId?: number;
   channels: readonly ("sms" | "email")[];
+  byName?: string;
 }): Promise<{ note: string; links: { label: string; href: string }[]; error?: string }> {
   const s = getSettings();
   const inv = get<{ id: number; number: number; token: string; customer_id: number; job_id: number | null }>(
@@ -1052,6 +1053,52 @@ async function sendDocument(opts: {
       }
     }
   }
+  // Let the owner know (by email) that this went out, and who sent it.
+  if (sent.length || links.length) {
+    const on = opts.kind === "invoice" ? s.notify_invoice === "1" : s.notify_receipt === "1";
+    const to = s.notify_email || s.company_email;
+    if (on && to && msg.emailConfigured(s)) {
+      const who = c.first_name || [c.first_name, c.last_name].filter(Boolean).join(" ") || c.company || "customer";
+      const fullName = [c.first_name, c.last_name].filter(Boolean).join(" ") || c.company || "Customer";
+      const how = [
+        ...sent,
+        ...links.map((l) => (l.href.startsWith("sms:") ? `text opened on ${opts.byName ?? "a team member"}'s phone` : `email opened in ${opts.byName ?? "a team member"}'s email app`)),
+      ];
+      const lines =
+        opts.kind === "invoice"
+          ? [
+              `Invoice #${inv.number} was sent to ${fullName}.`,
+              "",
+              `Total: ${msg.amountVar(full.total_cents)}`,
+              `Balance due: ${msg.amountVar(Math.max(0, full.balance_cents))}`,
+            ]
+          : [`A receipt for invoice #${inv.number} was sent to ${fullName}.`, "", `Payment: ${vars.amount} by ${vars.method}`, `Balance remaining: ${msg.amountVar(Math.max(0, full.balance_cents))}`];
+      const body = [
+        ...lines,
+        `How: ${how.join("; ")}`,
+        opts.byName ? `Sent by: ${opts.byName}` : "",
+        links.length ? "(Texts and emails opened on a phone can't be confirmed as sent by the CRM.)" : "",
+        "",
+        `Open in the CRM: ${origin}/invoices/${inv.id}`,
+        `What the customer sees: ${vars.link}`,
+      ]
+        .filter((x) => x !== "")
+        .join("\n");
+      await msg
+        .queueMessage({
+          kind: "notice",
+          channel: "email",
+          recipient: to,
+          subject: opts.kind === "invoice" ? `Invoice #${inv.number} sent to ${who} – ${msg.amountVar(full.total_cents)}` : `Receipt sent to ${who} – ${vars.amount} (${vars.method})`,
+          body,
+          customerId: c.id,
+          jobId: inv.job_id,
+          invoiceId: inv.id,
+        })
+        .catch(() => undefined);
+    }
+  }
+
   const label = opts.kind === "invoice" ? "Invoice" : "Receipt";
   const parts = [
     sent.length ? ` ${label} ${sent.join(" and ")}.` : "",
@@ -1114,7 +1161,7 @@ export async function sendInvoice(_: FormState, fd: FormData): Promise<FormState
   if (inv.status === "void") return { error: "This invoice is void." };
   const channels = (["sms", "email"] as const).filter((c) => fd.get(c));
   if (!channels.length) return { error: "Choose text, email or both." };
-  const r = await sendDocument({ kind: "invoice", invoiceId, channels });
+  const r = await sendDocument({ kind: "invoice", invoiceId, channels, byName: user.name });
   if (r.error) return { error: r.error };
   if (inv.status === "draft") run("UPDATE invoices SET status = 'sent' WHERE id = ?", invoiceId);
   logActivity({ customerId: inv.customer_id, jobId: inv.job_id, userId: user.id, body: `Invoice #${inv.number} marked sent` });
@@ -1179,6 +1226,13 @@ export async function saveMessagingSettings(_: FormState, fd: FormData): Promise
   await requireUser(["admin"]);
   for (const k of MESSAGING_SETTINGS) if (fd.has(k)) run("UPDATE settings SET value = ? WHERE key = ?", str(fd, k), k);
   for (const k of SECRET_SETTINGS) if (str(fd, k)) run("UPDATE settings SET value = ? WHERE key = ?", str(fd, k), k);
+  if (fd.has("notify_present")) {
+    const notifyEmail = str(fd, "notify_email");
+    if (notifyEmail && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(notifyEmail)) return { error: "That notification email address doesn't look right." };
+    run("UPDATE settings SET value = ? WHERE key = 'notify_email'", notifyEmail);
+    run("UPDATE settings SET value = ? WHERE key = 'notify_invoice'", fd.get("notify_invoice") ? "1" : "0");
+    run("UPDATE settings SET value = ? WHERE key = 'notify_receipt'", fd.get("notify_receipt") ? "1" : "0");
+  }
   if (str(fd, "twilio_from") && !msg.toE164(str(fd, "twilio_from"))) return { error: "The Twilio number should look like +16135551234." };
   if (str(fd, "twilio_from")) run("UPDATE settings SET value = ? WHERE key = 'twilio_from'", msg.toE164(str(fd, "twilio_from"))!);
   revalidatePath("/settings");
@@ -1223,7 +1277,7 @@ export async function sendReceipt(_: FormState, fd: FormData): Promise<FormState
   if (!p.token) run("UPDATE payments SET token = ? WHERE id = ?", randomToken(), paymentId);
   const channels = (["sms", "email"] as const).filter((c) => fd.get(c));
   if (!channels.length) return { error: "Choose text, email or both." };
-  const r = await sendDocument({ kind: "receipt", invoiceId: p.invoice_id, paymentId, channels });
+  const r = await sendDocument({ kind: "receipt", invoiceId: p.invoice_id, paymentId, channels, byName: user.name });
   if (r.error) return { error: r.error };
   revalidatePath("/", "layout");
   return { ok: r.note.trim() || "Receipt ready to send.", links: r.links };
