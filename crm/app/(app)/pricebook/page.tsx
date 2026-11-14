@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { requireUser } from "@/lib/auth";
-import { listPricebook } from "@/lib/data";
+import { listPricebook, listSuppliers } from "@/lib/data";
 import { APPLIANCE_TYPES, centsToInput, money } from "@/lib/format";
 import { deletePricebookItem, savePricebookItem, togglePricebookItem } from "@/lib/actions";
 import { ConfirmButton } from "@/components/forms";
@@ -101,6 +101,7 @@ export default async function PricebookPage({ searchParams }: { searchParams: Pr
                               {i.kind === "material" ? "Part" : "Service"}
                               {i.category ? ` · ${i.category}` : ""}
                               {i.taxable ? "" : " · not taxable"}
+                              {i.supplier ? ` · from ${i.supplier}` : ""}
                               {i.active ? "" : " · hidden"}
                             </div>
                           </td>
@@ -140,14 +141,14 @@ export default async function PricebookPage({ searchParams }: { searchParams: Pr
           ))}
         </div>
         <Card title={editing ? "Edit item" : "Add part or service"} className="self-start">
-          <ItemForm key={editing?.id ?? `new-${appliance}`} item={editing} appliance={appliance === "General" ? "" : appliance} />
+          <ItemForm key={editing?.id ?? `new-${appliance}`} item={editing} appliance={appliance === "General" ? "" : appliance} suppliers={listSuppliers()} />
         </Card>
       </div>
     </>
   );
 }
 
-function ItemForm({ item, appliance }: { item?: PricebookItem; appliance: string }) {
+function ItemForm({ item, appliance, suppliers }: { item?: PricebookItem; appliance: string; suppliers: string[] }) {
   return (
     <form action={savePricebookItem} className="space-y-3">
       {item && <input type="hidden" name="id" value={item.id} />}
@@ -187,6 +188,16 @@ function ItemForm({ item, appliance }: { item?: PricebookItem; appliance: string
           <input className="input" name="price" inputMode="decimal" placeholder="0.00" defaultValue={item ? centsToInput(item.unit_price_cents) : ""} required />
         </label>
       </div>
+      <label className="block">
+        <span className="label">Usually bought from</span>
+        <input className="input" name="supplier" list="catalogue-suppliers" defaultValue={item?.supplier} placeholder="e.g. Reliable Parts" />
+        <datalist id="catalogue-suppliers">
+          {suppliers.map((s) => (
+            <option key={s} value={s} />
+          ))}
+        </datalist>
+        <span className="mt-1 block text-xs text-stone-400">Only your team sees this. It fills in when you add this part to a job.</span>
+      </label>
       <label className="flex items-center gap-2 text-sm">
         <input type="checkbox" name="taxable" defaultChecked={item ? !!item.taxable : true} className="h-4 w-4 accent-amber-500" /> Taxable
       </label>

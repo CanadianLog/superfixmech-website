@@ -14,6 +14,7 @@ export function EstimateForm({
   estimate,
   items = [],
   readOnly = false,
+  suppliers = [],
 }: {
   customerId: number;
   addresses: Address[];
@@ -22,6 +23,7 @@ export function EstimateForm({
   estimate?: Estimate;
   items?: LineItemInput[];
   readOnly?: boolean;
+  suppliers?: string[];
 }) {
   return (
     <ActionForm action={saveEstimate} className="space-y-6">
@@ -41,7 +43,7 @@ export function EstimateForm({
         </fieldset>
       </Card>
       <Card title="Line items">
-        <LineItemsEditor initial={items} pricebook={pricebook} taxRate={estimate?.tax_rate ?? taxRate} readOnly={readOnly} />
+        <LineItemsEditor initial={items} pricebook={pricebook} taxRate={estimate?.tax_rate ?? taxRate} readOnly={readOnly} suppliers={suppliers} />
       </Card>
       {!readOnly && (
         <div className="flex justify-end gap-2">

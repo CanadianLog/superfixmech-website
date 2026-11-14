@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { requireUser } from "@/lib/auth";
 import { all } from "@/lib/db";
-import { listEstimates, listInvoices, paymentsBetween, profitBetween, today, totalsFor } from "@/lib/data";
+import { listEstimates, listInvoices, paymentsBetween, profitBetween, spendBySupplier, today, totalsFor } from "@/lib/data";
 import { addDays, fmtDate, money } from "@/lib/format";
 import { Card, PageHeader, Stat, Tabs } from "@/components/ui";
 
@@ -34,6 +34,8 @@ export default async function ReportsPage({ searchParams }: { searchParams: Prom
 
   const payments = paymentsBetween(from, to);
   const profit = profitBetween(from, to);
+  const suppliers = spendBySupplier(from, to);
+  const supplierTotal = suppliers.reduce((s, r) => s + r.cost, 0);
   const collected = payments.reduce((s, p) => s + p.amount_cents, 0);
   const byMethod = new Map<string, number>();
   for (const p of payments) byMethod.set(p.method, (byMethod.get(p.method) ?? 0) + p.amount_cents);
@@ -138,6 +140,28 @@ export default async function ReportsPage({ searchParams }: { searchParams: Prom
             </ul>
           ) : <p className="text-sm text-stone-400">No new jobs in this period.</p>}
         </Card>
+
+        {user.role === "admin" && (
+          <Card title="Materials bought, by supplier">
+            {suppliers.length ? (
+              <ul className="space-y-3 text-sm">
+                {suppliers.map((r) => (
+                  <li key={r.supplier}>
+                    <div className="mb-1 flex justify-between">
+                      <span className={r.supplier === "Not recorded" ? "text-stone-400" : ""}>
+                        {r.supplier} <span className="text-stone-400">· {r.lines} item{r.lines === 1 ? "" : "s"}</span>
+                      </span>
+                      <span className="font-semibold tabular-nums">{money(r.cost)}</span>
+                    </div>
+                    {bar(r.cost, supplierTotal, "#78716c")}
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p className="text-sm text-stone-400">No material costs recorded on invoices in this period.</p>
+            )}
+          </Card>
+        )}
 
         <Card title="Payments by method">
           {byMethod.size ? (

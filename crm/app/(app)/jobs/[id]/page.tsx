@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { requireUser, isOffice } from "@/lib/auth";
-import { activitiesFor, getAddress, getCustomer, getJob, invoicePayments, lineItems, listInvoices, listPricebook, rateFor, timeZone, today } from "@/lib/data";
+import { activitiesFor, getAddress, getCustomer, getJob, invoicePayments, lineItems, listInvoices, listPricebook, listSuppliers, rateFor, timeZone, today } from "@/lib/data";
 import { addressLine, customerName, fmtSchedule, fmtStamp, mapsUrl, money } from "@/lib/format";
 import { createInvoiceFromJob, deleteJob, finishJob, saveJobItems, saveTechNotes, setJobStatus } from "@/lib/actions";
 import { getSettings } from "@/lib/db";
@@ -150,6 +150,7 @@ export default async function JobPage({ params }: { params: Promise<{ id: string
               <LineItemsEditor
                 initial={lineItems("job", job.id).map((i) => ({ ...i, taxable: !!i.taxable }))}
                 pricebook={listPricebook()}
+                suppliers={listSuppliers()}
                 taxRate={rateFor("job", job.id)}
                 appliance={job.appliance}
               />

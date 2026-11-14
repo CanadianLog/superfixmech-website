@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 import { requireUser } from "@/lib/auth";
-import { customerAddresses, getCustomer, listPricebook, taxRate } from "@/lib/data";
+import { customerAddresses, getCustomer, listPricebook, listSuppliers, taxRate } from "@/lib/data";
 import { customerName } from "@/lib/format";
 import { PageHeader } from "@/components/ui";
 import { CustomerChooser } from "@/components/customer-chooser";
@@ -24,7 +24,7 @@ export default async function NewEstimatePage({ searchParams }: { searchParams: 
   return (
     <div className="mx-auto max-w-4xl">
       <PageHeader title="New estimate" subtitle={customerName(c)} back={{ href: `/customers/${c.id}`, label: customerName(c) }} />
-      <EstimateForm customerId={c.id} addresses={customerAddresses(c.id)} pricebook={listPricebook()} taxRate={taxRate()} />
+      <EstimateForm customerId={c.id} addresses={customerAddresses(c.id)} pricebook={listPricebook()} suppliers={listSuppliers()} taxRate={taxRate()} />
     </div>
   );
 }

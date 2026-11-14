@@ -380,3 +380,26 @@ export function profitBetween(from: string, to: string): { sales: number; cost: 
   const cost = Math.round(rows?.cost ?? 0);
   return { sales, cost, profit: sales - cost, invoices: rows?.n ?? 0 };
 }
+
+/** Suppliers used before (on line items or the parts catalogue), most used first. Internal only. */
+export function listSuppliers(): string[] {
+  return all<{ s: string }>(
+    `SELECT supplier AS s FROM (
+       SELECT supplier FROM line_items WHERE supplier != ''
+       UNION ALL SELECT supplier FROM pricebook WHERE supplier != ''
+     ) GROUP BY lower(supplier) ORDER BY COUNT(*) DESC, supplier LIMIT 200`,
+  ).map((r) => r.s);
+}
+
+/** Material spend by supplier on invoices issued in [from, to). Internal only. */
+export function spendBySupplier(from: string, to: string): { supplier: string; cost: number; lines: number }[] {
+  return all<{ supplier: string; cost: number; lines: number }>(
+    `SELECT CASE WHEN li.supplier = '' THEN 'Not recorded' ELSE li.supplier END AS supplier,
+            CAST(ROUND(SUM(li.quantity * li.cost_cents)) AS INTEGER) AS cost, COUNT(*) AS lines
+       FROM invoices i JOIN line_items li ON li.parent_type = 'invoice' AND li.parent_id = i.id
+      WHERE i.status = 'sent' AND i.issued_on >= ? AND i.issued_on < ? AND li.kind != 'discount' AND li.cost_cents > 0
+      GROUP BY 1 ORDER BY cost DESC`,
+    from,
+    to,
+  );
+}

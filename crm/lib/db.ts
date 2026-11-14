@@ -273,6 +273,9 @@ const MIGRATIONS: [table: string, column: string, definition: string][] = [
   ["customers", "no_review", "INTEGER NOT NULL DEFAULT 0"],
   // What a line costs you (per unit). Internal only: never shown to customers.
   ["line_items", "cost_cents", "INTEGER NOT NULL DEFAULT 0"],
+  // Where the material was bought (internal only), and a part's usual supplier.
+  ["line_items", "supplier", "TEXT NOT NULL DEFAULT ''"],
+  ["pricebook", "supplier", "TEXT NOT NULL DEFAULT ''"],
 ];
 
 function migrate(db: DatabaseSync) {
