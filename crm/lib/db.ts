@@ -186,6 +186,42 @@ CREATE TABLE IF NOT EXISTS messages (
 );
 CREATE INDEX IF NOT EXISTS messages_due ON messages(status, send_after);
 CREATE INDEX IF NOT EXISTS messages_job ON messages(job_id);
+
+-- Cold-calling property managers. Kept separate from customers until converted.
+CREATE TABLE IF NOT EXISTS prospects (
+  id INTEGER PRIMARY KEY,
+  company TEXT NOT NULL DEFAULT '',
+  contact_name TEXT NOT NULL DEFAULT '',
+  title TEXT NOT NULL DEFAULT '',
+  phone TEXT NOT NULL DEFAULT '',
+  alt_phone TEXT NOT NULL DEFAULT '',
+  email TEXT NOT NULL DEFAULT '',
+  website TEXT NOT NULL DEFAULT '',
+  address TEXT NOT NULL DEFAULT '',
+  city TEXT NOT NULL DEFAULT '',
+  units TEXT NOT NULL DEFAULT '',          -- e.g. "12 buildings / 400 units"
+  source TEXT NOT NULL DEFAULT '',
+  notes TEXT NOT NULL DEFAULT '',
+  status TEXT NOT NULL DEFAULT 'new'
+    CHECK (status IN ('new','attempted','follow_up','interested','not_interested','converted')),
+  follow_up_on TEXT,                       -- 'YYYY-MM-DD'
+  last_called_at TEXT,
+  call_count INTEGER NOT NULL DEFAULT 0,
+  customer_id INTEGER REFERENCES customers(id) ON DELETE SET NULL,
+  created_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ','now'))
+);
+CREATE INDEX IF NOT EXISTS prospects_follow_up ON prospects(status, follow_up_on);
+
+CREATE TABLE IF NOT EXISTS prospect_calls (
+  id INTEGER PRIMARY KEY,
+  prospect_id INTEGER NOT NULL REFERENCES prospects(id) ON DELETE CASCADE,
+  user_id INTEGER REFERENCES users(id) ON DELETE SET NULL,
+  outcome TEXT NOT NULL,
+  notes TEXT NOT NULL DEFAULT '',
+  follow_up_on TEXT,
+  created_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ','now'))
+);
+CREATE INDEX IF NOT EXISTS prospect_calls_prospect ON prospect_calls(prospect_id);
 `;
 
 const DEFAULT_SETTINGS: Record<string, string> = {
