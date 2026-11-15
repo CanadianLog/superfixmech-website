@@ -54,7 +54,7 @@ const serviceAreas: Record<string, string[]> = {
     "Lowertown",
     "Glebe",
     "Little Italy",
-    "Hintonberg",
+    "Hintonburg",
     "Wellington West",
   ],
   "South Ottawa": [
