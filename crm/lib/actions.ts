@@ -1050,7 +1050,10 @@ async function sendDocument(opts: {
         continue;
       }
       if (msg.emailConfigured(s)) {
-        const r = await msg.queueMessage({ kind: opts.kind, channel: "email", recipient: c.email, subject, body: emailBody, customerId: c.id, jobId: inv.job_id, invoiceId: inv.id });
+        // The invoice/receipt itself is shown inside the email; the plain text stays for simple email apps.
+        const { documentEmailHtml } = await import("./email-html");
+        const html = documentEmailHtml({ kind: opts.kind, invoiceId: inv.id, paymentId: opts.paymentId, intro: emailBody, link: vars.link, origin });
+        const r = await msg.queueMessage({ kind: opts.kind, channel: "email", recipient: c.email, subject, body: emailBody, html, customerId: c.id, jobId: inv.job_id, invoiceId: inv.id });
         if (r.ok) sent.push(`emailed to ${c.email}`);
         else problems.push(`email failed: ${r.error}`);
       } else {

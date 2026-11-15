@@ -276,6 +276,8 @@ const MIGRATIONS: [table: string, column: string, definition: string][] = [
   // Where the material was bought (internal only), and a part's usual supplier.
   ["line_items", "supplier", "TEXT NOT NULL DEFAULT ''"],
   ["pricebook", "supplier", "TEXT NOT NULL DEFAULT ''"],
+  // Formatted (HTML) version of an email, e.g. the invoice shown inside the email.
+  ["messages", "html", "TEXT NOT NULL DEFAULT ''"],
 ];
 
 function migrate(db: DatabaseSync) {
