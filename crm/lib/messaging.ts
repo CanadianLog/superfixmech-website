@@ -59,7 +59,7 @@ async function sendSms(to: string, body: string) {
   }
 }
 
-async function sendEmail(to: string, subject: string, body: string) {
+async function sendEmail(to: string, subject: string, body: string, html?: string) {
   const s = getSettings();
   const port = Number(s.smtp_port) || 465;
   const transport = nodemailer.createTransport({
@@ -74,12 +74,13 @@ async function sendEmail(to: string, subject: string, body: string) {
     to,
     subject,
     text: body,
+    ...(html ? { html } : {}),
   });
 }
 
 /** Sends one stored message now and records the outcome (and a line in the job/customer timeline). */
 async function deliver(id: number): Promise<{ ok: boolean; error?: string }> {
-  const m = get<{ id: number; channel: Channel; recipient: string; subject: string; body: string; kind: string; customer_id: number | null; job_id: number | null; status: string }>(
+  const m = get<{ id: number; channel: Channel; recipient: string; subject: string; body: string; html: string; kind: string; customer_id: number | null; job_id: number | null; status: string }>(
     "SELECT * FROM messages WHERE id = ?",
     id,
   );
@@ -92,7 +93,7 @@ async function deliver(id: number): Promise<{ ok: boolean; error?: string }> {
   const how = m.channel === "sms" ? `texted to ${m.recipient}` : `emailed to ${m.recipient}`;
   try {
     if (m.channel === "sms") await sendSms(m.recipient, m.body);
-    else await sendEmail(m.recipient, m.subject, m.body);
+    else await sendEmail(m.recipient, m.subject, m.body, m.html || undefined);
     if (m.customer_id) run("INSERT INTO activities (customer_id, job_id, kind, body) VALUES (?, ?, 'message', ?)", m.customer_id, m.job_id, `${what} ${how}`);
     return { ok: true };
   } catch (e) {
@@ -109,6 +110,8 @@ export async function queueMessage(opts: {
   recipient: string;
   subject?: string;
   body: string;
+  /** Optional formatted version of an email (plain `body` is still sent for simple email apps). */
+  html?: string;
   customerId?: number | null;
   jobId?: number | null;
   invoiceId?: number | null;
@@ -116,8 +119,8 @@ export async function queueMessage(opts: {
   sendNow?: boolean;
 }): Promise<{ ok: boolean; error?: string; id: number }> {
   const { id } = run(
-    `INSERT INTO messages (kind, channel, customer_id, job_id, invoice_id, recipient, subject, body, send_after)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    `INSERT INTO messages (kind, channel, customer_id, job_id, invoice_id, recipient, subject, body, html, send_after)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     opts.kind,
     opts.channel,
     opts.customerId ?? null,
@@ -126,6 +129,7 @@ export async function queueMessage(opts: {
     opts.recipient,
     opts.subject ?? "",
     opts.body,
+    opts.html ?? "",
     (opts.sendAfter ?? new Date()).toISOString(),
   );
   if (opts.sendNow === false) return { ok: true, id };
