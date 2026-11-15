@@ -138,22 +138,22 @@ export const serviceContent: Record<string, RepairContent> = {
   },
   "cooktop-repair": {
     overview:
-      "A dead burner or an element that only runs on high takes half your stove out of service. We repair coil, smooth-top (radiant), induction and gas cooktops in Ottawa homes.",
+      "A dead burner or an element that only runs on high takes half your stove out of service. We repair electric cooktops in Ottawa homes: coil, smooth-top (radiant) and induction. We do not repair gas cooktops.",
     bullets: [
       "Heating element failure",
-      "Ignition problems",
+      "Burner not turning on",
       "Inconsistent heat levels",
       "Knob or switch failure",
       "Surface indicator issues",
     ],
-    metaDescription: `Cooktop repair in Ottawa: coil, smooth-top, induction and gas. Dead burners, elements stuck on high, ignition faults. ${fee} diagnostic. Call ${company.phone}.`,
+    metaDescription: `Electric cooktop repair in Ottawa: coil, smooth-top and induction. Dead burners, elements stuck on high, cracked glass. ${fee} diagnostic. Call ${company.phone}.`,
     extraSections: [
       {
         heading: "What usually causes cooktop problems",
         points: [
           "One burner dead: a burned-out surface element, a loose or scorched connection, or a failed switch behind the knob.",
           "Element stuck on high: a failed infinite switch that no longer cycles the element on and off.",
-          "Gas burner clicks but will not light: a dirty or wet igniter, a blocked burner port, or a failed spark module.",
+          "Burner heats unevenly on a coil stove: a warped coil or a burned socket that makes poor contact.",
           "Induction zone will not heat: cookware that is not induction-compatible, or a fault in the zone's power board.",
           "Hot-surface light stays on: a failed limiter inside the element.",
         ],
@@ -182,9 +182,9 @@ export const serviceContent: Record<string, RepairContent> = {
           "On an electric cooktop it is usually the element itself, the wiring to it, or the switch behind the knob. On a coil stove you can swap the dead coil with a working one of the same size. If the dead spot stays in the same place, the fault is in the socket or the switch, not the coil.",
       },
       {
-        question: "Why does my gas burner keep clicking?",
+        question: "My glass cooktop is cracked. Can I still use it?",
         answer:
-          "Clicking that never stops usually means moisture or food residue around the igniter, often after a spill or cleaning. Let it dry fully. If it keeps clicking once dry, or the burner will not light at all, the igniter or spark module needs replacing. If you smell gas, turn the burner off, leave the area and call your gas utility first.",
+          "No. A crack lets spills reach the live parts underneath and can spread with heat. Switch the cooktop off at the breaker and book a visit. The glass top can usually be replaced without replacing the whole appliance.",
       },
       {
         question: "How much does a cooktop repair cost in Ottawa?",
@@ -306,7 +306,7 @@ export const serviceContent: Record<string, RepairContent> = {
   },
   "dryer-repair": {
     overview:
-      "A dryer that runs for two cycles and still leaves clothes damp is wasting power and may be a fire risk. We repair electric and gas dryers in Ottawa homes, condos and rental units, including stacked laundry pairs.",
+      "A dryer that runs for two cycles and still leaves clothes damp is wasting power and may be a fire risk. We repair electric dryers in Ottawa homes, condos and rental units, including stacked laundry pairs. We do not repair gas dryers.",
     bullets: [
       "No heat",
       "Long drying times",
@@ -319,7 +319,7 @@ export const serviceContent: Record<string, RepairContent> = {
       {
         heading: "What usually causes dryer problems",
         points: [
-          "Runs but no heat: a blown thermal fuse, a failed heating element, or a failed igniter on a gas dryer.",
+          "Runs but no heat: a blown thermal fuse, a failed heating element, or a failed thermostat.",
           "Takes too long to dry: a blocked or crushed vent, a clogged lint screen, or a weak heating element.",
           "Will not start: a failed door switch, start switch, thermal fuse or drive motor.",
           "Squealing or thumping: worn drum rollers, a worn idler pulley, or a frayed belt.",
@@ -418,21 +418,21 @@ export const serviceContent: Record<string, RepairContent> = {
   },
   "oven-repair": {
     overview:
-      "An oven that will not heat, runs too hot or shuts off mid-bake usually has one failed part. We repair electric and gas ovens in Ottawa, including freestanding ranges, slide-in ranges and built-in wall ovens.",
+      "An oven that will not heat, runs too hot or shuts off mid-bake usually has one failed part. We repair electric ovens in Ottawa, including freestanding ranges, slide-in ranges and built-in wall ovens. We do not repair gas ovens.",
     bullets: [
       "Not heating to target temp",
       "Uneven cooking",
       "Error code display",
-      "Ignition failures",
+      "Element not glowing",
       "Door not closing correctly",
     ],
-    metaDescription: `Oven and stove repair in Ottawa for GE, Whirlpool, Frigidaire, Samsung and LG. Not heating, uneven baking, error codes. ${fee} diagnostic. Call ${company.phone}.`,
+    metaDescription: `Electric oven and stove repair in Ottawa for GE, Whirlpool, Frigidaire, Samsung and LG. Not heating, uneven baking, error codes. ${fee} diagnostic. Call ${company.phone}.`,
     extraSections: [
       {
         heading: "What usually causes oven problems",
         points: [
-          "Electric oven will not heat: a burned-out bake or broil element, often with a visible blister or break.",
-          "Gas oven will not heat: a weak igniter that glows but never opens the gas valve.",
+          "Oven will not heat: a burned-out bake or broil element, often with a visible blister or break.",
+          "Heats on broil but not on bake, or the reverse: one element has failed while the other still works.",
           "Temperature is off or baking is uneven: a failed temperature sensor, a worn door gasket, or a convection fan that has stopped.",
           "Error code on the display: often a sensor or control board fault. Note the code before you reset it.",
           "Door will not close or unlock: bent hinges, or a door lock motor stuck after a self-clean cycle.",
@@ -459,7 +459,7 @@ export const serviceContent: Record<string, RepairContent> = {
       {
         question: "Why does my oven take so long to preheat?",
         answer:
-          "On an electric oven, one of the two elements has usually failed, so the other is doing all the work. On a gas oven, a weak igniter is slow to open the gas valve. A failed temperature sensor can also make the oven think it is hotter or colder than it is.",
+          "One of the two elements has usually failed, so the other is doing all the work. A failed temperature sensor can also make the oven think it is hotter or colder than it is.",
       },
       {
         question: "My oven door is locked after self-cleaning. What should I do?",
