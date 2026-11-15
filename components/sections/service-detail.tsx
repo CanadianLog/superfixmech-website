@@ -84,7 +84,7 @@ export function ServiceDetail({
           <article className="surface p-6 md:p-8">
             <Badge>Home Appliance Specialists</Badge>
             <h1 className="mt-4 text-3xl font-extrabold text-[#3b2b0f] md:text-4xl">
-              {title} Services - Fast, Affordable & Guaranteed
+              {title} Services in Ottawa - Fast, Affordable & Guaranteed
             </h1>
             <p className="mt-4 text-sm leading-7 text-[#7e6b45] md:text-base">{overview}</p>
             <h2 className="mt-5 text-lg font-bold text-[#5f4714]">{bulletsHeading}</h2>

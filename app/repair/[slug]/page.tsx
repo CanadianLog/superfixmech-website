@@ -24,10 +24,14 @@ export default async function ServicePage({ params }: Props) {
       overview={content.overview}
       bullets={content.bullets}
       faq={content.faq}
+      faqTitle={`${service.name} FAQs`}
       heroImage={`/service-photos/${slug}.jpg`}
       path={`/repair/${slug}`}
       parent={{ name: "Repair", path: "/repair" }}
       serviceType="Appliance repair"
+      extraSections={content.extraSections}
+      areasHeading={`${service.name} across Ottawa`}
+      areasIntro={`We offer ${service.name.toLowerCase()} in Ottawa and nearby communities. Find your neighbourhood:`}
     />
   );
 }
@@ -46,6 +50,6 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
   return {
     title: `${service.name} Ottawa | SuperFix Mechanical`,
-    description: `Professional ${service.name.toLowerCase()} in Ottawa. Same-day diagnostics, certified technicians, and a 30-day warranty on parts and labour. Call 613-366-7009.`,
+    description: serviceContent[slug].metaDescription,
   };
 }

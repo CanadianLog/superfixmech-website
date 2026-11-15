@@ -45,11 +45,10 @@ export function FaqList({ title = "DIY Fixes for Common Problems", items }: FaqL
                 {openIndex === index ? "-" : "+"}
               </span>
             </button>
-            {openIndex === index && (
-              <div className="px-4 pb-4">
-                <p className="text-sm leading-7 text-[#7e6b45]">{item.answer}</p>
-              </div>
-            )}
+            {/* Always in the HTML so search engines can read every answer; hidden until opened. */}
+            <div className="px-4 pb-4" hidden={openIndex !== index}>
+              <p className="text-sm leading-7 text-[#7e6b45]">{item.answer}</p>
+            </div>
           </div>
         ))}
       </Card>

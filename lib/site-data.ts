@@ -36,7 +36,7 @@ export const ogImage = {
 };
 
 /** Update when site content meaningfully changes; used for sitemap lastmod. */
-export const siteLastUpdated = "2026-11-09";
+export const siteLastUpdated = "2026-11-15";
 
 export const mainNav = [
   { href: "/", label: "Home" },
