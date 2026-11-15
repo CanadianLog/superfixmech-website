@@ -123,7 +123,7 @@ const baseArticles: Article[] = [
       {
         heading: "Signs of a failed part",
         points: [
-          "The drum turns but there's no heat at all: often a heating element, thermal fuse, or (on gas dryers) an igniter or gas valve coil.",
+          "The drum turns but there's no heat at all: often a heating element or a thermal fuse.",
           "The dryer stops partway through a cycle: frequently a thermal fuse or an overheating issue caused by blocked venting.",
           "Squealing, thumping, or grinding: worn drum rollers, idler pulley, or belt.",
           "The dryer won't start at all: door switch, start switch, or a blown thermal fuse.",
@@ -138,7 +138,7 @@ const baseArticles: Article[] = [
       {
         heading: "When to book a repair",
         paragraphs: [
-          "If you've cleaned the lint screen, confirmed strong airflow outside, and the dryer still runs cool or takes multiple cycles, it's time for a diagnosis. Gas dryers in particular should only be serviced by a qualified technician.",
+          "If you've cleaned the lint screen, confirmed strong airflow outside, and the dryer still runs cool or takes multiple cycles, it's time for a diagnosis. We repair electric dryers. A gas dryer should only be serviced by a licensed gas technician.",
         ],
       },
     ],

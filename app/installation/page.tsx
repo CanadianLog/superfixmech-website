@@ -12,7 +12,7 @@ const summaryByInstallation: Record<string, string> = {
   "washer-installation":
     "Proper hookup, levelling, and leak testing so your new washer runs quietly and drains correctly from day one.",
   "dryer-installation":
-    "Safe venting, power/gas hookup, and load testing for new dryer installs, including dryer-vent checks.",
+    "Safe venting, electrical hookup, and load testing for new dryer installs, including dryer-vent checks.",
   "dishwasher-installation":
     "Water line, drain, and electrical hookup for new dishwashers, with a full cycle test before we leave.",
   "range-hood-installation":

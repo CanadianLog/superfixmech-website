@@ -46,9 +46,9 @@ const installationContent: Record<
   },
   "dryer-installation": {
     overview:
-      "Safe, code-correct dryer installation in Ottawa, covering electrical or gas hookup and proper venting so your dryer runs efficiently and safely from the start.",
+      "Safe, code-correct dryer installation in Ottawa, covering electrical hookup and proper venting so your dryer runs efficiently and safely from the start.",
     bullets: [
-      "Electrical (240V) or gas line hookup",
+      "Electrical (240V) hookup",
       "Dryer vent connection and airflow check",
       "Levelling and stability adjustment",
       "Cord and outlet compatibility check",
@@ -57,12 +57,12 @@ const installationContent: Record<
     image: "/service-photos/dryer-installation.jpg",
     metaTitle: "Dryer Installation in Ottawa | SuperFix Mechanical",
     metaDescription:
-      "Electric and gas dryer installation in Ottawa with vent check and load test. Serving Kanata, Orleans, Nepean and Barrhaven. Call 613-366-7009.",
+      "Electric dryer installation in Ottawa with vent check and load test. Serving Kanata, Orleans, Nepean and Barrhaven. Call 613-366-7009.",
     extraSections: [
       {
         heading: "Before your dryer installation",
         points: [
-          "Confirm whether your hookup is electric or gas. A gas dryer needs a gas line already in place.",
+          "Confirm your dryer is electric. We install electric dryers only and do not connect gas dryers.",
           "Check that the new dryer's plug matches your outlet. We flag any mismatch before we start.",
           "Leave clear access to the dryer space and the vent opening.",
           "Tell us when booking if you want the old dryer removed.",
@@ -82,9 +82,9 @@ const installationContent: Record<
     ],
     faq: [
       {
-        question: "Do you install gas dryers as well as electric?",
+        question: "Do you install gas dryers?",
         answer:
-          "Yes, we install both electric and gas dryers, including connecting to an existing gas line where one is already in place.",
+          "No. We install electric dryers only. A gas dryer has to be connected by a licensed gas technician.",
       },
       {
         question: "Can you check my dryer vent while installing a new unit?",

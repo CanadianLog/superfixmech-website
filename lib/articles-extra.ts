@@ -78,15 +78,15 @@ export const extraArticles: Article[] = [
   },
   {
     slug: "oven-not-heating-properly",
-    title: "Oven Not Heating? Common Causes for Gas and Electric Ovens",
-    metaTitle: "Oven Not Heating? Gas & Electric Causes | SuperFix",
+    title: "Oven Not Heating? Common Causes for Electric Ovens",
+    metaTitle: "Electric Oven Not Heating? Common Causes | SuperFix",
     description:
-      "An oven that won't heat or heats unevenly often has a failed igniter, element, or sensor. What to check and when to call.",
+      "An oven that won't heat or heats unevenly often has a failed element, sensor, or control board. What to check and when to call.",
     date: "2026-10-06",
     readMinutes: 6,
     related: { href: "/repair/oven-repair", label: "Oven Repair in Ottawa" },
     intro:
-      "When the oven stops heating, dinner plans fall apart quickly. The cause depends largely on whether you have a gas or an electric oven, but a handful of parts account for most of the problems we see: the bake element or igniter, the temperature sensor, the control board, and the door seal. Below is a practical checklist, including the safety limits that matter most when you are dealing with gas and high-voltage components.",
+      "When the oven stops heating, dinner plans fall apart quickly. In an electric oven, a handful of parts account for most of the problems we see: the bake and broil elements, the temperature sensor, the control board, and the door seal. Below is a practical checklist, including the safety limits that matter most when you are dealing with high-voltage components.",
     sections: [
       {
         heading: "First, rule out the obvious",
@@ -103,10 +103,10 @@ export const extraArticles: Article[] = [
         ],
       },
       {
-        heading: "Gas ovens: the igniter",
+        heading: "Have a gas oven?",
         paragraphs: [
-          "Most modern gas ovens use an electric igniter, a small component that heats up to open the gas valve and light the burner. As igniters age, they glow weakly and no longer draw enough current to open the valve. The classic symptom is an igniter that glows for a minute or two but the burner never lights.",
-          "If you smell gas at any point, do not try to use the oven. Turn off the gas supply, open windows, avoid switches and flames, leave the house, and call your gas utility or emergency services. Igniter replacement and any work on gas lines should be done by a qualified technician.",
+          "This guide covers electric ovens, which are the ovens we repair. A gas oven that will not light needs a licensed gas technician.",
+          "If you smell gas at any point, do not try to use the oven. Open windows, avoid switches and flames, leave the house, and call your gas utility or emergency services.",
         ],
       },
       {
@@ -120,26 +120,25 @@ export const extraArticles: Article[] = [
         heading: "Uneven baking and slow preheating",
         paragraphs: [
           "If the oven heats but cooks unevenly, check whether the door gasket is intact. A torn or flattened seal lets heat escape. Make sure the racks are not covered in foil, which can block airflow, and that nothing is stored in the oven. In convection models, a failed convection fan can cause hot and cold spots, so listen for the fan when convection mode is on.",
-          "A long preheat time points to a weak element or igniter, a failing sensor, or a door that is not closing properly. Slow heating is often a warning sign: the part will frequently fail completely within weeks or months.",
+          "A long preheat time points to a weak element, a failing sensor, or a door that is not closing properly. Slow heating is often a warning sign: the part will frequently fail completely within weeks or months.",
         ],
       },
       {
         heading: "Control board and wiring faults",
         paragraphs: [
-          "If the elements and igniter test fine but the oven still does not heat, the cause may be a relay on the control board, a thermal fuse, or a wiring fault. Signs include a clock that works while the oven does not, error codes that repeat, a burnt smell near the control panel, or an oven that heats only some of the time. These problems are harder to diagnose without testing equipment and are best handled by a technician.",
+          "If the elements test fine but the oven still does not heat, the cause may be a relay on the control board, a thermal fuse, or a wiring fault. Signs include a clock that works while the oven does not, error codes that repeat, a burnt smell near the control panel, or an oven that heats only some of the time. These problems are harder to diagnose without testing equipment and are best handled by a technician.",
         ],
       },
       {
         heading: "When to call a professional",
         points: [
-          "You smell gas, or the burner will not light after the igniter glows.",
           "The breaker trips when the oven is turned on.",
           "The element is visibly burned, broken or blistered.",
           "Error codes return after power-cycling the oven.",
           "The oven is more than 15 degrees off its set temperature.",
         ],
         paragraphs: [
-          "Ovens combine high heat with gas or high-voltage electricity, so the safe move is to stop troubleshooting once the simple checks are done. A technician can test each component, replace the failed part, and confirm the oven is holding the right temperature before leaving.",
+          "Electric ovens combine high heat with high-voltage electricity, so the safe move is to stop troubleshooting once the simple checks are done. A technician can test each component, replace the failed part, and confirm the oven is holding the right temperature before leaving.",
         ],
       },
     ],
@@ -369,7 +368,7 @@ export const extraArticles: Article[] = [
           "Washers: roughly 10 to 13 years.",
           "Dryers: roughly 10 to 13 years.",
           "Dishwashers: roughly 9 to 12 years.",
-          "Electric and gas ranges and ovens: roughly 13 to 15 years.",
+          "Ranges and ovens: roughly 13 to 15 years.",
           "Over-the-range and built-in microwaves: roughly 8 to 10 years.",
           "Range hoods: roughly 10 to 15 years, depending on the fan motor.",
         ],
