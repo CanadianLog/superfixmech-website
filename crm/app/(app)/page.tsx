@@ -6,6 +6,7 @@ import { jobsInRange, listEstimates, listInvoices, paymentsBetween, profitBetwee
 import { loadDemoData } from "@/lib/actions";
 import { Card, Empty, PageHeader, Stat } from "@/components/ui";
 import { JobList } from "@/components/job-list";
+import { prospectCounts } from "@/lib/prospects";
 
 export const metadata = { title: "Dashboard" };
 
@@ -47,6 +48,7 @@ export default async function Dashboard({ searchParams }: { searchParams: Promis
   const openEstimates = listEstimates().filter((e) => e.status === "sent" || e.status === "approved");
   const unscheduled = unscheduledJobs();
   const customers = get<{ n: number }>("SELECT COUNT(*) AS n FROM customers")?.n ?? 0;
+  const calls = prospectCounts(day);
   const activity = all<{ id: number; body: string; created_at: string; user_name: string | null; customer_id: number | null; job_id: number | null; first_name: string | null; last_name: string | null }>(
     `SELECT a.id, a.body, a.created_at, a.customer_id, a.job_id, u.name AS user_name, c.first_name, c.last_name
        FROM activities a LEFT JOIN users u ON u.id = a.user_id LEFT JOIN customers c ON c.id = a.customer_id
@@ -82,6 +84,20 @@ export default async function Dashboard({ searchParams }: { searchParams: Promis
             <Link href="/customers/new" className="btn-primary">Add a customer</Link>
           </div>
         </div>
+      )}
+
+      {calls.total > 0 && (
+        <Link
+          href={calls.due ? "/prospects?view=due" : "/prospects"}
+          className={`mb-4 flex flex-wrap items-center justify-between gap-2 rounded-xl border px-4 py-3 text-sm ${calls.due ? "border-amber-300 bg-amber-50 text-amber-950" : "border-stone-200 bg-white text-stone-700"} hover:border-amber-400`}
+        >
+          <span>
+            <b>Cold calls:</b>{" "}
+            {calls.due ? `${calls.due} property manager${calls.due === 1 ? "" : "s"} to call today` : "nothing due today"}
+            {calls.interested ? ` · ${calls.interested} interested` : ""}
+          </span>
+          <span className="font-semibold">Open list →</span>
+        </Link>
       )}
 
       <div className="mb-6 grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-6">

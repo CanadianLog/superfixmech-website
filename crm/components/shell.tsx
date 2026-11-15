@@ -10,6 +10,7 @@ const NAV: { href: string; label: string; icon: string; roles?: Role[] }[] = [
   { href: "/schedule", label: "Schedule", icon: "M8 2v4M16 2v4M3 9h18M5 5h14a2 2 0 012 2v12a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2z" },
   { href: "/jobs", label: "Jobs", icon: "M14.7 6.3a4 4 0 00-5.4 5.4L3 18l3 3 6.3-6.3a4 4 0 005.4-5.4l-2.5 2.5-2.4-.6-.6-2.4z" },
   { href: "/customers", label: "Customers", icon: "M17 21v-2a4 4 0 00-4-4H7a4 4 0 00-4 4v2M10 11a4 4 0 100-8 4 4 0 000 8zM21 21v-2a4 4 0 00-3-3.9M16 3.1a4 4 0 010 7.8", roles: ["admin", "dispatcher"] },
+  { href: "/prospects", label: "Cold calls", icon: "M22 16.9v3a2 2 0 01-2.2 2 19.8 19.8 0 01-8.6-3.1 19.5 19.5 0 01-6-6A19.8 19.8 0 012.1 4.2 2 2 0 014.1 2h3a2 2 0 012 1.7c.1.9.4 1.8.7 2.7a2 2 0 01-.5 2.1L8 9.8a16 16 0 006 6l1.3-1.3a2 2 0 012.1-.4c.9.3 1.8.6 2.7.7a2 2 0 011.7 2z", roles: ["admin", "dispatcher"] },
   { href: "/estimates", label: "Estimates", icon: "M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2M9 14l2 2 4-4", roles: ["admin", "dispatcher"] },
   { href: "/invoices", label: "Invoices", icon: "M9 7h6M9 11h6M9 15h4M5 3h14v18l-3-2-2 2-2-2-2 2-2-2-3 2z", roles: ["admin", "dispatcher"] },
   { href: "/pricebook", label: "Parts catalogue", icon: "M7 7h.01M3 11.5V4a1 1 0 011-1h7.5l9.3 9.3a1 1 0 010 1.4l-7.6 7.6a1 1 0 01-1.4 0z", roles: ["admin", "dispatcher"] },

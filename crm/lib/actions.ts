@@ -1438,3 +1438,188 @@ export async function invoicesBulk(state: FormState, fd: FormData): Promise<Form
   }
   return markInvoicesPaid(state, fd);
 }
+
+/* ---------- cold calling (property managers) ---------- */
+
+const PROSPECT_FIELDS = ["company", "contact_name", "title", "phone", "alt_phone", "email", "website", "address", "city", "units", "source", "notes"] as const;
+
+export async function saveProspect(_: FormState, fd: FormData): Promise<FormState> {
+  await requireUser(["admin", "dispatcher"]);
+  const id = num(fd, "id");
+  const values = PROSPECT_FIELDS.map((f) => str(fd, f).slice(0, f === "notes" ? 4000 : 300));
+  if (!values[0] && !values[1]) return { error: "Add a company or a contact name." };
+  const followUp = str(fd, "follow_up_on") || null;
+  if (id) {
+    run(`UPDATE prospects SET ${PROSPECT_FIELDS.map((f) => `${f} = ?`).join(", ")}, follow_up_on = ? WHERE id = ?`, ...values, followUp, id);
+    done(`/prospects/${id}`);
+  }
+  const { id: newId } = run(
+    `INSERT INTO prospects (${PROSPECT_FIELDS.join(", ")}, follow_up_on) VALUES (${PROSPECT_FIELDS.map(() => "?").join(", ")}, ?)`,
+    ...values,
+    followUp,
+  );
+  done(`/prospects/${newId}`);
+}
+
+export async function deleteProspect(fd: FormData) {
+  await requireUser(["admin", "dispatcher"]);
+  run("DELETE FROM prospects WHERE id = ?", num(fd, "id"));
+  done("/prospects");
+}
+
+export async function setProspectStatus(fd: FormData) {
+  await requireUser(["admin", "dispatcher"]);
+  const id = num(fd, "id")!;
+  const { PROSPECT_STATUSES } = await import("./prospects");
+  const status = str(fd, "status");
+  if (PROSPECT_STATUSES.some((s) => s.value === status)) run("UPDATE prospects SET status = ? WHERE id = ?", status, id);
+  done(`/prospects/${id}`);
+}
+
+export async function logProspectCall(_: FormState, fd: FormData): Promise<FormState> {
+  const user = await requireUser(["admin", "dispatcher"]);
+  const id = num(fd, "prospect_id")!;
+  const { CALL_OUTCOMES, getProspect } = await import("./prospects");
+  const p = getProspect(id);
+  if (!p) return { error: "Not found." };
+  const outcome = CALL_OUTCOMES.find((o) => o.value === str(fd, "outcome"));
+  if (!outcome) return { error: "Pick what happened on the call." };
+  // If no follow-up date is given, suggest one: try again in 2 days, or tomorrow if they're interested.
+  let followUp = str(fd, "follow_up_on") || null;
+  if (!followUp && outcome.status !== "not_interested") followUp = addDays(today(), outcome.status === "interested" ? 1 : 2);
+  if (outcome.status === "not_interested") followUp = null;
+  const now = new Date().toISOString();
+  tx(() => {
+    run(
+      "INSERT INTO prospect_calls (prospect_id, user_id, outcome, notes, follow_up_on) VALUES (?, ?, ?, ?, ?)",
+      id,
+      user.id,
+      outcome.value,
+      str(fd, "notes").slice(0, 4000),
+      followUp,
+    );
+    run(
+      `UPDATE prospects SET call_count = call_count + 1, last_called_at = ?, follow_up_on = ?,
+         status = CASE WHEN status = 'converted' THEN status ELSE ? END WHERE id = ?`,
+      now,
+      followUp,
+      outcome.status,
+      id,
+    );
+  });
+  revalidatePath("/", "layout");
+  return { ok: `Call logged${followUp ? `, follow up ${followUp}` : ""}.` };
+}
+
+export async function deleteProspectCall(fd: FormData) {
+  await requireUser(["admin", "dispatcher"]);
+  run("DELETE FROM prospect_calls WHERE id = ?", num(fd, "id"));
+  run("UPDATE prospects SET call_count = (SELECT COUNT(*) FROM prospect_calls WHERE prospect_id = prospects.id) WHERE id = ?", num(fd, "prospect_id"));
+  done(`/prospects/${num(fd, "prospect_id")}`);
+}
+
+/** Turns a property manager into a regular customer (company + contact), keeping the prospect record. */
+export async function convertProspect(fd: FormData) {
+  const user = await requireUser(["admin", "dispatcher"]);
+  const id = num(fd, "id")!;
+  const { getProspect } = await import("./prospects");
+  const p = getProspect(id);
+  if (!p) redirect("/prospects");
+  if (p.customer_id) redirect(`/customers/${p.customer_id}`);
+  const [first, ...rest] = p.contact_name.trim().split(/\s+/);
+  const customerId = tx(() => {
+    const { id: cid } = run(
+      "INSERT INTO customers (first_name, last_name, company, email, phone, alt_phone, lead_source, notes, tags) VALUES (?, ?, ?, ?, ?, ?, 'Cold call', ?, 'Property manager')",
+      first ?? "",
+      rest.join(" "),
+      p.company,
+      p.email,
+      p.phone,
+      p.alt_phone,
+      [p.title && `Title: ${p.title}`, p.units && `Manages: ${p.units}`, p.website && `Website: ${p.website}`, p.notes].filter(Boolean).join("\n"),
+    );
+    if (p.address) {
+      run("INSERT INTO addresses (customer_id, street, city, province) VALUES (?, ?, ?, 'ON')", cid, p.address, p.city);
+    }
+    run("UPDATE prospects SET status = 'converted', customer_id = ?, follow_up_on = NULL WHERE id = ?", cid, id);
+    logActivity({ customerId: cid, userId: user.id, body: `Became a customer from cold calling (${p.call_count} call${p.call_count === 1 ? "" : "s"})` });
+    return cid;
+  });
+  done(`/customers/${customerId}`);
+}
+
+export async function importProspects(_: FormState, fd: FormData): Promise<FormState> {
+  await requireUser(["admin", "dispatcher"]);
+  const file = fd.get("file");
+  if (!(file instanceof File) || file.size === 0) return { error: "Choose a CSV file." };
+  if (/\.(xlsx?|numbers)$/i.test(file.name)) return { error: "That's an Excel file. Save it as CSV first (File → Save As → CSV)." };
+  const { parseCSV } = await import("./csv");
+  const [head = [], ...rows] = parseCSV(await file.text());
+  const norm = (h: string) => h.toLowerCase().replace(/[^a-z0-9]/g, "");
+  const idx = (...names: string[]) => head.findIndex((h) => names.map(norm).includes(norm(h)));
+  const col = {
+    company: idx("Company", "Company Name", "Property Management Company", "Business", "Business Name", "Organization", "Name"),
+    contact_name: idx("Contact", "Contact Name", "Full Name", "Person", "Property Manager", "Manager"),
+    first: idx("First Name"),
+    last: idx("Last Name"),
+    title: idx("Title", "Job Title", "Role", "Position"),
+    phone: idx("Phone", "Phone Number", "Mobile", "Cell", "Office Phone", "Main Phone"),
+    email: idx("Email", "Email Address", "E-mail"),
+    website: idx("Website", "Web", "URL", "Site"),
+    address: idx("Address", "Street", "Street Address"),
+    city: idx("City", "Town"),
+    units: idx("Units", "Doors", "Properties", "Buildings", "Portfolio", "Size"),
+    notes: idx("Notes", "Note", "Comments"),
+    source: idx("Source", "Lead Source", "List"),
+  };
+  if (col.company < 0 && col.contact_name < 0 && col.first < 0) {
+    return { error: "Couldn't find a Company or Contact column. The first row of the file should have column names like Company, Contact, Phone, Email." };
+  }
+  const v = (r: string[], i: number) => (i >= 0 ? (r[i] ?? "").trim() : "");
+  let added = 0;
+  let skipped = 0;
+  tx(() => {
+    for (const r of rows) {
+      const company = v(r, col.company);
+      const contact = v(r, col.contact_name) || [v(r, col.first), v(r, col.last)].filter(Boolean).join(" ");
+      if (!company && !contact) {
+        skipped++;
+        continue;
+      }
+      const phone = v(r, col.phone);
+      const email = v(r, col.email);
+      // Skip anyone already on the list (same phone, email, or company + contact).
+      const dup = get<{ id: number }>(
+        `SELECT id FROM prospects WHERE (? != '' AND REPLACE(REPLACE(REPLACE(REPLACE(phone,'-',''),' ',''),'(',''),')','') = ?)
+            OR (? != '' AND lower(email) = lower(?)) OR (lower(company) = lower(?) AND lower(contact_name) = lower(?)) LIMIT 1`,
+        phone,
+        phone.replace(/[-\s()]/g, ""),
+        email,
+        email,
+        company,
+        contact,
+      );
+      if (dup) {
+        skipped++;
+        continue;
+      }
+      run(
+        "INSERT INTO prospects (company, contact_name, title, phone, email, website, address, city, units, notes, source) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+        company,
+        contact,
+        v(r, col.title),
+        phone,
+        email,
+        v(r, col.website),
+        v(r, col.address),
+        v(r, col.city),
+        v(r, col.units),
+        v(r, col.notes),
+        v(r, col.source) || `Imported ${file.name}`.slice(0, 100),
+      );
+      added++;
+    }
+  });
+  revalidatePath("/", "layout");
+  return { ok: `Added ${added} property manager${added === 1 ? "" : "s"}.${skipped ? ` Skipped ${skipped} (already on the list or blank).` : ""}` };
+}
