@@ -1623,3 +1623,133 @@ export async function importProspects(_: FormState, fd: FormData): Promise<FormS
   revalidatePath("/", "layout");
   return { ok: `Added ${added} property manager${added === 1 ? "" : "s"}.${skipped ? ` Skipped ${skipped} (already on the list or blank).` : ""}` };
 }
+
+/* ---------- card payments (Helcim) ---------- */
+
+/** Staff: opens Helcim's card window for an amount on this invoice. Returns the checkout token. */
+export async function startCardPayment(input: { invoiceId: number; amount: string; receipt: string[] }): Promise<{ checkoutToken?: string; error?: string }> {
+  const user = await requireUser();
+  const helcim = await import("./helcim");
+  if (!helcim.helcimConfigured()) return { error: "Card payments aren't set up yet. Add your Helcim API token in Settings → Card payments." };
+  const { getInvoice } = await import("./data");
+  const inv = getInvoice(Number(input.invoiceId));
+  if (!inv) return { error: "Invoice not found." };
+  if (!isOffice(user) && !(inv.job_id && canTouchJob(user, inv.job_id))) return { error: "Not allowed." };
+  if (inv.status === "void") return { error: "This invoice is void." };
+  const amount = toCents(String(input.amount));
+  if (amount <= 0) return { error: "Enter an amount greater than zero." };
+  if (amount > Math.max(0, inv.balance_cents)) return { error: `That's more than the balance owing (${msg.amountVar(Math.max(0, inv.balance_cents))}).` };
+  try {
+    const checkoutToken = await helcim.createCheckout({
+      invoiceId: inv.id,
+      amountCents: amount,
+      source: "staff",
+      userId: user.id,
+      receiptChannels: (input.receipt ?? []).filter((c) => c === "sms" || c === "email"),
+    });
+    return { checkoutToken };
+  } catch (e) {
+    return { error: (e as Error).message };
+  }
+}
+
+/** Customer, from the invoice link: pays the whole balance online. */
+export async function startOnlinePayment(token: string): Promise<{ checkoutToken?: string; error?: string }> {
+  const helcim = await import("./helcim");
+  if (!helcim.helcimOnline()) return { error: "Online card payments aren't available right now. Please call us to pay." };
+  const row = get<{ id: number }>("SELECT id FROM invoices WHERE token = ?", String(token));
+  const { getInvoice } = await import("./data");
+  const inv = row && getInvoice(row.id);
+  if (!inv || inv.status === "void") return { error: "This invoice can't be paid online." };
+  if (inv.balance_cents <= 0) return { error: "This invoice is already paid. Thank you!" };
+  const c = get<{ email: string; phone: string }>("SELECT email, phone FROM customers WHERE id = ?", inv.customer_id);
+  // Receipt goes by email if possible, otherwise by text.
+  const receipt = c?.email && msg.emailConfigured() ? ["email"] : c?.phone && msg.smsConfigured() ? ["sms"] : [];
+  try {
+    return { checkoutToken: await helcim.createCheckout({ invoiceId: inv.id, amountCents: inv.balance_cents, source: "customer", receiptChannels: receipt }) };
+  } catch (e) {
+    console.error("Helcim checkout:", e);
+    return { error: "Couldn't open the card payment window. Please try again, or call us to pay." };
+  }
+}
+
+/** Called by the browser once Helcim approves the card: verifies it and records the payment. */
+export async function finishCardPayment(checkoutToken: string, eventMessage: unknown): Promise<{ ok?: string; error?: string; links?: { label: string; href: string }[] }> {
+  const helcim = await import("./helcim");
+  const co = get<{ checkout_token: string; secret_token: string; invoice_id: number; amount_cents: number; source: string; user_id: number | null; receipt_channels: string; payment_id: number | null }>(
+    "SELECT * FROM helcim_checkouts WHERE checkout_token = ?",
+    String(checkoutToken),
+  );
+  if (!co) return { error: "That payment session wasn't found." };
+  if (co.payment_id) return { ok: "Payment already recorded." };
+  let txn: Awaited<ReturnType<typeof helcim.verifyResult>>;
+  try {
+    txn = await helcim.verifyResult(co, eventMessage);
+  } catch (e) {
+    const bad = get<{ customer_id: number; job_id: number | null; number: number }>("SELECT customer_id, job_id, number FROM invoices WHERE id = ?", co.invoice_id);
+    if (bad) logActivity({ customerId: bad.customer_id, jobId: bad.job_id, body: `Card payment on invoice #${bad.number} needs checking: ${(e as Error).message}` });
+    return { error: (e as Error).message };
+  }
+  const reference = `Helcim #${txn.transactionId} · ${helcim.cardLabel(txn)}`;
+  const inv = get<{ customer_id: number; number: number; job_id: number | null; status: string }>("SELECT customer_id, number, job_id, status FROM invoices WHERE id = ?", co.invoice_id)!;
+  const paymentId = tx(() => {
+    const dup = get<{ id: number }>("SELECT id FROM payments WHERE invoice_id = ? AND reference LIKE ?", co.invoice_id, `Helcim #${txn.transactionId} %`);
+    if (dup) return dup.id;
+    const { id: pid } = run(
+      "INSERT INTO payments (invoice_id, amount_cents, method, reference, paid_on, recorded_by, token) VALUES (?, ?, 'card', ?, ?, ?, ?)",
+      co.invoice_id,
+      co.amount_cents,
+      reference,
+      today(),
+      co.user_id,
+      randomToken(),
+    );
+    run("UPDATE helcim_checkouts SET payment_id = ? WHERE checkout_token = ?", pid, co.checkout_token);
+    if (inv.status === "draft") run("UPDATE invoices SET status = 'sent' WHERE id = ?", co.invoice_id);
+    if (txn.customerCode) run("UPDATE customers SET helcim_customer_code = ? WHERE id = ? AND helcim_customer_code = ''", txn.customerCode, inv.customer_id);
+    logActivity({
+      customerId: inv.customer_id,
+      jobId: inv.job_id,
+      userId: co.user_id,
+      kind: "payment",
+      body: `${co.source === "customer" ? "Customer paid online" : "Card payment"}: $${(co.amount_cents / 100).toFixed(2)} on invoice #${inv.number} (${helcim.cardLabel(txn)}, Helcim #${txn.transactionId})`,
+    });
+    return pid;
+  });
+  let note = "";
+  const synced = get<{ qbo_id: string | null }>("SELECT qbo_id FROM invoices WHERE id = ?", co.invoice_id);
+  if (synced?.qbo_id && qbo.qboConfig().connected) {
+    try {
+      await qbo.syncInvoice(co.invoice_id);
+      note = " Sent to QuickBooks.";
+    } catch (e) {
+      note = ` Not sent to QuickBooks: ${(e as Error).message}`;
+    }
+  }
+  const channels = co.receipt_channels.split(",").filter((c): c is "sms" | "email" => c === "sms" || c === "email");
+  let links: { label: string; href: string }[] = [];
+  if (channels.length) {
+    const by = co.user_id ? get<{ name: string }>("SELECT name FROM users WHERE id = ?", co.user_id)?.name : undefined;
+    const r = await sendDocument({ kind: "receipt", invoiceId: co.invoice_id, paymentId, channels, byName: by });
+    note = `${r.note}${note}`;
+    links = co.source === "staff" ? r.links : [];
+  }
+  // Staff pages refresh when they tap Done (revalidating here would hide the confirmation box right away).
+  if (co.source === "customer") revalidatePath("/", "layout");
+  return { ok: co.source === "customer" ? "Payment approved. Thank you!" : `Card approved: ${helcim.cardLabel(txn)}. Payment recorded.${note}`, links };
+}
+
+export async function saveHelcimSettings(_: FormState, fd: FormData): Promise<FormState> {
+  await requireUser(["admin"]);
+  if (str(fd, "helcim_api_token")) run("UPDATE settings SET value = ? WHERE key = 'helcim_api_token'", str(fd, "helcim_api_token"));
+  if (fd.get("remove_token")) run("UPDATE settings SET value = '' WHERE key = 'helcim_api_token'");
+  run("UPDATE settings SET value = ? WHERE key = 'helcim_online'", fd.get("helcim_online") ? "1" : "0");
+  revalidatePath("/", "layout");
+  if (!getSettings().helcim_api_token) return { ok: "Saved. Card payments are off until you add a Helcim API token." };
+  try {
+    const { testHelcim } = await import("./helcim");
+    return { ok: `Saved. ${await testHelcim()}` };
+  } catch (e) {
+    return { error: `Saved, but the test failed: ${(e as Error).message}` };
+  }
+}

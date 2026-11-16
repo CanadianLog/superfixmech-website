@@ -1,6 +1,7 @@
 import "server-only";
 import { get, getSettings } from "./db";
 import { getAddress, getCustomer, getInvoice, invoicePayments, lineItems, rateFor } from "./data";
+import { helcimOnline } from "./helcim";
 import { addressLine, computeTotals, customerName, fmtDate, lineTotal, money, taxLabel } from "./format";
 
 /**
@@ -65,6 +66,7 @@ export function documentEmailHtml(opts: {
   const paid = payments.reduce((sum, p) => sum + p.amount_cents, 0);
   const balance = Math.max(0, totals.total - paid);
   const payment = opts.paymentId ? payments.find((p) => p.id === opts.paymentId) : undefined;
+  const payOnline = opts.kind === "invoice" && helcimOnline(s) && balance > 0;
   const methodLabel = (m: string) => (m === "card" ? "credit card" : m === "e-transfer" ? "e-Transfer" : m);
 
   const row = (label: string, value: string, strong = false, color = INK) =>
@@ -108,7 +110,7 @@ export function documentEmailHtml(opts: {
   const customerLines = [customerName(c), c.company && (c.first_name || c.last_name) ? c.company : "", c.email, c.phone].filter(Boolean).map(esc).join("<br>");
 
   const button = `<table role="presentation" cellpadding="0" cellspacing="0" style="margin:6px 0 0"><tr>
-      <td style="background:#f4c542;border-radius:999px"><a href="${esc(opts.link)}" style="display:inline-block;padding:12px 24px;font-size:15px;font-weight:700;color:#2f2512;text-decoration:none">${opts.kind === "invoice" ? "View &amp; print invoice" : "View &amp; print receipt"}</a></td>
+      <td style="background:#f4c542;border-radius:999px"><a href="${esc(opts.link)}" style="display:inline-block;padding:12px 24px;font-size:15px;font-weight:700;color:#2f2512;text-decoration:none">${opts.kind === "invoice" ? (payOnline ? "View &amp; pay invoice" : "View &amp; print invoice") : "View &amp; print receipt"}</a></td>
     </tr></table>`;
 
   return `<!doctype html>
@@ -176,7 +178,7 @@ export function documentEmailHtml(opts: {
         </td></tr>
         ${inv.notes ? `<tr><td style="padding:16px 28px 0;font-size:13px;line-height:19px;color:${MUTED};white-space:pre-line">${esc(inv.notes)}</td></tr>` : ""}
         <tr><td style="padding:16px 28px 24px;font-size:13px;line-height:19px;color:${MUTED}">
-          ${balance > 0 ? `Payment options: e-transfer to ${esc(s.company_email)}, or call ${esc(s.company_phone)} to pay by card.<br><br>` : ""}
+          ${balance > 0 ? (payOnline ? `Pay by card online with the button below, or e-transfer to ${esc(s.company_email)}.<br><br>` : `Payment options: e-transfer to ${esc(s.company_email)}, or call ${esc(s.company_phone)} to pay by card.<br><br>`) : ""}
           ${button}
         </td></tr>
       </table>

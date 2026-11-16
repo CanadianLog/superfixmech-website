@@ -3,6 +3,7 @@ import { centsToInput, money } from "@/lib/format";
 import type { InvoiceRow } from "@/lib/data";
 import type { JobMessage } from "@/lib/messaging";
 import { ActionForm, SubmitButton } from "./forms";
+import { CardPayButton } from "./card-pay";
 
 
 export const PAY_METHODS = [
@@ -41,7 +42,7 @@ export function SendInvoiceForm({ invoice, phone, email, smsReady, emailReady }:
   );
 }
 
-export function PaymentForm({ invoice, phone, email, smsReady, emailReady, today }: { invoice: InvoiceRow; phone: string; email: string; smsReady: boolean; emailReady: boolean; today: string }) {
+export function PaymentForm({ invoice, phone, email, smsReady, emailReady, today, cardReady = false }: { invoice: InvoiceRow; phone: string; email: string; smsReady: boolean; emailReady: boolean; today: string; cardReady?: boolean }) {
   return (
     <ActionForm action={recordPayment} className="space-y-4">
       <input type="hidden" name="invoice_id" value={invoice.id} />
@@ -68,7 +69,14 @@ export function PaymentForm({ invoice, phone, email, smsReady, emailReady, today
         <div className="label">Send receipt by</div>
         <ChannelBoxes prefix="receipt_" phone={phone} email={email} smsReady={smsReady} emailReady={emailReady} />
       </div>
-      <SubmitButton className="btn-primary w-full" pendingText="Saving…">Record payment & send receipt</SubmitButton>
+      {cardReady && (
+        <div className="space-y-2 rounded-xl border border-stone-200 bg-stone-50 p-3">
+          <div className="text-sm font-semibold text-stone-800">Take the card now</div>
+          <p className="text-xs text-stone-500">Opens Helcim&apos;s secure card window for the amount above. When it&apos;s approved, the payment is recorded and the receipt goes out by the boxes ticked above.</p>
+          <CardPayButton mode="staff" invoiceId={invoice.id} label="Charge card now" />
+        </div>
+      )}
+      <SubmitButton className="btn-primary w-full" pendingText="Saving…">{cardReady ? "Record a payment already taken" : "Record payment & send receipt"}</SubmitButton>
     </ActionForm>
   );
 }

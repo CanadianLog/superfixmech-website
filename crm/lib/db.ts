@@ -188,6 +188,19 @@ CREATE INDEX IF NOT EXISTS messages_due ON messages(status, send_after);
 CREATE INDEX IF NOT EXISTS messages_job ON messages(job_id);
 
 -- Cold-calling property managers. Kept separate from customers until converted.
+-- Card payments started through Helcim. The secret token never leaves the server; it proves the result is genuine.
+CREATE TABLE IF NOT EXISTS helcim_checkouts (
+  checkout_token TEXT PRIMARY KEY,
+  secret_token TEXT NOT NULL,
+  invoice_id INTEGER NOT NULL REFERENCES invoices(id) ON DELETE CASCADE,
+  amount_cents INTEGER NOT NULL,
+  source TEXT NOT NULL DEFAULT 'staff',
+  user_id INTEGER REFERENCES users(id) ON DELETE SET NULL,
+  receipt_channels TEXT NOT NULL DEFAULT '',
+  payment_id INTEGER REFERENCES payments(id) ON DELETE SET NULL,
+  created_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ','now'))
+);
+
 CREATE TABLE IF NOT EXISTS prospects (
   id INTEGER PRIMARY KEY,
   company TEXT NOT NULL DEFAULT '',
@@ -238,6 +251,8 @@ const DEFAULT_SETTINGS: Record<string, string> = {
   invoice_footer: "Thank you for choosing SuperFix Mechanical! All repairs carry our parts and labour warranty.",
   estimate_valid_days: "30",
   booking_api_key: "",
+  helcim_api_token: "",
+  helcim_online: "1",
   // QuickBooks Online
   qbo_client_id: "",
   qbo_client_secret: "",
@@ -293,6 +308,7 @@ const DEFAULT_SETTINGS: Record<string, string> = {
 
 /** Columns added after the first release. Each runs once, only if missing. */
 const MIGRATIONS: [table: string, column: string, definition: string][] = [
+  ["customers", "helcim_customer_code", "TEXT NOT NULL DEFAULT ''"],
   ["jobs", "tax_rate", "REAL"],
   ["estimates", "tax_rate", "REAL"],
   ["invoices", "tax_rate", "REAL"],
