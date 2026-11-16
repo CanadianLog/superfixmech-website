@@ -14,6 +14,8 @@ export default function sitemap(): MetadataRoute.Sitemap {
     "/repair",
     "/installation",
     "/blog",
+    "/warranty",
+    "/refund-policy",
   ];
 
   return [

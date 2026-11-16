@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import { PolicyContent } from "@/components/sections/policy-content";
 
 export const metadata: Metadata = {
-  robots: { index: false, follow: true },
   title: "Refund Policy | SuperFix Mechanical",
   description:
     "Refund policy for parts and service charges with SuperFix Mechanical appliance repair, Ottawa.",
@@ -13,7 +12,7 @@ export default function RefundPolicyPage() {
     <main>
       <PolicyContent
         title="Refund Policy"
-        intro="This placeholder refund policy clarifies service fees, final-sale parts, and exception handling."
+        intro="This policy explains how refunds work for parts and service charges at SuperFix Mechanical."
         sections={[
           {
             heading: "Parts Sales",
@@ -26,7 +25,7 @@ export default function RefundPolicyPage() {
           {
             heading: "Service Charges",
             points: [
-              "Diagnostic fees are non-refundable once service is delivered.",
+              "The diagnostic fee is $89 plus tax and is non-refundable once service is delivered.",
               "Completed labour charges are non-refundable, except where required by law.",
               "Approved warranty claims are handled under the warranty policy.",
             ],
