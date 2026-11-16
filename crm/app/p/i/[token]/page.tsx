@@ -4,6 +4,8 @@ import { getAddress, getCustomer, getInvoice, invoicePayments, lineItems, rateFo
 import { fmtDate, money } from "@/lib/format";
 import { DocumentView } from "@/components/document";
 import { PrintButton } from "@/components/forms";
+import { CardPayButton } from "@/components/card-pay";
+import { helcimOnline } from "@/lib/helcim";
 
 export const dynamic = "force-dynamic";
 export const metadata = { title: "Your invoice", robots: { index: false } };
@@ -17,6 +19,7 @@ export default async function InvoicePortal({ params }: { params: Promise<{ toke
   const job = inv.job_id ? get<{ address_id: number | null }>("SELECT address_id FROM jobs WHERE id = ?", inv.job_id) : undefined;
   const s = getSettings();
   const payments = invoicePayments(inv.id);
+  const payOnline = helcimOnline(s) && inv.balance_cents > 0;
 
   return (
     <DocumentView
@@ -47,9 +50,15 @@ export default async function InvoicePortal({ params }: { params: Promise<{ toke
       }
     >
       {inv.display_status === "paid" && <div className="mt-6 text-center text-2xl font-black uppercase tracking-widest text-emerald-600">Paid — thank you!</div>}
+      {payOnline && (
+        <div className="no-print mx-auto mt-8 max-w-sm space-y-2 text-center">
+          <CardPayButton mode="customer" token={token} label={`Pay ${money(inv.balance_cents)} by card`} />
+          <p className="text-xs text-stone-500">Secure payment by Helcim. Visa, Mastercard and Amex accepted.</p>
+        </div>
+      )}
       {inv.notes && <p className="mt-8 whitespace-pre-line text-sm text-stone-600">{inv.notes}</p>}
       <div className="no-print mt-8 flex flex-wrap items-center justify-between gap-3 border-t border-stone-200 pt-6 text-sm text-stone-500">
-        <span>Payment options: e-transfer to {s.company_email}, or call {s.company_phone} to pay by card.</span>
+        <span>{inv.balance_cents > 0 ? (payOnline ? `Other payment options: e-transfer to ${s.company_email}, or call ${s.company_phone}.` : `Payment options: e-transfer to ${s.company_email}, or call ${s.company_phone} to pay by card.`) : `Questions? Call ${s.company_phone}.`}</span>
         <PrintButton />
       </div>
     </DocumentView>

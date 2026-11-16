@@ -1,3 +1,4 @@
+import { helcimConfigured } from "@/lib/helcim";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { requireUser, isOffice } from "@/lib/auth";
@@ -97,7 +98,7 @@ export default async function JobPage({ params }: { params: Promise<{ id: string
                     <section className="border-t border-stone-100 pt-5">
                       <h3 className="mb-2 text-sm font-bold">2. Payment & receipt</h3>
                       {invoice.balance_cents > 0 ? (
-                        <PaymentForm invoice={invoice} phone={customer.phone} email={customer.email} smsReady={smsReady} emailReady={emailReady} today={today()} />
+                        <PaymentForm invoice={invoice} phone={customer.phone} email={customer.email} smsReady={smsReady} emailReady={emailReady} today={today()} cardReady={helcimConfigured()} />
                       ) : (
                         <>
                           <PaidBadge invoice={invoice} />

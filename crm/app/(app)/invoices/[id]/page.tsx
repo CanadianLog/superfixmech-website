@@ -7,6 +7,7 @@ import { customerName, fmtDate, fmtStamp, money } from "@/lib/format";
 import { appOrigin } from "@/lib/origin";
 import { deleteInvoice, deletePayment, saveInvoice, setInvoiceStatus, syncInvoiceToQbo } from "@/lib/actions";
 import { emailConfigured, smsConfigured } from "@/lib/messaging";
+import { helcimConfigured } from "@/lib/helcim";
 import { PaymentForm, ReceiptForm, SendInvoiceForm } from "@/components/checkout";
 import { qboConfig } from "@/lib/quickbooks";
 import { Card, Field, PageHeader, StatusBadge } from "@/components/ui";
@@ -90,7 +91,7 @@ export default async function InvoicePage({ params }: { params: Promise<{ id: st
 
           {!locked && inv.balance_cents > 0 && (
             <Card title="Record payment & send receipt">
-              <PaymentForm invoice={inv} phone={c.phone} email={c.email} smsReady={smsConfigured()} emailReady={emailConfigured()} today={today()} />
+              <PaymentForm invoice={inv} phone={c.phone} email={c.email} smsReady={smsConfigured()} emailReady={emailConfigured()} today={today()} cardReady={helcimConfigured()} />
             </Card>
           )}
 

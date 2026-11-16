@@ -7,6 +7,7 @@ import { loadDemoData, rotateBookingKey, saveSettings } from "@/lib/actions";
 import { Card, Field, PageHeader } from "@/components/ui";
 import { ActionForm, SubmitButton } from "@/components/forms";
 import { QuickBooksCard } from "@/components/quickbooks-card";
+import { HelcimCard } from "@/components/helcim-card";
 import { AddressSearchCard, MessagingCard, ReviewCard, WebsiteCard } from "@/components/messaging-cards";
 
 export const metadata = { title: "Settings" };
@@ -40,6 +41,7 @@ export default async function SettingsPage({ searchParams }: { searchParams: Pro
           ["#reviews", "Google review requests"],
           ["#address-search", "Address search"],
           ["#website", "Your website"],
+          ["#payments", "Card payments"],
           ["#quickbooks", "QuickBooks"],
           ["#booking", "Booking key"],
         ].map(([href, label]) => (
@@ -80,6 +82,7 @@ export default async function SettingsPage({ searchParams }: { searchParams: Pro
       <ReviewCard s={s} />
       <AddressSearchCard s={s} fromEnv={!!process.env.GOOGLE_MAPS_API_KEY} />
       <WebsiteCard s={s} origin={origin} placeQuery={place_q?.slice(0, 120)} />
+      <HelcimCard s={s} origin={origin} />
       <QuickBooksCard origin={origin} status={qbo} />
 
       <div id="booking" className="scroll-mt-6" />

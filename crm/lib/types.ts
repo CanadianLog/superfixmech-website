@@ -24,6 +24,7 @@ export type Customer = {
   notes: string;
   qbo_id: string | null;
   no_review: number;
+  helcim_customer_code?: string;
   created_at: string;
 };
 
