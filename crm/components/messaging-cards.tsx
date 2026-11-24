@@ -1,5 +1,5 @@
 import { addManualReview, removeManualReview, saveReviewSelection, linkGoogleBusiness, unlinkGoogleBusiness, refreshGoogleReviews, saveAddressSearchKey, saveMessagingSettings, saveReviewSettings, saveWebsiteOrigins, sendTestMessage } from "@/lib/actions";
-import { emailConfigured, smsConfigured } from "@/lib/messaging";
+import { emailConfigured, smsConfigured, twilioMissing } from "@/lib/messaging";
 import { getGoogleReviews, hiddenReviewIds, manualReviews, searchBusinesses, type PlaceCandidate, type StoredReview } from "@/lib/reviews";
 import { ActionForm, ConfirmButton, SubmitButton } from "./forms";
 import { Card, Field } from "./ui";
@@ -11,6 +11,7 @@ const Pill = ({ on }: { on: boolean }) => (
 export function MessagingCard({ s }: { s: Record<string, string> }) {
   const sms = smsConfigured(s);
   const email = emailConfigured(s);
+  const missing = twilioMissing(s);
   return (
     <div id="messaging" className="mt-6 scroll-mt-6">
       <Card title="Texts & email">
@@ -19,7 +20,7 @@ export function MessagingCard({ s }: { s: Record<string, string> }) {
         </p>
         <ActionForm action={saveMessagingSettings} className="mt-5 space-y-6">
           <section>
-            <div className="mb-2 flex items-center gap-2"><h3 className="text-sm font-bold">Texting (Twilio)</h3><Pill on={sms} /></div>
+            <div className="mb-2 flex items-center gap-2"><h3 className="text-sm font-bold">Texting (Twilio)</h3><Pill on={sms} />{!sms && missing.length < 3 && <span className="text-xs font-semibold text-rose-700">Still needed: {missing.join(", ")}</span>}</div>
             <p className="mb-3 text-xs text-stone-500">
               Sign up at twilio.com, buy a local 613 number (about US$1–2/month plus roughly a cent per text), then copy the Account SID and Auth Token from the Twilio console.
               Customers who reply STOP are blocked automatically.
@@ -64,8 +65,8 @@ export function MessagingCard({ s }: { s: Record<string, string> }) {
           <ActionForm action={sendTestMessage} className="mt-6 flex flex-wrap items-end gap-2 border-t border-stone-100 pt-4">
             <Field label="Send a test">
               <select className="input" name="channel" defaultValue={sms ? "sms" : "email"}>
-                {sms && <option value="sms">Text to</option>}
-                {email && <option value="email">Email to</option>}
+                <option value="sms">Text to{sms ? "" : " (not set up)"}</option>
+                <option value="email">Email to{email ? "" : " (not set up)"}</option>
               </select>
             </Field>
             <input className="input max-w-xs" name="to" placeholder="Your mobile # or email" aria-label="Send test to" />
