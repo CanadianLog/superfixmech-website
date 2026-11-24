@@ -30,6 +30,9 @@ export function MessagingCard({ s }: { s: Record<string, string> }) {
               <Field label="Auth token"><input className="input" type="password" name="twilio_token" autoComplete="off" placeholder={s.twilio_token ? "•••••••• (saved)" : ""} /></Field>
               <Field label="Your Twilio number"><input className="input" name="twilio_from" defaultValue={s.twilio_from} placeholder="+16135551234" /></Field>
             </div>
+            <Field label="Forward customer replies to your cell" className="mt-3 sm:max-w-sm" hint="When a customer texts your Twilio number, it's forwarded here and saved on their timeline. Reply to the forwarded text and it goes back to the customer from your business number. Leave blank to turn off.">
+              <input className="input" name="sms_forward_to" type="tel" defaultValue={s.sms_forward_to} placeholder="613-555-1234" />
+            </Field>
           </section>
           <section>
             <div className="mb-2 flex items-center gap-2"><h3 className="text-sm font-bold">Email (your mailbox)</h3><Pill on={email} /></div>

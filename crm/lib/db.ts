@@ -201,6 +201,16 @@ CREATE TABLE IF NOT EXISTS helcim_checkouts (
   created_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ','now'))
 );
 
+-- Texts customers sent to the Twilio number (forwarded to the owner's cell; replies go to the latest one).
+CREATE TABLE IF NOT EXISTS sms_inbound (
+  id INTEGER PRIMARY KEY,
+  from_number TEXT NOT NULL,
+  customer_id INTEGER REFERENCES customers(id) ON DELETE SET NULL,
+  body TEXT NOT NULL DEFAULT '',
+  media TEXT NOT NULL DEFAULT '',
+  created_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ','now'))
+);
+
 CREATE TABLE IF NOT EXISTS prospects (
   id INTEGER PRIMARY KEY,
   company TEXT NOT NULL DEFAULT '',
@@ -253,6 +263,7 @@ const DEFAULT_SETTINGS: Record<string, string> = {
   booking_api_key: "",
   helcim_api_token: "",
   helcim_online: "1",
+  sms_forward_to: "",
   // QuickBooks Online
   qbo_client_id: "",
   qbo_client_secret: "",
