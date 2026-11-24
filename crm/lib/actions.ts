@@ -1259,11 +1259,13 @@ export async function saveReviewSettings(_: FormState, fd: FormData): Promise<Fo
 
 export async function sendTestMessage(_: FormState, fd: FormData): Promise<FormState> {
   const me = await requireUser(["admin"]);
-  const channel = str(fd, "channel") === "email" ? "email" : "sms";
   const to = str(fd, "to");
+  // Go by what was typed: an address with @ is an email, anything else is a mobile number.
+  const channel = to.includes("@") ? "email" : to ? "sms" : str(fd, "channel") === "email" ? "email" : "sms";
   if (!to) return { error: channel === "sms" ? "Enter your mobile number." : "Enter your email address." };
   const s = getSettings();
-  if (channel === "sms" && !msg.smsConfigured(s)) return { error: "Save your Twilio details first." };
+  if (channel === "sms" && !msg.toE164(to)) return { error: `“${to}” doesn't look like a mobile number or an email address.` };
+  if (channel === "sms" && !msg.smsConfigured(s)) return { error: `Texting isn't ready yet. Fill in and save: ${msg.twilioMissing(s).join(", ")}.` };
   if (channel === "email" && !msg.emailConfigured(s)) return { error: "Save your email details first." };
   const r = await msg.queueMessage({
     kind: "test",

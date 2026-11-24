@@ -17,6 +17,14 @@ export type MessageKind = "invoice" | "receipt" | "review" | "test" | "notice";
 export function smsConfigured(s = getSettings()) {
   return !!(s.twilio_sid && s.twilio_token && s.twilio_from);
 }
+/** Which Twilio fields still need filling in (empty when texting is ready). */
+export function twilioMissing(s = getSettings()): string[] {
+  return [
+    !s.twilio_sid && "Account SID",
+    !s.twilio_token && "Auth token",
+    !s.twilio_from && "Twilio number",
+  ].filter(Boolean) as string[];
+}
 export function emailConfigured(s = getSettings()) {
   return !!(s.smtp_host && s.smtp_user && s.smtp_pass);
 }
