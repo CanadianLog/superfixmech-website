@@ -1232,19 +1232,42 @@ const REVIEW_SETTINGS = ["google_review_url", "review_delay_minutes", "review_co
 
 export async function saveMessagingSettings(_: FormState, fd: FormData): Promise<FormState> {
   await requireUser(["admin"]);
+  // Check everything before saving anything. After an error the form shows the saved values again,
+  // so a half-saved form would otherwise wipe good fields on the next Save.
+  const fail = (error: string): FormState => {
+    revalidatePath("/settings");
+    return { error };
+  };
+  const notifyEmail = str(fd, "notify_email");
+  if (fd.has("notify_present") && notifyEmail && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(notifyEmail)) return fail("That notification email address doesn't look right.");
+  const from = str(fd, "twilio_from");
+  if (from && !msg.toE164(from)) return fail("The Twilio number should look like +16135551234.");
+  const cell = str(fd, "sms_forward_to");
+  if (fd.has("sms_forward_to") && cell) {
+    if (!msg.toE164(cell)) return fail("The cell number for forwarded replies doesn't look right. Use 10 digits, like 613-555-1234.");
+    if (msg.toE164(cell) === msg.toE164(from || getSettings().twilio_from)) return fail("Forward replies to your own cell, not to the Twilio number.");
+  }
+
   for (const k of MESSAGING_SETTINGS) if (fd.has(k)) run("UPDATE settings SET value = ? WHERE key = ?", str(fd, k), k);
   for (const k of SECRET_SETTINGS) if (str(fd, k)) run("UPDATE settings SET value = ? WHERE key = ?", str(fd, k), k);
+  if (from) run("UPDATE settings SET value = ? WHERE key = 'twilio_from'", msg.toE164(from)!);
   if (fd.has("notify_present")) {
-    const notifyEmail = str(fd, "notify_email");
-    if (notifyEmail && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(notifyEmail)) return { error: "That notification email address doesn't look right." };
     run("UPDATE settings SET value = ? WHERE key = 'notify_email'", notifyEmail);
     run("UPDATE settings SET value = ? WHERE key = 'notify_invoice'", fd.get("notify_invoice") ? "1" : "0");
     run("UPDATE settings SET value = ? WHERE key = 'notify_receipt'", fd.get("notify_receipt") ? "1" : "0");
   }
-  if (str(fd, "twilio_from") && !msg.toE164(str(fd, "twilio_from"))) return { error: "The Twilio number should look like +16135551234." };
-  if (str(fd, "twilio_from")) run("UPDATE settings SET value = ? WHERE key = 'twilio_from'", msg.toE164(str(fd, "twilio_from"))!);
+  let replies = "";
+  if (fd.has("sms_forward_to")) {
+    run("UPDATE settings SET value = ? WHERE key = 'sms_forward_to'", cell ? msg.toE164(cell)! : "");
+    if (cell && msg.smsConfigured()) {
+      const { connectTwilioReplies } = await import("./sms-inbound");
+      const r = await connectTwilioReplies(await appOrigin());
+      if (!r.ok) return fail(`Saved, but: ${r.message}`);
+      replies = ` Customer replies will be forwarded to ${cell}.`;
+    }
+  }
   revalidatePath("/settings");
-  return { ok: "Saved. Use “Send a test” to check it works." };
+  return { ok: `Saved.${replies} Use “Send a test” to check it works.` };
 }
 
 export async function saveReviewSettings(_: FormState, fd: FormData): Promise<FormState> {
