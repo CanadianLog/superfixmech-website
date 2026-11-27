@@ -1778,3 +1778,30 @@ export async function saveHelcimSettings(_: FormState, fd: FormData): Promise<Fo
     return { error: `Saved, but the test failed: ${(e as Error).message}` };
   }
 }
+
+/* ---------- calendar sync ---------- */
+
+export async function resetMyCalendarLink() {
+  const me = await requireUser();
+  const { resetCalendarToken } = await import("./calendar");
+  resetCalendarToken(me.id);
+  done("/account");
+}
+
+export async function saveMyBusyCalendar(_: FormState, fd: FormData): Promise<FormState> {
+  const me = await requireUser();
+  const cal = await import("./calendar");
+  if (fd.get("remove")) {
+    run("UPDATE users SET busy_calendar_url = '' WHERE id = ?", me.id);
+    revalidatePath("/", "layout");
+    return { ok: "Removed. Your calendar no longer shows on the schedule." };
+  }
+  const raw = str(fd, "busy_calendar_url");
+  const url = cal.normalizeCalendarUrl(raw);
+  if (!url) return { error: "Paste the calendar link from iCloud. It starts with webcal:// or https://." };
+  const r = await cal.checkCalendar(url);
+  if (!r.ok) return { error: r.message };
+  run("UPDATE users SET busy_calendar_url = ? WHERE id = ?", url, me.id);
+  revalidatePath("/", "layout");
+  return { ok: `${r.message} They now show as grey busy blocks on the schedule.` };
+}
