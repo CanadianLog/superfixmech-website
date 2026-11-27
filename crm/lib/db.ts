@@ -320,6 +320,8 @@ const DEFAULT_SETTINGS: Record<string, string> = {
 /** Columns added after the first release. Each runs once, only if missing. */
 const MIGRATIONS: [table: string, column: string, definition: string][] = [
   ["customers", "helcim_customer_code", "TEXT NOT NULL DEFAULT ''"],
+  ["users", "calendar_token", "TEXT NOT NULL DEFAULT ''"],
+  ["users", "busy_calendar_url", "TEXT NOT NULL DEFAULT ''"],
   ["jobs", "tax_rate", "REAL"],
   ["estimates", "tax_rate", "REAL"],
   ["invoices", "tax_rate", "REAL"],

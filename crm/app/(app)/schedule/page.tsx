@@ -4,6 +4,7 @@ import { jobsInRange, listTechs, today, unscheduledJobs, type JobRow } from "@/l
 import { addDays, customerName, fmtDate, fmtTime, minutesOfDay, weekStart } from "@/lib/format";
 import { quickSchedule } from "@/lib/actions";
 import { Card, PageHeader, StatusBadge } from "@/components/ui";
+import { busyBlocks, type BusyBlock } from "@/lib/calendar";
 
 export const metadata = { title: "Schedule" };
 
@@ -28,6 +29,13 @@ export default async function SchedulePage({ searchParams }: { searchParams: Pro
   const from = view === "day" ? date : weekStart(date);
   const days = view === "day" ? 1 : 7;
   const jobs = jobsInRange(`${from}T00:00`, `${addDays(from, days)}T00:00`, techFilter);
+  // Personal calendars (iCloud etc.) shown as busy time. Only the owner sees their event names.
+  const busy: Busy[] = (await busyBlocks(from, addDays(from, days), techFilter)).map((b) => ({
+    ...b,
+    label: b.userId === user.id ? b.title : "Busy",
+    color: techs.find((t) => t.id === b.userId)?.color ?? "#a8a29e",
+    name: techs.find((t) => t.id === b.userId)?.name ?? "",
+  }));
   const step = view === "day" ? 1 : 7;
   const qs = (d: string, v = view) => `/schedule?date=${d}&view=${v}${sp.tech ? `&tech=${sp.tech}` : ""}`;
 
@@ -50,6 +58,7 @@ export default async function SchedulePage({ searchParams }: { searchParams: Pro
             <Link href={qs(addDays(date, -step))} className="btn-ghost" aria-label="Previous">←</Link>
             <Link href={qs(now)} className="btn-ghost">Today</Link>
             <Link href={qs(addDays(date, step))} className="btn-ghost" aria-label="Next">→</Link>
+            <Link href="/account#calendar" className="btn-ghost" title="Put jobs on your iPhone calendar, or show your iCloud calendar here">Calendar sync</Link>
             {office && <Link href={`/jobs/new`} className="btn-primary">+ New job</Link>}
           </>
         }
@@ -67,19 +76,39 @@ export default async function SchedulePage({ searchParams }: { searchParams: Pro
       )}
 
       <div className={`grid gap-6 ${office ? "2xl:grid-cols-[1fr_320px]" : ""}`}>
-        {view === "week" ? <WeekView from={from} jobs={jobs} now={now} office={office} qs={qs} /> : <DayView date={date} jobs={jobs} techs={office && !sp.tech ? techs : techs.filter((t) => t.id === techFilter)} />}
+        {view === "week" ? <WeekView from={from} jobs={jobs} busy={busy} now={now} office={office} qs={qs} /> : <DayView date={date} jobs={jobs} busy={busy} techs={office && !sp.tech ? techs : techs.filter((t) => t.id === techFilter)} />}
         {office && <UnscheduledPanel back={qs(date)} techs={techs} defaultDate={date} />}
       </div>
     </>
   );
 }
 
-function WeekView({ from, jobs, now, office, qs }: { from: string; jobs: JobRow[]; now: string; office: boolean; qs: (d: string, v?: string) => string }) {
+type Busy = BusyBlock & { label: string; color: string; name: string };
+
+function BusyChip({ b, showName }: { b: Busy; showName: boolean }) {
+  return (
+    <div className="rounded-md border border-dashed border-stone-300 bg-stone-100/70 px-2 py-1 text-xs text-stone-500" title="From a personal calendar">
+      <div className="font-semibold">{b.allDay ? "All day" : `${fmtTime(b.start)}–${fmtTime(b.end)}`}</div>
+      <div className="truncate">
+        {showName && b.name ? <span className="mr-1 inline-block h-2 w-2 rounded-full align-middle" style={{ background: b.color }} /> : null}
+        {b.label}
+        {showName && b.name ? <span className="text-stone-400"> · {b.name}</span> : null}
+      </div>
+    </div>
+  );
+}
+
+function WeekView({ from, jobs, busy, now, office, qs }: { from: string; jobs: JobRow[]; busy: Busy[]; now: string; office: boolean; qs: (d: string, v?: string) => string }) {
   const days = Array.from({ length: 7 }, (_, i) => addDays(from, i));
   return (
     <div className="grid gap-3 md:grid-cols-7">
       {days.map((d) => {
         const dayJobs = jobs.filter((j) => j.scheduled_start?.startsWith(d));
+        const dayBusy = busy.filter((b) => b.start.slice(0, 10) <= d && (b.end.slice(0, 10) > d || b.start.slice(0, 10) === d));
+        const items = [
+          ...dayJobs.map((j) => ({ at: j.scheduled_start ?? "", job: j as JobRow | null, busy: null as Busy | null })),
+          ...dayBusy.map((b) => ({ at: b.allDay ? `${d}T00:00` : b.start < `${d}T00:00` ? `${d}T00:00` : b.start, job: null, busy: b })),
+        ].sort((a, b) => a.at.localeCompare(b.at));
         return (
           <div key={d} className={`card flex min-h-40 flex-col ${d === now ? "ring-2 ring-amber-400" : ""}`}>
             <div className="flex items-center justify-between border-b border-stone-100 px-3 py-2">
@@ -89,7 +118,7 @@ function WeekView({ from, jobs, now, office, qs }: { from: string; jobs: JobRow[
               {office && <Link href={`/jobs/new?date=${d}`} className="text-stone-400 hover:text-stone-900" aria-label="Add job this day">+</Link>}
             </div>
             <div className="flex-1 space-y-2 p-2">
-              {dayJobs.map((j) => (
+              {items.map(({ job: j, busy: b }, i) => b ? <BusyChip key={`b${i}`} b={b} showName={office} /> : j && (
                 <Link key={j.id} href={`/jobs/${j.id}`} className="block rounded-md border-l-4 bg-stone-50 px-2 py-1.5 text-xs hover:bg-amber-50" style={{ borderColor: j.tech_color ?? "#a8a29e" }}>
                   <div className="font-semibold text-stone-900">{fmtTime(j.scheduled_start)}–{fmtTime(j.scheduled_end)}</div>
                   <div className="truncate">{j.title}</div>
@@ -97,7 +126,7 @@ function WeekView({ from, jobs, now, office, qs }: { from: string; jobs: JobRow[
                   {j.status !== "scheduled" && <div className="mt-1"><StatusBadge status={j.status} /></div>}
                 </Link>
               ))}
-              {dayJobs.length === 0 && <div className="py-4 text-center text-xs text-stone-300">—</div>}
+              {items.length === 0 && <div className="py-4 text-center text-xs text-stone-300">—</div>}
             </div>
           </div>
         );
@@ -106,7 +135,7 @@ function WeekView({ from, jobs, now, office, qs }: { from: string; jobs: JobRow[
   );
 }
 
-function DayView({ date, jobs, techs }: { date: string; jobs: JobRow[]; techs: { id: number; name: string; color: string }[] }) {
+function DayView({ date, jobs, busy, techs }: { date: string; jobs: JobRow[]; busy: Busy[]; techs: { id: number; name: string; color: string }[] }) {
   const lanes: { id: number | null; name: string; color: string }[] = [...techs];
   if (jobs.some((j) => !j.tech_id)) lanes.push({ id: null, name: "Unassigned", color: "#a8a29e" });
   const hours = Array.from({ length: (DAY_END - DAY_START) / 60 + 1 }, (_, i) => DAY_START / 60 + i);
@@ -125,6 +154,7 @@ function DayView({ date, jobs, techs }: { date: string; jobs: JobRow[]; techs: {
         </div>
         {lanes.map((lane) => {
           const laneJobs = jobs.filter((j) => j.tech_id === lane.id);
+          const laneBusy = busy.filter((b) => b.userId === lane.id && b.start.slice(0, 10) <= date && (b.end.slice(0, 10) > date || b.start.slice(0, 10) === date));
           return (
             <div key={lane.id ?? "none"} className="w-56 shrink-0 border-l border-stone-100">
               <div className="flex h-10 items-center gap-2 border-b border-stone-100 px-3 text-sm font-semibold">
@@ -136,6 +166,29 @@ function DayView({ date, jobs, techs }: { date: string; jobs: JobRow[]; techs: {
                 {hours.map((h) => (
                   <div key={h} className="absolute inset-x-0 border-t border-stone-100" style={{ top: (h * 60 - DAY_START) * PX_PER_MIN }} />
                 ))}
+                {laneBusy.filter((b) => b.allDay).length > 0 && (
+                  <div className="absolute inset-x-1 top-0 z-10 truncate rounded border border-dashed border-stone-300 bg-stone-100 px-2 py-0.5 text-[11px] text-stone-500">
+                    All day: {laneBusy.filter((b) => b.allDay).map((b) => b.label).join(", ")}
+                  </div>
+                )}
+                {laneBusy.filter((b) => !b.allDay).map((b, i) => {
+                  const s0 = b.start < `${date}T00:00` ? 0 : minutesOfDay(b.start);
+                  const e0 = b.end.slice(0, 10) > date ? 24 * 60 : minutesOfDay(b.end);
+                  const start = Math.max(s0, DAY_START);
+                  const end = Math.min(e0, DAY_END);
+                  if (end <= start) return null;
+                  return (
+                    <div
+                      key={`busy${i}`}
+                      className="absolute inset-x-1 overflow-hidden rounded-md border border-dashed border-stone-300 px-2 py-1 text-xs text-stone-500"
+                      style={{ top: (start - DAY_START) * PX_PER_MIN, height: Math.max((end - start) * PX_PER_MIN, 22), background: "repeating-linear-gradient(135deg,#f5f5f4,#f5f5f4 6px,#e7e5e4 6px,#e7e5e4 12px)" }}
+                      title="From a personal calendar"
+                    >
+                      <div className="font-semibold">{fmtTime(b.start < `${date}T00:00` ? `${date}T00:00` : b.start)}–{fmtTime(b.end)}</div>
+                      <div className="truncate">{b.label}</div>
+                    </div>
+                  );
+                })}
                 {laneJobs.map((j) => {
                   const start = Math.max(minutesOfDay(j.scheduled_start!), DAY_START);
                   const end = Math.min(j.scheduled_end && j.scheduled_end.startsWith(date) ? minutesOfDay(j.scheduled_end) : start + 120, DAY_END);
